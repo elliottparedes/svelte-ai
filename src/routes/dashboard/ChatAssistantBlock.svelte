@@ -1,0 +1,109 @@
+<script lang="ts">
+	import Markdown from './Markdown.svelte';
+	import CopyButton from './CopyButton.svelte';
+	import type { ChatMessage } from '$lib/types/dashboard';
+	import { formatMessageTime } from '$lib/client/chatMessageList.utils';
+
+	let { msg, showCopy } = $props<{ msg: ChatMessage; showCopy: boolean }>();
+</script>
+
+<div class="assistant-row">
+	<Markdown content={msg.content} />
+	<div class="msg-meta">
+		<span class="msg-time">{formatMessageTime(msg.createdAt)}</span>
+		{#if showCopy}
+			<div class="msg-actions">
+				<CopyButton text={msg.content} />
+			</div>
+		{/if}
+	</div>
+</div>
+
+<style>
+	.assistant-row {
+		width: 100%;
+		color: #cdd6f4;
+		font-size: 0.95rem;
+		line-height: 1.6;
+		animation: messageIn 0.25s ease-out;
+	}
+	.assistant-row :global(pre) {
+		white-space: pre-wrap;
+		background: #1e1e2e;
+		padding: 0.75rem 1rem;
+		border-radius: 8px;
+		color: #cdd6f4;
+		font-family: 'Fira Code', 'Consolas', monospace;
+		overflow-x: auto;
+	}
+	.assistant-row :global(code) {
+		font-family: 'Fira Code', 'Consolas', monospace;
+		background: #1e1e2e;
+		padding: 0.15rem 0.35rem;
+		border-radius: 4px;
+		font-size: 0.85em;
+	}
+	.assistant-row :global(p) {
+		margin: 0 0 0.75rem;
+	}
+	.assistant-row :global(p:last-child) {
+		margin-bottom: 0;
+	}
+	.assistant-row :global(ul),
+	.assistant-row :global(ol) {
+		margin: 0 0 0.75rem;
+		padding-left: 1.25rem;
+	}
+	.assistant-row :global(li) {
+		margin-bottom: 0.25rem;
+	}
+	.assistant-row :global(blockquote) {
+		border-left: 3px solid #45475a;
+		margin: 0 0 0.75rem;
+		padding-left: 0.75rem;
+		color: #a6adc8;
+	}
+	.assistant-row :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin-bottom: 0.75rem;
+	}
+	.assistant-row :global(th),
+	.assistant-row :global(td) {
+		border: 1px solid #313244;
+		padding: 0.4rem 0.6rem;
+		text-align: left;
+	}
+	.assistant-row :global(th) {
+		background: #1e1e2e;
+	}
+	.msg-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+	}
+	.msg-actions {
+		display: flex;
+		gap: 0.5rem;
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+	.assistant-row:hover .msg-actions {
+		opacity: 1;
+	}
+	.msg-time {
+		font-size: 0.7rem;
+		color: #6c7086;
+	}
+	@keyframes messageIn {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+</style>

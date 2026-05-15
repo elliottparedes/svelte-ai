@@ -1,0 +1,37 @@
+export type MysqlConnParts = {
+	host: string;
+	port: number;
+	user: string;
+	password: string;
+	database: string;
+};
+
+/** Supports `mysql://` and `mysql2://` URLs (mysql2 driver accepts host/port/user/pass/db). */
+export function parseMysqlDatabaseUrl(urlStr: string): MysqlConnParts {
+	const u = new URL(urlStr);
+	if (u.protocol !== 'mysql:' && u.protocol !== 'mysql2:') {
+		throw new Error(`DATABASE_URL must use mysql:// or mysql2:// (got ${u.protocol})`);
+	}
+	const dbPath = u.pathname.replace(/^\//, '').split('/')[0] ?? '';
+	if (!dbPath) throw new Error('DATABASE_URL must include a database path');
+	return {
+		host: u.hostname || 'localhost',
+		port: u.port ? Number(u.port) : 3306,
+		user: decodeURIComponent(u.username || ''),
+		password: decodeURIComponent(u.password || ''),
+		database: decodeURIComponent(dbPath)
+	};
+}
+
+/** Single URL wins; otherwise discrete `MYSQL_*` vars (same defaults as before). */
+export function resolveMysqlConn(): MysqlConnParts {
+	const url = process.env.DATABASE_URL?.trim();
+	if (url) return parseMysqlDatabaseUrl(url);
+	return {
+		host: process.env.MYSQL_HOST || 'localhost',
+		port: Number(process.env.MYSQL_PORT) || 3306,
+		user: process.env.MYSQL_USER || 'root',
+		password: process.env.MYSQL_PASSWORD || '',
+		database: process.env.MYSQL_DATABASE || 'ai_platform'
+	};
+}

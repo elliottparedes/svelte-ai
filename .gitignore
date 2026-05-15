@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+
+# Environment (secrets)
+.env
+.env.*
+!.env.example
+
+# SvelteKit / Vite
+.svelte-kit/
+build/
+dist/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Logs & debug
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+# Windows reserved device name — breaks `git add .` if a stray file exists
+/nul
+
+# Editors / IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# TypeScript / tooling caches
+*.tsbuildinfo
+.eslintcache
+
+# Test / coverage (if added later)
+coverage/
+
+# Optional local tooling
+.vercel/
