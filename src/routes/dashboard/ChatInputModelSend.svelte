@@ -1,9 +1,10 @@
 <script lang="ts">
 	import ModelSelector from './ModelSelector.svelte';
-	import type { Model } from '$lib/types/dashboard';
+	import type { Model, ModelProviderGroup } from '$lib/types/dashboard';
 
 	let {
 		models,
+		modelGroups,
 		selectedModel = $bindable(''),
 		modelLocked = false,
 		value,
@@ -12,6 +13,7 @@
 		onSend
 	} = $props<{
 		models: Model[];
+		modelGroups: ModelProviderGroup[];
 		selectedModel?: string;
 		modelLocked?: boolean;
 		value: string;
@@ -65,7 +67,7 @@
 		</div>
 		<div class="dropdown-menu" role="menu" style="min-width: 280px;">
 			<div class="dropdown-content">
-				<ModelSelector {models} selected={selectedModel} onChange={selectModel} />
+				<ModelSelector {modelGroups} selected={selectedModel} onChange={selectModel} />
 			</div>
 		</div>
 	</div>

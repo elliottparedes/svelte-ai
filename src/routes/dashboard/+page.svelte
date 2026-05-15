@@ -28,6 +28,22 @@
 	const showProjectChatBack = $derived(
 		chatBackProjectId !== null && !(model.activeProjectId !== null && !model.projectComposeMode)
 	);
+
+	const chatContextExtraTokens = $derived.by(() => {
+		if (model.projectComposeMode && model.activeProjectId) {
+			const sp = model.projects.find((p) => p.id === model.activeProjectId)?.systemPrompt ?? '';
+			return Math.ceil(sp.length / 4);
+		}
+		const cid = model.activeConversationId;
+		if (!cid) return 0;
+		const conv =
+			model.projectConversations.find((c) => c.id === cid) ??
+			model.conversations.find((c) => c.id === cid);
+		const pid = conv?.projectId;
+		if (!pid) return 0;
+		const sp = model.projects.find((p) => p.id === pid)?.systemPrompt ?? '';
+		return Math.ceil(sp.length / 4);
+	});
 </script>
 
 <div class="app-layout">
@@ -82,8 +98,11 @@
 					modelLocked={model.messages.length > 0}
 					onSend={model.sendMessage}
 					models={model.models}
+					modelGroups={model.modelGroups}
 					bind:selectedModel={model.selectedModel}
 					bind:attachments={model.attachments}
+					messages={model.messages}
+					extraSystemTokens={chatContextExtraTokens}
 				/>
 			</div>
 		{/if}

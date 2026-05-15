@@ -68,7 +68,7 @@
 	function handleDelete(id: string, e: MouseEvent) {
 		e.stopPropagation();
 		openMenuId = null;
-		const title = conversations.find((c) => c.id === id)?.title ?? 'Chat';
+		const title = conversations.find((c: Conversation) => c.id === id)?.title ?? 'Chat';
 		pendingDelete = { id, title };
 	}
 

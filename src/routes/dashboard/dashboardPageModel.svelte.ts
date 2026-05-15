@@ -146,6 +146,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			logout,
 			sendMessage
 		},
-		data.models
+		data.models,
+		data.modelGroups
 	);
 }

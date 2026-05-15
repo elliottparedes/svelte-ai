@@ -1,6 +1,5 @@
 import type { ToolDefinition } from '../domain/ChatProvider.interface';
 
-export const MAX_HISTORY_MESSAGES = 20;
 export const MAX_TOOL_TURNS = 12;
 
 export const TOOLS: ToolDefinition[] = [

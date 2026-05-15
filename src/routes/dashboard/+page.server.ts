@@ -14,6 +14,7 @@ import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
+import { pickCuratedDashboardModels } from '$lib/server/model/curatedDashboardModels';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user;
@@ -31,24 +32,24 @@ export const load: PageServerLoad = async ({ locals }) => {
 		OPENROUTER_API_KEY,
 		OPENROUTER_HTTP_REFERER || undefined
 	);
-	let models: ChatModel[] = [];
+	let catalog: ChatModel[] = [];
 	try {
-		models = [...(await provider.listModels())].sort((a, b) =>
-			a.name.localeCompare(b.name)
-		);
+		catalog = [...(await provider.listModels())].sort((a, b) => a.name.localeCompare(b.name));
 	} catch (err) {
 		logger.error('OpenRouter models failed', { error: String(err) });
 	}
-	if (!isOpenRouterCapabilitiesHydrated() && models.length > 0) {
-		hydrateOpenRouterCapabilities(models);
+	if (!isOpenRouterCapabilitiesHydrated() && catalog.length > 0) {
+		hydrateOpenRouterCapabilities(catalog);
 	}
+	const { models, groups: modelGroups } = pickCuratedDashboardModels(catalog);
 
 	logger.info('Dashboard load', {
 		userId: user.id,
 		conversations: conversations.length,
 		projects: projects.length,
-		models: models.length
+		catalogModels: catalog.length,
+		curatedModels: models.length
 	});
 
-	return { conversations, projects, models, defaultModelId: OPENROUTER_DEFAULT_MODEL };
+	return { conversations, projects, models, modelGroups, defaultModelId: OPENROUTER_DEFAULT_MODEL };
 };

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import ChatInputModelSend from './ChatInputModelSend.svelte';
-	import type { Model } from '$lib/types/dashboard';
+	import ChatContextMeter from './ChatContextMeter.svelte';
+	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 
 	let {
 		models,
+		modelGroups,
 		selectedModel = $bindable(''),
 		modelLocked = false,
 		value,
@@ -12,9 +14,13 @@
 		showAttachButton,
 		isUploading,
 		onAttachClick,
-		onSend
+		onSend,
+		messages = [],
+		attachments = [],
+		extraSystemTokens = 0
 	} = $props<{
 		models: Model[];
+		modelGroups: ModelProviderGroup[];
 		selectedModel?: string;
 		modelLocked?: boolean;
 		value: string;
@@ -24,9 +30,20 @@
 		isUploading: boolean;
 		onAttachClick: () => void;
 		onSend: () => void;
+		messages?: ChatMessage[];
+		attachments?: ChatAttachmentInput[];
+		extraSystemTokens?: number;
 	}>();
 </script>
 
+<ChatContextMeter
+	{messages}
+	draftText={value}
+	{attachments}
+	{models}
+	selectedModel={selectedModel ?? ''}
+	{extraSystemTokens}
+/>
 <div class="input-footer">
 	<div class="footer-left">
 		{#if showAttachButton}
@@ -41,7 +58,7 @@
 			</button>
 		{/if}
 	</div>
-	<ChatInputModelSend {models} bind:selectedModel {modelLocked} {value} {attachmentsLen} {isStreaming} {onSend} />
+	<ChatInputModelSend {models} {modelGroups} bind:selectedModel {modelLocked} {value} {attachmentsLen} {isStreaming} {onSend} />
 </div>
 
 <style>

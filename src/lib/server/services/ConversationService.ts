@@ -10,7 +10,6 @@ import { buildSystemMessagesForTurn } from './conversationSystemMessages';
 import { maybeApplyVisionRelay, VISION_RELAY_SYSTEM_HINT } from './conversationVisionRelay.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
 import {
-	MAX_HISTORY_MESSAGES,
 	TOOLS,
 	TOOLS_WITHOUT_WEB_SEARCH,
 	TOOL_SYSTEM_PROMPT,
@@ -20,6 +19,11 @@ import {
 import type { VisionRelayService } from './VisionRelayService';
 import { modelSupportsTools, modelOpenRouterModalities } from '../model/modelCapabilities';
 import { runConversationToolTurns } from './conversationToolTurns';
+import { estimateMessagesTokens } from '$lib/shared/estimateContextTokens';
+import { trimChatMessagesByTokenBudget } from './conversationHistoryTrim';
+
+const HISTORY_FETCH_LIMIT = 2000;
+const FALLBACK_PROMPT_TOKEN_BUDGET = 28_000;
 
 export class ConversationService {
 	constructor(
@@ -58,7 +62,7 @@ export class ConversationService {
 				.join(' ') ?? '';
 		const storedContent = attachmentSummary ? `${prompt}\n${attachmentSummary}` : prompt;
 		await this.messageRepo.create(convId, 'user', storedContent);
-		const history = await this.messageRepo.findByConversationId(convId, MAX_HISTORY_MESSAGES);
+		const history = await this.messageRepo.findByConversationId(convId, HISTORY_FETCH_LIMIT);
 
 		const conv = await this.chatRepo.findById(convId);
 		const effectiveProjectId = conv?.projectId ?? projectId ?? null;
@@ -108,7 +112,13 @@ export class ConversationService {
 			: [];
 
 		let augmentedHistory = augmentHistory(history, augmentedPrompt);
-		augmentedHistory = [...systemMessages, ...relaySystem, ...augmentedHistory];
+		const prefixMessages = [...systemMessages, ...relaySystem];
+		const catalogBudget = await this.provider.getPromptTokenBudget?.(model ?? '');
+		const promptBudget =
+			catalogBudget != null ? catalogBudget : FALLBACK_PROMPT_TOKEN_BUDGET;
+		const historyBudget = Math.max(1024, promptBudget - estimateMessagesTokens(prefixMessages));
+		augmentedHistory = trimChatMessagesByTokenBudget(augmentedHistory, historyBudget);
+		augmentedHistory = [...prefixMessages, ...augmentedHistory];
 
 		const orMods = modelOpenRouterModalities(model);
 		const options: Record<string, unknown> | undefined =

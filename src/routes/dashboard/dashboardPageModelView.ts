@@ -1,4 +1,11 @@
-import type { ChatAttachmentInput, ChatMessage, Conversation, Model, Project } from '$lib/types/dashboard';
+import type {
+	ChatAttachmentInput,
+	ChatMessage,
+	Conversation,
+	Model,
+	ModelProviderGroup,
+	Project
+} from '$lib/types/dashboard';
 
 export type DashboardPageModelStateAccess = {
 	getConversations: () => Conversation[];
@@ -41,7 +48,8 @@ export type DashboardPageModelHandlers = {
 export function createDashboardPageModelView(
 	s: DashboardPageModelStateAccess,
 	actions: DashboardPageModelHandlers,
-	models: Model[]
+	models: Model[],
+	modelGroups: ModelProviderGroup[]
 ) {
 	return {
 		get conversations() {
@@ -119,6 +127,7 @@ export function createDashboardPageModelView(
 		renameConversation: actions.renameConversation,
 		logout: actions.logout,
 		sendMessage: actions.sendMessage,
-		models
+		models,
+		modelGroups
 	};
 }

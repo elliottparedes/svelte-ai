@@ -42,6 +42,10 @@ export interface ChatModel {
 	supportsTools?: boolean;
 	/** From OpenRouter `modalities` for image-generation models (e.g. `['image','text']`). */
 	openRouterModalities?: readonly string[];
+	/** OpenRouter total context window (tokens), when provided by the catalog. */
+	contextLength?: number;
+	/** Provider max completion tokens hint (tokens reserved from the window for the reply). */
+	maxCompletionTokens?: number;
 }
 
 export interface ChatAttachment {
@@ -61,4 +65,6 @@ export interface ChatProvider {
 	): AsyncGenerator<ChatStreamChunk, void, unknown>;
 
 	listModels(): Promise<readonly ChatModel[]>;
+	/** Max estimated prompt tokens before trimming history (OpenRouter: from model catalog). */
+	getPromptTokenBudget?(modelId: string): Promise<number | null>;
 }

@@ -11,6 +11,10 @@ import { ToolCallAccumulator } from './ToolCallAccumulator';
 import { formatOpenRouterMessages } from './openRouterFormat';
 import { applyOpenRouterStreamPayloadOptions } from './openRouterChatRequest.util';
 import { openRouterPdfPluginsForChat } from './openRouterPdfPlugin.util';
+import {
+	fetchOpenRouterChatModelsCached,
+	promptInputBudgetForModel
+} from './openRouterModelsCatalog';
 
 const BASE = 'https://openrouter.ai/api/v1';
 
@@ -19,6 +23,10 @@ export class OpenRouterProvider implements ChatProvider {
 		private readonly apiKey: string,
 		private readonly httpReferer?: string
 	) {}
+
+	private modelsCacheKey(): string {
+		return `${this.apiKey.length}:${this.httpReferer ?? ''}`;
+	}
 
 	private headers(): Record<string, string> {
 		const h: Record<string, string> = {
@@ -110,37 +118,11 @@ export class OpenRouterProvider implements ChatProvider {
 	}
 
 	async listModels(): Promise<readonly ChatModel[]> {
-		const res = await fetch(`${BASE}/models`, { headers: this.headers() });
-		if (!res.ok) {
-			const detail = (await res.text().catch(() => '')).slice(0, 800);
-			throw new Error(`OpenRouter models error: ${res.status}${detail ? ` — ${detail}` : ''}`);
-		}
-		const json = (await res.json()) as {
-			data: Array<{
-				id: string;
-				name: string;
-				architecture?: { input_modalities?: string[]; output_modalities?: string[] };
-				supported_parameters?: string[];
-			}>;
-		};
-		return json.data.map((m) => {
-			const mods = m.architecture?.input_modalities ?? [];
-			const out = m.architecture?.output_modalities ?? [];
-			const params = m.supported_parameters;
-			const supportsTools = !Array.isArray(params) || params.includes('tools');
-			const openRouterModalities = out.includes('image')
-				? out.includes('text')
-					? (['image', 'text'] as const)
-					: (['image'] as const)
-				: undefined;
-			return {
-				id: m.id,
-				name: m.name || m.id,
-				supportsVision: mods.includes('image'),
-				supportsFiles: mods.includes('file'),
-				supportsTools,
-				...(openRouterModalities ? { openRouterModalities } : {})
-			};
-		});
+		return fetchOpenRouterChatModelsCached(this.modelsCacheKey(), this.headers());
+	}
+
+	async getPromptTokenBudget(modelId: string): Promise<number | null> {
+		const models = await this.listModels();
+		return promptInputBudgetForModel(models, modelId);
 	}
 }
