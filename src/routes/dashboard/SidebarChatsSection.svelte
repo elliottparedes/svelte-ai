@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import ChatConvMoreMenu from './ChatConvMoreMenu.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import SidebarConversationRow from './SidebarConversationRow.svelte';
@@ -62,10 +63,23 @@
 		editingId = null;
 	}
 
+	let pendingDelete = $state<{ id: string; title: string } | null>(null);
+
 	function handleDelete(id: string, e: MouseEvent) {
 		e.stopPropagation();
 		openMenuId = null;
-		onDelete(id);
+		const title = conversations.find((c) => c.id === id)?.title ?? 'Chat';
+		pendingDelete = { id, title };
+	}
+
+	function cancelPendingDelete() {
+		pendingDelete = null;
+	}
+
+	function confirmPendingDelete() {
+		const p = pendingDelete;
+		pendingDelete = null;
+		if (p) void onDelete(p.id);
 	}
 
 	async function moveToProject(convId: string, projectId: string | null) {
@@ -103,6 +117,13 @@
 		<p class="empty">No conversations yet.</p>
 	{/if}
 </div>
+
+<DeleteChatConfirmModal
+	open={pendingDelete !== null}
+	chatTitle={pendingDelete?.title ?? ''}
+	onCancel={cancelPendingDelete}
+	onConfirm={confirmPendingDelete}
+/>
 
 <style>
 	.section-label {

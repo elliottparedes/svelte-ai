@@ -5,6 +5,7 @@
 	import ChatInput from './ChatInput.svelte';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import DashboardProjectPanel from './DashboardProjectPanel.svelte';
+	import ProjectChatBackButton from './ProjectChatBackButton.svelte';
 	import { createDashboardPageModel } from './dashboardPageModel.svelte.js';
 	import type { DashboardPageLoadData, DashboardUser } from '$lib/types/dashboard';
 
@@ -14,6 +15,19 @@
 	// Model + chat UI state stay client-side for this navigation; load `data` is only initial snapshot.
 	// svelte-ignore state_referenced_locally
 	const model = createDashboardPageModel(data);
+
+	const chatBackProjectId = $derived.by(() => {
+		if (model.projectComposeMode && model.activeProjectId) return model.activeProjectId;
+		const cid = model.activeConversationId;
+		if (!cid) return null;
+		const fromProject = model.projectConversations.find((c) => c.id === cid);
+		if (fromProject?.projectId) return fromProject.projectId;
+		return model.conversations.find((c) => c.id === cid)?.projectId ?? null;
+	});
+
+	const showProjectChatBack = $derived(
+		chatBackProjectId !== null && !(model.activeProjectId !== null && !model.projectComposeMode)
+	);
 </script>
 
 <div class="app-layout">
@@ -33,6 +47,9 @@
 	/>
 
 	<main class="chat-main">
+		{#if showProjectChatBack && chatBackProjectId}
+			<ProjectChatBackButton projectId={chatBackProjectId} onBack={model.loadProject} />
+		{/if}
 		{#if model.activeProjectId && !model.projectComposeMode}
 			<DashboardProjectPanel
 				projects={model.projects}
