@@ -50,6 +50,7 @@
 				}}
 				onOpenConversation={model.loadMessages}
 				onRenameChat={model.renameConversation}
+				onDeleteChat={model.deleteConversation}
 			/>
 		{:else if model.messages.length === 0 && !model.projectComposeMode}
 			<WelcomeScreen />

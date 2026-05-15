@@ -45,7 +45,9 @@
 
 <style>
 	.project-prompt {
+		margin-inline: auto;
 		max-width: 900px;
+		width: 100%;
 		margin-bottom: 2rem;
 	}
 	.prompt-display {

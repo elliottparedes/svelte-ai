@@ -69,6 +69,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 	async function deleteConversation(id: string) {
 		if (!(await deleteConversationApi(id))) return;
 		conversations = conversations.filter((c) => c.id !== id);
+		projectConversations = projectConversations.filter((c) => c.id !== id);
 		if (activeConversationId === id) {
 			activeConversationId = null;
 			messages = [];

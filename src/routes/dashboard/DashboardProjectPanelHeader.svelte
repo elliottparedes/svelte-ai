@@ -15,8 +15,10 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		margin-inline: auto;
 		margin-bottom: 2rem;
 		max-width: 900px;
+		width: 100%;
 	}
 	.project-header h2 {
 		color: #cdd6f4;

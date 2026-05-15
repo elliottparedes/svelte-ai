@@ -16,7 +16,8 @@
 		onStartEditPrompt,
 		onCancelEditPrompt,
 		onOpenConversation,
-		onRenameChat
+		onRenameChat,
+		onDeleteChat
 	} = $props<{
 		projects: Project[];
 		activeProjectId: string;
@@ -29,6 +30,7 @@
 		onCancelEditPrompt: () => void;
 		onOpenConversation: (id: string) => void;
 		onRenameChat: (id: string, title: string) => void | Promise<void>;
+		onDeleteChat: (id: string) => void | Promise<void>;
 	}>();
 
 	const activeProject = $derived(projects.find((p: Project) => p.id === activeProjectId));
@@ -47,7 +49,12 @@
 		{onCancelEditPrompt}
 		{onStartEditPrompt}
 	/>
-	<DashboardProjectChatsGrid {projectConversations} {onOpenConversation} {onRenameChat} />
+	<DashboardProjectChatsGrid
+		{projectConversations}
+		{onOpenConversation}
+		{onRenameChat}
+		{onDeleteChat}
+	/>
 </div>
 
 <style>

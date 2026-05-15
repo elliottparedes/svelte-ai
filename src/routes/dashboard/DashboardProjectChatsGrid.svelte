@@ -5,11 +5,13 @@
 	let {
 		projectConversations,
 		onOpenConversation,
-		onRenameChat
+		onRenameChat,
+		onDeleteChat
 	} = $props<{
 		projectConversations: Conversation[];
 		onOpenConversation: (id: string) => void;
 		onRenameChat: (id: string, title: string) => void | Promise<void>;
+		onDeleteChat: (id: string) => void | Promise<void>;
 	}>();
 
 	let editingId = $state<string | null>(null);
@@ -49,6 +51,7 @@
 				bind:editValue={editingValue}
 				onOpen={() => onOpenConversation(conv.id)}
 				onStartRename={(e) => startRename(conv, e)}
+				onDelete={() => onDeleteChat(conv.id)}
 				{submitRename}
 				{cancelRename}
 			/>
@@ -67,6 +70,9 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 		gap: 1rem;
+		margin-inline: auto;
 		max-width: 900px;
+		width: 100%;
+		justify-content: center;
 	}
 </style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import type { Conversation } from '$lib/types/dashboard';
 
@@ -8,6 +9,7 @@
 		editValue = $bindable(''),
 		onOpen,
 		onStartRename,
+		onDelete,
 		submitRename,
 		cancelRename
 	} = $props<{
@@ -16,9 +18,26 @@
 		editValue?: string;
 		onOpen: () => void;
 		onStartRename: (e: MouseEvent) => void;
+		onDelete: () => void | Promise<void>;
 		submitRename: (e: Event) => void;
 		cancelRename: (e: Event) => void;
 	}>();
+
+	let deleteModalOpen = $state(false);
+
+	function openDeleteModal(e: MouseEvent) {
+		e.stopPropagation();
+		deleteModalOpen = true;
+	}
+
+	function closeDeleteModal() {
+		deleteModalOpen = false;
+	}
+
+	async function confirmDelete() {
+		deleteModalOpen = false;
+		await onDelete();
+	}
 </script>
 
 <div class="chat-card" class:editing>
@@ -29,9 +48,25 @@
 			<div class="card-title">{conv.title}</div>
 			<div class="card-meta">{new Date(conv.createdAt).toLocaleDateString()}</div>
 		</button>
-		<button type="button" class="rename-btn" title="Rename chat" onclick={onStartRename}>✎</button>
+		<button type="button" class="icon-btn" title="Rename chat" onclick={onStartRename}>✎</button>
+		<button
+			type="button"
+			class="icon-btn danger"
+			title="Delete chat"
+			aria-label="Delete chat"
+			onclick={openDeleteModal}
+		>
+			✕
+		</button>
 	{/if}
 </div>
+
+<DeleteChatConfirmModal
+	open={deleteModalOpen}
+	chatTitle={conv.title}
+	onCancel={closeDeleteModal}
+	onConfirm={confirmDelete}
+/>
 
 <style>
 	.chat-card {
@@ -83,7 +118,7 @@
 		color: #6c7086;
 		font-size: 0.75rem;
 	}
-	.rename-btn {
+	.icon-btn {
 		flex-shrink: 0;
 		align-self: center;
 		width: 2rem;
@@ -100,8 +135,12 @@
 			color 0.15s,
 			background 0.15s;
 	}
-	.rename-btn:hover {
+	.icon-btn:hover {
 		color: #cdd6f4;
 		background: #313244;
+	}
+	.icon-btn.danger:hover {
+		color: #f38ba8;
+		background: rgba(243, 139, 168, 0.12);
 	}
 </style>
