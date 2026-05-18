@@ -12,12 +12,19 @@ import { logger } from '../logger';
 import { appendToolExchangeToHistory } from './conversationToolHistory.util';
 import { eachBudgetExhaustionChunk } from './conversationMaxToolsFinish';
 import type { ConversationProcessEvent } from './conversationProcess.types';
+import type { ChatRepository } from '../repositories/ChatRepository';
+import type { ConversationTitleService } from './ConversationTitleService';
+import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
 import { MAX_TOOL_TURNS } from './conversationTools.config';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
 	conversationId: string;
 	modelLabel: string;
+	isNewThread: boolean;
+	userPrompt: string;
+	chatRepo: ChatRepository;
+	titleService: ConversationTitleService | undefined;
 	provider: ChatProvider;
 	messageRepo: MessageRepository;
 	toolExecutor: ToolExecutor;
@@ -62,6 +69,15 @@ export async function* runConversationToolTurns(params: {
 				replyChars: assistantContent.length,
 				toolInvocations,
 				llmTurn: turn
+			});
+			yield* yieldNewThreadTitleEvents({
+				isNewThread: params.isNewThread,
+				conversationId: params.conversationId,
+				userPrompt: params.userPrompt,
+				assistantContent,
+				userId: params.userId,
+				chatRepo: params.chatRepo,
+				titleService: params.titleService
 			});
 			yield { type: 'done' as const, conversationId: params.conversationId };
 			return;
@@ -113,6 +129,15 @@ export async function* runConversationToolTurns(params: {
 				toolInvocations,
 				llmTurn: turn,
 				afterMaxToolTurns: true
+			});
+			yield* yieldNewThreadTitleEvents({
+				isNewThread: params.isNewThread,
+				conversationId: params.conversationId,
+				userPrompt: params.userPrompt,
+				assistantContent: ev.reply,
+				userId: params.userId,
+				chatRepo: params.chatRepo,
+				titleService: params.titleService
 			});
 			yield { type: 'done' as const, conversationId: params.conversationId };
 		}

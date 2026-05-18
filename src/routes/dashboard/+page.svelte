@@ -29,6 +29,10 @@
 		chatBackProjectId !== null && !(model.activeProjectId !== null && !model.projectComposeMode)
 	);
 
+	const modelSupportsTools = $derived(
+		model.models.find((m) => m.id === model.selectedModel)?.supportsTools !== false
+	);
+
 	const chatContextExtraTokens = $derived.by(() => {
 		if (model.projectComposeMode && model.activeProjectId) {
 			const sp = model.projects.find((p) => p.id === model.activeProjectId)?.systemPrompt ?? '';
@@ -57,6 +61,7 @@
 		onNewChat={model.startNewChat}
 		onDelete={model.deleteConversation}
 		onRename={model.renameConversation}
+		streamingConversationIds={model.streamingConversationIds}
 		{user}
 		onLogout={model.logout}
 		bind:collapsed={model.sidebarCollapsed}
@@ -73,9 +78,7 @@
 				projectConversations={model.projectConversations}
 				bind:editingProjectPrompt={model.editingProjectPrompt}
 				bind:projectPromptValue={model.projectPromptValue}
-				onNewChatInProject={() => {
-					model.projectComposeMode = true;
-				}}
+				onNewChatInProject={model.startProjectCompose}
 				onSavePrompt={model.saveProjectPrompt}
 				onStartEditPrompt={model.startEditingPrompt}
 				onCancelEditPrompt={() => {
@@ -84,6 +87,7 @@
 				onOpenConversation={model.loadMessages}
 				onRenameChat={model.renameConversation}
 				onDeleteChat={model.deleteConversation}
+				streamingConversationIds={model.streamingConversationIds}
 			/>
 		{:else if model.messages.length === 0 && !model.projectComposeMode}
 			<WelcomeScreen />
@@ -92,10 +96,11 @@
 		{/if}
 		{#if !model.activeProjectId || model.projectComposeMode}
 			<div class="chat-input-area">
-				<ChatInput
+				{#key model.activeConversationId ?? (model.projectComposeMode ? `compose-${model.activeProjectId}` : 'new')}
+					<ChatInput
 					bind:value={model.inputValue}
 					isStreaming={model.isStreaming}
-					modelLocked={model.messages.length > 0}
+					modelLocked={model.modelLocked}
 					onSend={model.sendMessage}
 					models={model.models}
 					modelGroups={model.modelGroups}
@@ -103,7 +108,10 @@
 					bind:attachments={model.attachments}
 					messages={model.messages}
 					extraSystemTokens={chatContextExtraTokens}
+					{modelSupportsTools}
+					bind:enabledToolIds={model.enabledToolIds}
 				/>
+				{/key}
 			</div>
 		{/if}
 	</main>

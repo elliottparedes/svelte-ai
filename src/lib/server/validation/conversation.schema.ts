@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { CHAT_TOOL_ORDER } from '$lib/shared/chatToolSystemPrompt';
+
+const chatToolNameSchema = z.enum(CHAT_TOOL_ORDER);
 
 export const attachmentSchema = z.object({
 	type: z.enum(['image', 'text', 'file']),
@@ -13,7 +16,9 @@ export const chatPromptSchema = z.object({
 	message: z.string().min(1).max(50000),
 	model: z.string().min(1).optional(),
 	attachments: z.array(attachmentSchema).optional(),
-	projectId: z.string().uuid().optional()
+	projectId: z.string().uuid().optional(),
+	/** Omit for legacy “all tools” (minus vision-relay web strip). Empty = no tools. */
+	enabledToolNames: z.array(chatToolNameSchema).max(CHAT_TOOL_ORDER.length).optional()
 });
 
 export const conversationIdSchema = z.object({

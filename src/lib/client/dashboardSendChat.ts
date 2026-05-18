@@ -1,41 +1,34 @@
-import type { ChatAttachmentInput, ChatMessage, Conversation } from '$lib/types/dashboard';
+import type { ChatAttachmentInput, ChatMessage } from '$lib/types/dashboard';
 import { readChatSseStream } from '$lib/client/readChatSse';
 import { accumulateChatSse } from '$lib/client/dashboardChatSseReducer';
 import {
-	fetchNewConversationSummary,
-	fetchProjectConversations
-} from '$lib/client/dashboardRemote';
+	isPendingConversationId,
+	type StreamFinishResult
+} from '$lib/client/dashboardStreamLifecycle';
 
 export type DashboardSendDeps = {
+	streamKey: string;
 	getMessages: () => ChatMessage[];
 	text: string;
 	attachments: ChatAttachmentInput[];
-	getActiveConversationId: () => string | null;
 	getProjectComposeMode: () => boolean;
 	getActiveProjectId: () => string | null;
 	getSelectedModel: () => string;
-	getConversations: () => Conversation[];
-	getProjectConversations: () => Conversation[];
+	getModelSupportsTools: () => boolean;
+	getEnabledToolNames: () => readonly string[];
 	setInputValue: (v: string) => void;
 	setAttachments: (a: ChatAttachmentInput[]) => void;
-	setStreaming: (v: boolean) => void;
-	setError: (v: string) => void;
-	setMessages: (m: ChatMessage[]) => void;
-	setActiveConversationId: (id: string | null) => void;
-	setProjectComposeMode: (v: boolean) => void;
-	setActiveProjectId: (v: string | null) => void;
-	setConversations: (c: Conversation[]) => void;
-	setProjectConversations: (c: Conversation[]) => void;
+	onStreamMessages: (streamKey: string, messages: ChatMessage[], errorMessage: string) => void;
+	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
+	onStreamFinish: (result: StreamFinishResult) => Promise<void>;
+	onStreamFailed: (streamKey: string, errorMessage: string) => void;
 };
 
 export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<void> {
 	const text = d.text.trim();
 	if (!text && d.attachments.length === 0) return;
 
-	d.setStreaming(true);
-	d.setError('');
 	d.setInputValue('');
-
 	const attachmentSummary = d.attachments
 		.map((a) => {
 			const label = a.type === 'image' ? 'Image' : a.type === 'file' ? 'PDF' : 'File';
@@ -43,10 +36,11 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		})
 		.join(' ');
 	const displayContent = text + (attachmentSummary ? ' ' + attachmentSummary : '');
-	d.setMessages([
+	const nextMessages: ChatMessage[] = [
 		...d.getMessages(),
 		{ id: crypto.randomUUID(), role: 'user', content: displayContent, createdAt: new Date() }
-	]);
+	];
+	d.onStreamMessages(d.streamKey, nextMessages, '');
 
 	const payloadAttachments = d.attachments.map((a) => ({
 		type: a.type,
@@ -60,13 +54,18 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	let res: Response;
 	try {
 		const payload: Record<string, unknown> = {
-			conversationId: d.getActiveConversationId() ?? undefined,
 			message: text || ' ',
 			model: d.getSelectedModel() || undefined,
 			attachments: payloadAttachments
 		};
+		if (!isPendingConversationId(d.streamKey)) {
+			payload.conversationId = d.streamKey;
+		}
 		if (d.getProjectComposeMode() && d.getActiveProjectId()) {
 			payload.projectId = d.getActiveProjectId();
+		}
+		if (d.getModelSupportsTools()) {
+			payload.enabledToolNames = [...d.getEnabledToolNames()];
 		}
 		res = await fetch('/api/v1/chat', {
 			method: 'POST',
@@ -74,20 +73,18 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 			body: JSON.stringify(payload)
 		});
 	} catch {
-		d.setStreaming(false);
-		d.setError('Network error. Please try again.');
+		d.onStreamFailed(d.streamKey, 'Network error. Please try again.');
 		return;
 	}
 
 	if (!res.ok || !res.body) {
-		d.setStreaming(false);
-		d.setError('Failed to send message');
+		d.onStreamFailed(d.streamKey, 'Failed to send message');
 		return;
 	}
 
 	const assistantId = crypto.randomUUID();
 	let acc = {
-		messages: d.getMessages(),
+		messages: nextMessages,
 		assistantContent: '',
 		doneConversationId: null as string | null,
 		errorMessage: ''
@@ -95,34 +92,21 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 
 	try {
 		for await (const ev of readChatSseStream(res.body)) {
+			if (ev.type === 'title') {
+				d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
+				continue;
+			}
 			acc = accumulateChatSse(acc, ev, assistantId);
-			d.setMessages(acc.messages);
-			d.setError(acc.errorMessage);
+			d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
 		}
-		const currentConvId = acc.doneConversationId ?? d.getActiveConversationId();
-		d.setActiveConversationId(currentConvId);
-		if (d.getProjectComposeMode() && currentConvId) {
-			d.setProjectComposeMode(false);
-			const projId = d.getActiveProjectId();
-			d.setActiveProjectId(null);
-			if (projId) {
-				const list = await fetchProjectConversations(projId);
-				if (list) d.setProjectConversations(list);
-			}
-		} else if (
-			currentConvId &&
-			!d.getConversations().find((c) => c.id === currentConvId) &&
-			!d.getActiveProjectId()
-		) {
-			const meta = await fetchNewConversationSummary(currentConvId);
-			if (meta && meta.projectId == null) {
-				d.setConversations([
-					{ id: currentConvId, title: meta.title, createdAt: new Date() },
-					...d.getConversations()
-				]);
-			}
-		}
-	} finally {
-		d.setStreaming(false);
+		await d.onStreamFinish({
+			streamKey: d.streamKey,
+			conversationId: acc.doneConversationId ?? (isPendingConversationId(d.streamKey) ? null : d.streamKey),
+			modelId: d.getSelectedModel(),
+			wasProjectCompose: d.getProjectComposeMode(),
+			projectId: d.getActiveProjectId()
+		});
+	} catch {
+		d.onStreamFailed(d.streamKey, 'Stream interrupted');
 	}
 }

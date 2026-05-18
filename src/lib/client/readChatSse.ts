@@ -2,6 +2,7 @@ export type ChatSseEvent =
 	| { type: 'chunk'; content: string }
 	| { type: 'tool_call'; name: string; arguments?: Record<string, unknown> }
 	| { type: 'tool_result'; name: string; result: string }
+	| { type: 'title'; conversationId: string; title: string }
 	| { type: 'error'; message: string }
 	| { type: 'done'; conversationId: string };
 
@@ -38,6 +39,12 @@ export async function* readChatSseStream(
 							type: 'tool_result',
 							name: String(parsed.name),
 							result: String(parsed.result ?? '')
+						};
+					} else if (t === 'title') {
+						yield {
+							type: 'title',
+							conversationId: String(parsed.conversationId ?? ''),
+							title: String(parsed.title ?? '')
 						};
 					} else if (t === 'error') {
 						yield {

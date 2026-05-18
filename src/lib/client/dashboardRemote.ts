@@ -1,14 +1,27 @@
 import type { ChatMessage, Conversation, Project } from '$lib/types/dashboard';
 
-export async function fetchConversationMessages(conversationId: string): Promise<ChatMessage[] | null> {
+export type ConversationThread = {
+	messages: ChatMessage[];
+	modelId: string | null;
+};
+
+export async function fetchConversationThread(conversationId: string): Promise<ConversationThread | null> {
 	const res = await fetch(`/api/v1/conversations/${conversationId}/messages`);
 	if (!res.ok) return null;
 	const json = await res.json();
-	return json.messages.map((m: { id: string; role: string; content: string; createdAt: string }) => ({
+	const conv = json.conversation as { modelId?: string | null };
+	const messages = json.messages.map((m: { id: string; role: string; content: string; createdAt: string }) => ({
 		...m,
 		role: m.role as 'user' | 'assistant',
 		createdAt: new Date(m.createdAt)
 	}));
+	return { messages, modelId: conv.modelId ?? null };
+}
+
+/** @deprecated Use fetchConversationThread */
+export async function fetchConversationMessages(conversationId: string): Promise<ChatMessage[] | null> {
+	const thread = await fetchConversationThread(conversationId);
+	return thread?.messages ?? null;
 }
 
 export async function fetchProjectConversations(projectId: string): Promise<Conversation[] | null> {
@@ -46,10 +59,10 @@ export async function saveProjectPromptApi(
 
 export async function fetchNewConversationSummary(
 	conversationId: string
-): Promise<{ title: string; projectId: string | null } | null> {
+): Promise<{ title: string; projectId: string | null; modelId: string | null } | null> {
 	const res = await fetch(`/api/v1/conversations/${conversationId}/messages`);
 	if (!res.ok) return null;
 	const json = await res.json();
-	const c = json.conversation as { title: string; projectId?: string | null };
-	return { title: c.title, projectId: c.projectId ?? null };
+	const c = json.conversation as { title: string; projectId?: string | null; modelId?: string | null };
+	return { title: c.title, projectId: c.projectId ?? null, modelId: c.modelId ?? null };
 }

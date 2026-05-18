@@ -16,6 +16,7 @@ export interface Conversation {
 	id: string;
 	title: string;
 	projectId?: string | null;
+	modelId?: string | null;
 	createdAt: Date | string;
 }
 
@@ -30,6 +31,8 @@ export interface Model {
 	name: string;
 	supportsVision?: boolean;
 	supportsFiles?: boolean;
+	/** When false, server omits tool definitions for this model id. */
+	supportsTools?: boolean;
 	/** From OpenRouter model catalog (`context_length`). */
 	contextLength?: number;
 	/** From OpenRouter (`top_provider.max_completion_tokens` or similar). */

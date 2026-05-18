@@ -3,6 +3,8 @@
 	import ChatInputToolbar from './ChatInputToolbar.svelte';
 	import ChatInputShell from './ChatInputShell.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
+	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
+	import { ALL_CHAT_TOOL_IDS } from '$lib/shared/chatToolSystemPrompt';
 	import {
 		consumeClipboardForAttachments,
 		chatAttachmentRejectMessage,
@@ -21,7 +23,9 @@
 		selectedModel = $bindable(''),
 		attachments = $bindable<ChatAttachmentInput[]>([]),
 		messages = [],
-		extraSystemTokens = 0
+		extraSystemTokens = 0,
+		modelSupportsTools = true,
+		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS])
 	} = $props<{
 		value?: string;
 		isStreaming: boolean;
@@ -33,6 +37,8 @@
 		attachments: ChatAttachmentInput[];
 		messages?: ChatMessage[];
 		extraSystemTokens?: number;
+		modelSupportsTools?: boolean;
+		enabledToolIds?: ChatToolId[];
 	}>();
 	let fileInput: HTMLInputElement | null = $state(null);
 	let dragOver = $state(false);
@@ -137,6 +143,8 @@
 			{messages}
 			{attachments}
 			{extraSystemTokens}
+			{modelSupportsTools}
+			bind:enabledToolIds
 		/>
 	{/snippet}
 </ChatInputShell>

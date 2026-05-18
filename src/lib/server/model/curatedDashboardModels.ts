@@ -2,31 +2,12 @@ import type { ChatModel } from '../domain/ChatProvider.interface';
 
 type GroupDef = { readonly label: string; readonly ids: readonly string[] };
 
-/** Dashboard picker: curated OpenRouter ids, grouped by provider. */
+/** Dashboard picker: best value picks — one clear role each, minimal overlap. */
 export const CURATED_DASHBOARD_MODEL_GROUPS: readonly GroupDef[] = [
-	{
-		label: 'Anthropic',
-		ids: ['anthropic/claude-opus-4', 'anthropic/claude-sonnet-4', 'anthropic/claude-3.5-haiku']
-	},
-	{
-		label: 'OpenAI',
-		ids: ['openai/gpt-4.1', 'openai/o3', 'openai/gpt-4o-mini', 'openai/gpt-4.1-mini']
-	},
-	{
-		label: 'Google',
-		ids: [
-			'google/gemini-2.5-pro-preview',
-			'google/gemini-2.5-flash',
-			'google/gemini-2.5-flash-lite',
-			'google/gemini-2.0-flash-001'
-		]
-	},
-	{ label: 'xAI', ids: ['x-ai/grok-4.3'] },
-	{ label: 'DeepSeek', ids: ['deepseek/deepseek-r1-0528', 'deepseek/deepseek-chat'] },
-	{
-		label: 'Qwen',
-		ids: ['qwen/qwen3.5-flash-02-23', 'qwen/qwen3.5-397b-a17b', 'qwen/qwen3-max']
-	}
+	{ label: 'Qwen', ids: ['qwen/qwen3.5-flash-02-23', 'qwen/qwen3-max'] },
+	{ label: 'Meta', ids: ['meta-llama/llama-4-scout'] },
+	{ label: 'DeepSeek', ids: ['deepseek/deepseek-v4-flash', 'deepseek/deepseek-r1-0528'] },
+	{ label: 'MoonshotAI', ids: ['moonshotai/kimi-k2.5'] }
 ];
 
 export type CuratedModelGroup = { label: string; models: ChatModel[] };

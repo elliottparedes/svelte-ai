@@ -12,7 +12,8 @@
 		activeProjectId,
 		onSelect,
 		onDelete,
-		onRename
+		onRename,
+		streamingConversationIds
 	} = $props<{
 		conversations: Conversation[];
 		projects: Project[];
@@ -21,6 +22,7 @@
 		onSelect: (id: string) => void;
 		onDelete: (id: string) => void;
 		onRename: (id: string, title: string) => void;
+		streamingConversationIds: ReadonlySet<string>;
 	}>();
 
 	let editingId = $state<string | null>(null);
@@ -104,6 +106,7 @@
 				{projects}
 				{activeId}
 				{activeProjectId}
+				streaming={streamingConversationIds.has(conv.id)}
 				menuOpen={openMenuId === conv.id}
 				onToggle={(e: MouseEvent) => toggleMenu(conv.id, e)}
 				onRenameStart={startRename}

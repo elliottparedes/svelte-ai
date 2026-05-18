@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ChatConvMoreMenu from './ChatConvMoreMenu.svelte';
+	import SidebarChatLoadingDots from './SidebarChatLoadingDots.svelte';
 	import type { Conversation, Project } from '$lib/types/dashboard';
 
 	let {
@@ -7,6 +8,7 @@
 		projects,
 		activeId,
 		activeProjectId,
+		streaming = false,
 		menuOpen,
 		onToggle,
 		onRenameStart,
@@ -18,6 +20,7 @@
 		projects: Project[];
 		activeId: string | null;
 		activeProjectId: string | null;
+		streaming?: boolean;
 		menuOpen: boolean;
 		onToggle: (e: MouseEvent) => void;
 		onRenameStart: (c: Conversation, e: MouseEvent) => void;
@@ -29,7 +32,12 @@
 
 <div class="conv-item" class:active={conv.id === activeId && !activeProjectId}>
 	<button class="conv-btn" onclick={() => onSelect(conv.id)}>
-		<span class="conv-title">{conv.title}</span>
+		{#if conv.title.trim()}
+			<span class="conv-title">{conv.title}</span>
+		{/if}
+		{#if streaming}
+			<SidebarChatLoadingDots />
+		{/if}
 	</button>
 	<ChatConvMoreMenu
 		{conv}
@@ -56,6 +64,9 @@
 	}
 	.conv-btn {
 		flex: 1;
+		display: flex;
+		align-items: center;
+		min-width: 0;
 		background: none;
 		border: none;
 		color: #a6adc8;

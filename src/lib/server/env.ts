@@ -22,7 +22,7 @@ export const OPENROUTER_HTTP_REFERER = getEnv('OPENROUTER_HTTP_REFERER', '');
 /** Preferred model id when the client omits `model` (must exist on OpenRouter). */
 export const OPENROUTER_DEFAULT_MODEL = getEnv(
 	'OPENROUTER_DEFAULT_MODEL',
-	'google/gemini-2.0-flash-001'
+	'qwen/qwen3.5-flash-02-23'
 );
 export const BRAVE_SEARCH_API_KEY = getEnv('BRAVE_SEARCH_API_KEY', '');
 
@@ -31,3 +31,6 @@ export const VISION_RELAY_ENABLED = getEnv('VISION_RELAY_ENABLED', 'true').toLow
 /** OpenRouter model id with vision; used only to summarize images for non-vision models. */
 export const VISION_RELAY_MODEL = getEnv('VISION_RELAY_MODEL', 'google/gemini-2.0-flash-001');
 export const VISION_RELAY_MAX_TOKENS = Number(getEnv('VISION_RELAY_MAX_TOKENS', '512')) || 512;
+/** Cheap OpenRouter model for auto-generated chat titles after the first reply. */
+export const CHAT_TITLE_MODEL = getEnv('CHAT_TITLE_MODEL', 'google/gemini-2.0-flash-lite-001');
+export const CHAT_TITLE_ENABLED = getEnv('CHAT_TITLE_ENABLED', 'true').toLowerCase() !== 'false';

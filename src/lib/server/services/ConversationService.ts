@@ -9,18 +9,14 @@ import { resolveConversationForPrompt } from './conversationResolve.util';
 import { buildSystemMessagesForTurn } from './conversationSystemMessages';
 import { maybeApplyVisionRelay, VISION_RELAY_SYSTEM_HINT } from './conversationVisionRelay.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
-import {
-	TOOLS,
-	TOOLS_WITHOUT_WEB_SEARCH,
-	TOOL_SYSTEM_PROMPT,
-	TOOL_SYSTEM_PROMPT_NO_TOOLS,
-	TOOL_SYSTEM_PROMPT_NO_WEB_SEARCH
-} from './conversationTools.config';
+import { resolveToolingForTurn } from './conversationToolTurnConfig';
 import type { VisionRelayService } from './VisionRelayService';
+import type { ConversationTitleService } from './ConversationTitleService';
 import { modelSupportsTools, modelOpenRouterModalities } from '../model/modelCapabilities';
 import { runConversationToolTurns } from './conversationToolTurns';
 import { estimateMessagesTokens } from '$lib/shared/estimateContextTokens';
 import { trimChatMessagesByTokenBudget } from './conversationHistoryTrim';
+import { toolDefinitionsForOrderedNames } from './conversationToolsPick';
 
 const HISTORY_FETCH_LIMIT = 2000;
 const FALLBACK_PROMPT_TOKEN_BUDGET = 28_000;
@@ -32,7 +28,8 @@ export class ConversationService {
 		private readonly messageRepo: MessageRepository,
 		private readonly toolExecutor: ToolExecutor,
 		private readonly projectRepo?: ProjectRepository,
-		private readonly visionRelay?: VisionRelayService
+		private readonly visionRelay?: VisionRelayService,
+		private readonly titleService?: ConversationTitleService
 	) {}
 
 	async *processPrompt(
@@ -41,15 +38,17 @@ export class ConversationService {
 		prompt: string,
 		attachments?: readonly ChatAttachment[],
 		model?: string,
-		projectId?: string
+		projectId?: string,
+		enabledToolNames?: readonly string[]
 	): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 		const isNewThread = !conversationId;
-		const convId = await resolveConversationForPrompt(
+		const { convId, effectiveModel } = await resolveConversationForPrompt(
 			this.chatRepo,
 			userId,
 			conversationId,
 			projectId,
-			prompt
+			prompt,
+			model
 		);
 
 		const attachmentSummary =
@@ -70,7 +69,7 @@ export class ConversationService {
 			userId,
 			conversationId: convId,
 			isNewThread,
-			model: model ?? 'default',
+			model: effectiveModel ?? 'default',
 			projectId: effectiveProjectId,
 			promptChars: prompt.length,
 			attachmentCount: attachments?.length ?? 0
@@ -83,7 +82,7 @@ export class ConversationService {
 			conversationId: convId,
 			augmentedPrompt: augmentedPromptBase,
 			imageAttachments,
-			model,
+			model: effectiveModel,
 			visionRelay: this.visionRelay
 		});
 
@@ -99,13 +98,17 @@ export class ConversationService {
 			streamAttachments = multimodal?.length ? multimodal : undefined;
 		}
 
-		const toolsCapable = modelSupportsTools(model);
-		const toolSystemPrompt = !toolsCapable
-			? TOOL_SYSTEM_PROMPT_NO_TOOLS
-			: relayApplied
-				? TOOL_SYSTEM_PROMPT_NO_WEB_SEARCH
-				: TOOL_SYSTEM_PROMPT;
-		const systemMessages = await buildSystemMessagesForTurn(conv, this.projectRepo, toolSystemPrompt);
+		const toolsCapable = modelSupportsTools(effectiveModel);
+		const { effectiveNames, systemContentForMessages } = resolveToolingForTurn({
+			toolsCapable,
+			relayApplied,
+			enabledToolNames
+		});
+		const systemMessages = await buildSystemMessagesForTurn(
+			conv,
+			this.projectRepo,
+			systemContentForMessages
+		);
 
 		const relaySystem: ChatMessage[] = relayApplied
 			? [{ id: 'system-vision-relay', role: 'system', content: VISION_RELAY_SYSTEM_HINT, createdAt: new Date() }]
@@ -113,27 +116,32 @@ export class ConversationService {
 
 		let augmentedHistory = augmentHistory(history, augmentedPrompt);
 		const prefixMessages = [...systemMessages, ...relaySystem];
-		const catalogBudget = await this.provider.getPromptTokenBudget?.(model ?? '');
+		const catalogBudget = await this.provider.getPromptTokenBudget?.(effectiveModel ?? '');
 		const promptBudget =
 			catalogBudget != null ? catalogBudget : FALLBACK_PROMPT_TOKEN_BUDGET;
 		const historyBudget = Math.max(1024, promptBudget - estimateMessagesTokens(prefixMessages));
 		augmentedHistory = trimChatMessagesByTokenBudget(augmentedHistory, historyBudget);
 		augmentedHistory = [...prefixMessages, ...augmentedHistory];
 
-		const orMods = modelOpenRouterModalities(model);
+		const orMods = modelOpenRouterModalities(effectiveModel);
 		const options: Record<string, unknown> | undefined =
-			model || orMods?.length
+			effectiveModel || orMods?.length
 				? {
-						...(model ? { model } : {}),
+						...(effectiveModel ? { model: effectiveModel } : {}),
 						...(orMods?.length ? { modalities: orMods } : {})
 					}
 				: undefined;
-		const toolsForTurn = !toolsCapable ? [] : relayApplied ? TOOLS_WITHOUT_WEB_SEARCH : TOOLS;
+		const toolsForTurn =
+			!toolsCapable || effectiveNames.length === 0 ? [] : toolDefinitionsForOrderedNames(effectiveNames);
 
 		yield* runConversationToolTurns({
 			userId,
 			conversationId: convId,
-			modelLabel: model ?? 'default',
+			modelLabel: effectiveModel ?? 'default',
+			isNewThread,
+			userPrompt: prompt,
+			chatRepo: this.chatRepo,
+			titleService: this.titleService,
 			provider: this.provider,
 			messageRepo: this.messageRepo,
 			toolExecutor: this.toolExecutor,

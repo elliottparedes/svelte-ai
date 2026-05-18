@@ -13,10 +13,13 @@ import {
 	OPENROUTER_DEFAULT_MODEL,
 	VISION_RELAY_ENABLED,
 	VISION_RELAY_MODEL,
-	VISION_RELAY_MAX_TOKENS
+	VISION_RELAY_MAX_TOKENS,
+	CHAT_TITLE_MODEL,
+	CHAT_TITLE_ENABLED
 } from '$lib/server/db/config';
 import { logger } from '$lib/server/logger';
 import { VisionRelayService } from '$lib/server/services/VisionRelayService';
+import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
 import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
@@ -38,7 +41,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(400, parseResult.error.issues.map((i) => i.message).join(', '));
 	}
 
-	const { conversationId, message, model, attachments, projectId } = parseResult.data;
+	const { conversationId, message, model, attachments, projectId, enabledToolNames } =
+		parseResult.data;
 	const effectiveModel = model?.trim() || OPENROUTER_DEFAULT_MODEL;
 	logger.info('Chat request', {
 		userId: user.id,
@@ -68,13 +72,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				OPENROUTER_HTTP_REFERER || undefined
 			)
 		: undefined;
+	const titleService = CHAT_TITLE_ENABLED
+		? new ConversationTitleService(
+				OPENROUTER_API_KEY,
+				CHAT_TITLE_MODEL,
+				OPENROUTER_HTTP_REFERER || undefined
+			)
+		: undefined;
 	const service = new ConversationService(
 		provider,
 		new ChatRepository(),
 		new MessageRepository(),
 		new ToolExecutor(),
 		new ProjectRepository(),
-		visionRelay
+		visionRelay,
+		titleService
 	);
 
 	const encoder = new TextEncoder();
@@ -89,7 +101,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					message,
 					attachments,
 					effectiveModel,
-					projectId
+					projectId,
+					enabledToolNames
 				)) {
 					if (chunk.type === 'done') resolvedConversationId = chunk.conversationId;
 					controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));

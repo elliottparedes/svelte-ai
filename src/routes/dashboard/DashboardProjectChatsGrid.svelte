@@ -6,12 +6,14 @@
 		projectConversations,
 		onOpenConversation,
 		onRenameChat,
-		onDeleteChat
+		onDeleteChat,
+		streamingConversationIds
 	} = $props<{
 		projectConversations: Conversation[];
 		onOpenConversation: (id: string) => void;
 		onRenameChat: (id: string, title: string) => void | Promise<void>;
 		onDeleteChat: (id: string) => void | Promise<void>;
+		streamingConversationIds: ReadonlySet<string>;
 	}>();
 
 	let editingId = $state<string | null>(null);
@@ -47,6 +49,7 @@
 		{#each projectConversations as conv}
 			<DashboardProjectChatCard
 				{conv}
+				streaming={streamingConversationIds.has(conv.id)}
 				editing={editingId === conv.id}
 				bind:editValue={editingValue}
 				onOpen={() => onOpenConversation(conv.id)}

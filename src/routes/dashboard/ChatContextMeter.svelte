@@ -2,8 +2,7 @@
 	import {
 		estimateMessagesTokens,
 		estimateTokensFromText,
-		estimateAttachmentInputTokens,
-		ESTIMATED_TOOL_SYSTEM_TOKENS
+		estimateAttachmentInputTokens
 	} from '$lib/shared/estimateContextTokens';
 	import { promptInputTokenBudget } from '$lib/shared/contextWindowBudget';
 	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
@@ -14,7 +13,8 @@
 		attachments,
 		models,
 		selectedModel,
-		extraSystemTokens = 0
+		extraSystemTokens = 0,
+		toolStackEstimate
 	} = $props<{
 		messages: ChatMessage[];
 		draftText: string;
@@ -22,6 +22,7 @@
 		models: Model[];
 		selectedModel: string;
 		extraSystemTokens?: number;
+		toolStackEstimate: number;
 	}>();
 
 	const model = $derived(models.find((m: Model) => m.id === selectedModel));
@@ -32,7 +33,7 @@
 		estimateMessagesTokens(messages) +
 			estimateTokensFromText(draftText) +
 			estimateAttachmentInputTokens(attachments) +
-			ESTIMATED_TOOL_SYSTEM_TOKENS +
+			toolStackEstimate +
 			extraSystemTokens
 	);
 

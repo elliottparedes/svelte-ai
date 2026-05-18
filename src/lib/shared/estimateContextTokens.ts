@@ -1,7 +1,7 @@
 /** Rough token estimate (~4 chars/token); aligns UI hint with server-side trim heuristic. */
 const CHARS_PER_TOKEN = 4;
 const PER_MESSAGE_OVERHEAD = 4;
-/** Approximate tool + formatting system overhead sent with each chat (server). */
+/** Full tool stack baseline; matches `estimateChatToolsTurnTokens` for all tools. */
 export const ESTIMATED_TOOL_SYSTEM_TOKENS = 3200;
 
 export function estimateTokensFromText(text: string): number {

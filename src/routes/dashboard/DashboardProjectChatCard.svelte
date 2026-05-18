@@ -1,10 +1,12 @@
 <script lang="ts">
 	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
+	import SidebarChatLoadingDots from './SidebarChatLoadingDots.svelte';
 	import type { Conversation } from '$lib/types/dashboard';
 
 	let {
 		conv,
+		streaming = false,
 		editing,
 		editValue = $bindable(''),
 		onOpen,
@@ -14,6 +16,7 @@
 		cancelRename
 	} = $props<{
 		conv: Conversation;
+		streaming?: boolean;
 		editing: boolean;
 		editValue?: string;
 		onOpen: () => void;
@@ -45,7 +48,14 @@
 		<SidebarChatRenameRow bind:value={editValue} {submitRename} {cancelRename} />
 	{:else}
 		<button type="button" class="card-main" onclick={onOpen}>
-			<div class="card-title">{conv.title}</div>
+			<div class="card-title">
+				{#if conv.title.trim()}
+					{conv.title}
+				{/if}
+				{#if streaming}
+					<SidebarChatLoadingDots />
+				{/if}
+			</div>
 			<div class="card-meta">{new Date(conv.createdAt).toLocaleDateString()}</div>
 		</button>
 		<button type="button" class="icon-btn" title="Rename chat" onclick={onStartRename}>✎</button>
@@ -106,6 +116,8 @@
 		color: #cdd6f4;
 	}
 	.card-title {
+		display: flex;
+		align-items: center;
 		color: #cdd6f4;
 		font-size: 0.95rem;
 		font-weight: 500;

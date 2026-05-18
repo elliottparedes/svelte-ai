@@ -15,6 +15,7 @@
 		onNewChat,
 		onDelete,
 		onRename,
+		streamingConversationIds,
 		user,
 		onLogout,
 		collapsed = $bindable(false)
@@ -28,6 +29,7 @@
 		onNewChat: () => void;
 		onDelete: (id: string) => void;
 		onRename: (id: string, title: string) => void;
+		streamingConversationIds: ReadonlySet<string>;
 		user: DashboardUser | null;
 		onLogout: () => void;
 		collapsed?: boolean;
@@ -48,7 +50,16 @@
 				<span>New chat</span>
 			</button>
 			<SidebarProjectsSection {projects} {activeProjectId} onSelectProject={onSelectProject} />
-			<SidebarChatsSection {conversations} {projects} {activeId} {activeProjectId} {onSelect} {onDelete} {onRename} />
+			<SidebarChatsSection
+				{conversations}
+				{projects}
+				{activeId}
+				{activeProjectId}
+				{streamingConversationIds}
+				{onSelect}
+				{onDelete}
+				{onRename}
+			/>
 			{#if user}
 				<SidebarUserFooter {user} onLogout={onLogout} />
 			{/if}

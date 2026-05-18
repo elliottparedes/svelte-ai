@@ -34,6 +34,7 @@ export class ChatRepository {
 			userId: input.userId,
 			projectId: input.projectId ?? null,
 			title: input.title,
+			modelId: input.modelId ?? null,
 			createdAt: now,
 			updatedAt: now
 		});
@@ -46,6 +47,7 @@ export class ChatRepository {
 		const updateData: Partial<typeof conversations.$inferInsert> = { updatedAt: new Date() };
 		if (input.title !== undefined) updateData.title = input.title;
 		if (input.projectId !== undefined) updateData.projectId = input.projectId;
+		if (input.modelId !== undefined) updateData.modelId = input.modelId;
 
 		await db.update(conversations).set(updateData).where(eq(conversations.id, id));
 		const conv = await this.findById(id);

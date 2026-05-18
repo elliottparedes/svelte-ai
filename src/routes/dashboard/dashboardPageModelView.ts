@@ -6,6 +6,7 @@ import type {
 	ModelProviderGroup,
 	Project
 } from '$lib/types/dashboard';
+import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 
 export type DashboardPageModelStateAccess = {
 	getConversations: () => Conversation[];
@@ -19,6 +20,7 @@ export type DashboardPageModelStateAccess = {
 	getInputValue: () => string;
 	setInputValue: (v: string) => void;
 	getIsStreaming: () => boolean;
+	getStreamingConversationIds: () => ReadonlySet<string>;
 	getErrorMessage: () => string;
 	getSelectedModel: () => string;
 	setSelectedModel: (v: string) => void;
@@ -30,6 +32,9 @@ export type DashboardPageModelStateAccess = {
 	setEditingProjectPrompt: (v: boolean) => void;
 	getProjectPromptValue: () => string;
 	setProjectPromptValue: (v: string) => void;
+	getEnabledToolIds: () => ChatToolId[];
+	setEnabledToolIds: (v: ChatToolId[]) => void;
+	getModelLocked: () => boolean;
 };
 
 export type DashboardPageModelHandlers = {
@@ -38,6 +43,7 @@ export type DashboardPageModelHandlers = {
 	saveProjectPrompt: () => Promise<void>;
 	startEditingPrompt: () => void;
 	startNewChat: () => void;
+	startProjectCompose: () => void;
 	deleteConversation: (id: string) => Promise<void>;
 	renameConversation: (id: string, title: string) => Promise<void>;
 	logout: () => Promise<void>;
@@ -85,6 +91,9 @@ export function createDashboardPageModelView(
 		get isStreaming() {
 			return s.getIsStreaming();
 		},
+		get streamingConversationIds() {
+			return s.getStreamingConversationIds();
+		},
 		get errorMessage() {
 			return s.getErrorMessage();
 		},
@@ -118,11 +127,21 @@ export function createDashboardPageModelView(
 		set projectPromptValue(v: string) {
 			s.setProjectPromptValue(v);
 		},
+		get enabledToolIds() {
+			return s.getEnabledToolIds();
+		},
+		set enabledToolIds(v: ChatToolId[]) {
+			s.setEnabledToolIds(v);
+		},
+		get modelLocked() {
+			return s.getModelLocked();
+		},
 		loadMessages: actions.loadMessages,
 		loadProject: actions.loadProject,
 		saveProjectPrompt: actions.saveProjectPrompt,
 		startEditingPrompt: actions.startEditingPrompt,
 		startNewChat: actions.startNewChat,
+		startProjectCompose: actions.startProjectCompose,
 		deleteConversation: actions.deleteConversation,
 		renameConversation: actions.renameConversation,
 		logout: actions.logout,
