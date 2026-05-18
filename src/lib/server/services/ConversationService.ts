@@ -1,25 +1,19 @@
-import type { ChatAttachment, ChatMessage, ChatProvider } from '../domain/ChatProvider.interface';
+import type { ChatAttachment, ChatProvider } from '../domain/ChatProvider.interface';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import type { MessageRepository } from '../repositories/MessageRepository';
 import type { ProjectRepository } from '../repositories/ProjectRepository';
 import type { ToolExecutor } from '../infrastructure/ToolExecutor';
 import { logger } from '../logger';
-import { augmentHistory, buildAugmentedPrompt } from './conversationPrompt.util';
 import { resolveConversationForPrompt } from './conversationResolve.util';
-import { buildSystemMessagesForTurn } from './conversationSystemMessages';
-import { maybeApplyVisionRelay, VISION_RELAY_SYSTEM_HINT } from './conversationVisionRelay.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
-import { resolveToolingForTurn } from './conversationToolTurnConfig';
 import type { VisionRelayService } from './VisionRelayService';
 import type { ConversationTitleService } from './ConversationTitleService';
-import { modelSupportsTools, modelOpenRouterModalities } from '../model/modelCapabilities';
+import { modelSupportsTools } from '../model/modelCapabilities';
 import { runConversationToolTurns } from './conversationToolTurns';
-import { estimateMessagesTokens } from '$lib/shared/estimateContextTokens';
-import { trimChatMessagesByTokenBudget } from './conversationHistoryTrim';
 import { toolDefinitionsForOrderedNames } from './conversationToolsPick';
+import { prepareConversationTurn } from './conversationTurnPrepare';
 
 const HISTORY_FETCH_LIMIT = 2000;
-const FALLBACK_PROMPT_TOKEN_BUDGET = 28_000;
 
 export class ConversationService {
 	constructor(
@@ -75,64 +69,25 @@ export class ConversationService {
 			attachmentCount: attachments?.length ?? 0
 		});
 
-		const augmentedPromptBase = buildAugmentedPrompt(prompt, attachments);
-		const imageAttachments = attachments?.filter((a) => a.type === 'image' && a.dataUrl);
-		const { augmentedPrompt, relayApplied } = await maybeApplyVisionRelay({
-			userId,
-			conversationId: convId,
-			augmentedPrompt: augmentedPromptBase,
-			imageAttachments,
-			model: effectiveModel,
-			visionRelay: this.visionRelay
-		});
-
-		const multimodal = attachments?.filter(
-			(a) =>
-				(a.type === 'image' && a.dataUrl) || (a.type === 'file' && a.dataUrl)
-		);
-		let streamAttachments: readonly ChatAttachment[] | undefined;
-		if (relayApplied) {
-			streamAttachments = multimodal?.filter((a) => a.type === 'file');
-			if (!streamAttachments?.length) streamAttachments = undefined;
-		} else {
-			streamAttachments = multimodal?.length ? multimodal : undefined;
-		}
-
 		const toolsCapable = modelSupportsTools(effectiveModel);
-		const { effectiveNames, systemContentForMessages } = resolveToolingForTurn({
-			toolsCapable,
-			relayApplied,
-			enabledToolNames
-		});
-		const systemMessages = await buildSystemMessagesForTurn(
+		const prepared = await prepareConversationTurn({
 			conv,
-			this.projectRepo,
-			systemContentForMessages
-		);
-
-		const relaySystem: ChatMessage[] = relayApplied
-			? [{ id: 'system-vision-relay', role: 'system', content: VISION_RELAY_SYSTEM_HINT, createdAt: new Date() }]
-			: [];
-
-		let augmentedHistory = augmentHistory(history, augmentedPrompt);
-		const prefixMessages = [...systemMessages, ...relaySystem];
-		const catalogBudget = await this.provider.getPromptTokenBudget?.(effectiveModel ?? '');
-		const promptBudget =
-			catalogBudget != null ? catalogBudget : FALLBACK_PROMPT_TOKEN_BUDGET;
-		const historyBudget = Math.max(1024, promptBudget - estimateMessagesTokens(prefixMessages));
-		augmentedHistory = trimChatMessagesByTokenBudget(augmentedHistory, historyBudget);
-		augmentedHistory = [...prefixMessages, ...augmentedHistory];
-
-		const orMods = modelOpenRouterModalities(effectiveModel);
-		const options: Record<string, unknown> | undefined =
-			effectiveModel || orMods?.length
-				? {
-						...(effectiveModel ? { model: effectiveModel } : {}),
-						...(orMods?.length ? { modalities: orMods } : {})
-					}
-				: undefined;
+			history,
+			prompt,
+			attachments,
+			effectiveModel,
+			enabledToolNames,
+			toolsCapable,
+			provider: this.provider,
+			projectRepo: this.projectRepo,
+			visionRelay: this.visionRelay,
+			userId,
+			conversationId: convId
+		});
 		const toolsForTurn =
-			!toolsCapable || effectiveNames.length === 0 ? [] : toolDefinitionsForOrderedNames(effectiveNames);
+			!toolsCapable || prepared.effectiveNames.length === 0
+				? []
+				: toolDefinitionsForOrderedNames(prepared.effectiveNames);
 
 		yield* runConversationToolTurns({
 			userId,
@@ -145,10 +100,10 @@ export class ConversationService {
 			provider: this.provider,
 			messageRepo: this.messageRepo,
 			toolExecutor: this.toolExecutor,
-			initialHistory: augmentedHistory,
-			streamAttachments,
+			initialHistory: prepared.augmentedHistory,
+			streamAttachments: prepared.streamAttachments,
 			toolsForTurn,
-			options
+			options: prepared.options
 		});
 	}
 }

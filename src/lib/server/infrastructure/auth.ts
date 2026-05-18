@@ -2,7 +2,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { UserRepository } from '../repositories/UserRepository';
 import type { User } from '../domain/User.types';
 
-const SESSION_COOKIE = 'session';
+import { SESSION_COOKIE } from './session';
 const AUTH_HEADER = 'authorization';
 const BEARER_PREFIX = 'Bearer ';
 

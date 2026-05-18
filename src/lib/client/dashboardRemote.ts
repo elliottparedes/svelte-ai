@@ -57,6 +57,18 @@ export async function saveProjectPromptApi(
 	return res.ok;
 }
 
+export async function moveConversationToProject(
+	conversationId: string,
+	projectId: string | null
+): Promise<boolean> {
+	const res = await fetch(`/api/v1/conversations/${conversationId}/move`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ projectId })
+	});
+	return res.ok;
+}
+
 export async function fetchNewConversationSummary(
 	conversationId: string
 ): Promise<{ title: string; projectId: string | null; modelId: string | null } | null> {

@@ -4,6 +4,7 @@ export const users = mysqlTable('users', {
 	id: varchar('id', { length: 36 }).primaryKey(),
 	email: varchar('email', { length: 255 }).notNull().unique(),
 	name: varchar('name', { length: 255 }),
+	passwordHash: varchar('password_hash', { length: 255 }),
 	apiKey: varchar('api_key', { length: 255 }),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [

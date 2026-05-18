@@ -1,7 +1,10 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
+	import AuthCard from './AuthCard.svelte';
+	import { parseAuthError } from '$lib/client/authApi';
 
 	let email = $state('');
+	let password = $state('');
 	let error = $state('');
 	let loading = $state(false);
 
@@ -11,52 +14,46 @@
 		const res = await fetch('/api/v1/auth/login', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ email })
+			body: JSON.stringify({ email, password })
 		});
 		if (!res.ok) {
-			error = 'Login failed';
+			error = await parseAuthError(res);
 			loading = false;
 			return;
 		}
-		goto('/dashboard');
+		await invalidateAll();
+		await goto('/dashboard');
 	}
 </script>
 
-<section class="section">
-	<div class="container" style="max-width: 400px;">
-		<div class="box">
-			<h1 class="title is-4">Sign In</h1>
-			<p class="subtitle is-6">Dev login — enter your email</p>
-
-			{#if error}
-				<div class="notification is-danger is-light">{error}</div>
-			{/if}
-
-			<div class="field">
-				<label class="label" for="email">Email</label>
-				<div class="control">
-					<input
-						id="email"
-						class="input"
-						type="email"
-						placeholder="test@example.com"
-						bind:value={email}
-						onkeydown={(e) => e.key === 'Enter' && login()}
-					/>
-				</div>
-			</div>
-
-			<div class="field">
-				<div class="control">
-					<button class="button is-primary is-fullwidth" onclick={login} disabled={loading}>
-						{loading ? 'Loading...' : 'Login'}
-					</button>
-				</div>
-			</div>
-
-			<div class="has-text-grey is-size-7 mt-4">
-				<p>Test user: <code>test@example.com</code></p>
-			</div>
+<AuthCard
+	title="Sign In"
+	subtitle="Welcome back"
+	{error}
+	{loading}
+	submitLabel="Login"
+	onSubmit={login}
+>
+	{#snippet children()}
+		<div class="field">
+			<label class="label" for="email">Email</label>
+			<input id="email" class="input" type="email" autocomplete="email" bind:value={email} required />
 		</div>
-	</div>
-</section>
+
+		<div class="field">
+			<label class="label" for="password">Password</label>
+			<input
+				id="password"
+				class="input"
+				type="password"
+				autocomplete="current-password"
+				bind:value={password}
+				required
+			/>
+		</div>
+	{/snippet}
+
+	{#snippet footer()}
+		<p>Don&apos;t have an account? <a href="/signup">Sign up</a></p>
+	{/snippet}
+</AuthCard>

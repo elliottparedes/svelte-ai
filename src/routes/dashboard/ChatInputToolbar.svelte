@@ -55,17 +55,17 @@
 	);
 </script>
 
-<ChatContextMeter
-	{messages}
-	draftText={value}
-	{attachments}
-	{models}
-	selectedModel={selectedModel ?? ''}
-	{extraSystemTokens}
-	{toolStackEstimate}
-/>
 <div class="input-footer">
 	<div class="footer-left">
+		<ChatContextMeter
+			{messages}
+			draftText={value}
+			{attachments}
+			{models}
+			selectedModel={selectedModel ?? ''}
+			{extraSystemTokens}
+			{toolStackEstimate}
+		/>
 		{#if showAttachButton}
 			<button
 				type="button"

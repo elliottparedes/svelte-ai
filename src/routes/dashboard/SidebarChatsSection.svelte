@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { moveConversationToProject } from '$lib/client/dashboardRemote';
 	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
-	import ChatConvMoreMenu from './ChatConvMoreMenu.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import SidebarConversationRow from './SidebarConversationRow.svelte';
 	import type { Conversation, Project } from '$lib/types/dashboard';
@@ -86,12 +86,7 @@
 
 	async function moveToProject(convId: string, projectId: string | null) {
 		openMenuId = null;
-		const res = await fetch(`/api/v1/conversations/${convId}/move`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ projectId })
-		});
-		if (res.ok) window.location.reload();
+		if (await moveConversationToProject(convId, projectId)) window.location.reload();
 	}
 </script>
 

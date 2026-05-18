@@ -7,7 +7,9 @@
 </svelte:head>
 
 <div class="root-shell">
-	{@render children()}
+	<div class="root-content">
+		{@render children()}
+	</div>
 </div>
 
 <style>
@@ -23,5 +25,12 @@
 		height: 100%;
 		min-height: 0;
 		overflow: hidden;
+	}
+	.root-content {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-height: 0;
+		width: 100%;
 	}
 </style>

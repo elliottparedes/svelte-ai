@@ -1,54 +1,14 @@
-import type {
-	ChatAttachmentInput,
-	ChatMessage,
-	Conversation,
-	Model,
-	ModelProviderGroup,
-	Project
-} from '$lib/types/dashboard';
+import type { ChatAttachmentInput, Model, ModelProviderGroup } from '$lib/types/dashboard';
 import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
+import type {
+	DashboardPageModelHandlers,
+	DashboardPageModelStateAccess
+} from './dashboardPageModelView.types';
 
-export type DashboardPageModelStateAccess = {
-	getConversations: () => Conversation[];
-	getProjects: () => Project[];
-	getActiveConversationId: () => string | null;
-	getActiveProjectId: () => string | null;
-	getProjectComposeMode: () => boolean;
-	setProjectComposeMode: (v: boolean) => void;
-	getProjectConversations: () => Conversation[];
-	getMessages: () => ChatMessage[];
-	getInputValue: () => string;
-	setInputValue: (v: string) => void;
-	getIsStreaming: () => boolean;
-	getStreamingConversationIds: () => ReadonlySet<string>;
-	getErrorMessage: () => string;
-	getSelectedModel: () => string;
-	setSelectedModel: (v: string) => void;
-	getSidebarCollapsed: () => boolean;
-	setSidebarCollapsed: (v: boolean) => void;
-	getAttachments: () => ChatAttachmentInput[];
-	setAttachments: (v: ChatAttachmentInput[]) => void;
-	getEditingProjectPrompt: () => boolean;
-	setEditingProjectPrompt: (v: boolean) => void;
-	getProjectPromptValue: () => string;
-	setProjectPromptValue: (v: string) => void;
-	getEnabledToolIds: () => ChatToolId[];
-	setEnabledToolIds: (v: ChatToolId[]) => void;
-	getModelLocked: () => boolean;
-};
-
-export type DashboardPageModelHandlers = {
-	loadMessages: (conversationId: string) => Promise<void>;
-	loadProject: (projectId: string) => Promise<void>;
-	saveProjectPrompt: () => Promise<void>;
-	startEditingPrompt: () => void;
-	startNewChat: () => void;
-	startProjectCompose: () => void;
-	deleteConversation: (id: string) => Promise<void>;
-	renameConversation: (id: string, title: string) => Promise<void>;
-	logout: () => Promise<void>;
-	sendMessage: () => Promise<void>;
-};
+export type {
+	DashboardPageModelHandlers,
+	DashboardPageModelStateAccess
+} from './dashboardPageModelView.types';
 
 /** Bindings/read surface for +page.svelte (getters avoid state_referenced_locally). */
 export function createDashboardPageModelView(

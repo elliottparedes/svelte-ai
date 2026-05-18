@@ -6,6 +6,7 @@
 	} from '$lib/shared/estimateContextTokens';
 	import { promptInputTokenBudget } from '$lib/shared/contextWindowBudget';
 	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
+	import ChatContextMeterRing from './ChatContextMeterRing.svelte';
 
 	let {
 		messages,
@@ -67,50 +68,49 @@
 </script>
 
 {#if promptBudget != null && pct != null}
-	<div class="meter" role="img" aria-label={ariaLabel} tabindex="0">
-		<div class="track">
-			<div class="fill" class:warn={pct > 88} style:width="{pct}%"></div>
-		</div>
+	<div class="meter-wrap">
+		<button type="button" class="meter" aria-label={ariaLabel}>
+			<ChatContextMeterRing {pct} warn={pct > 88} />
+		</button>
 		<div class="hover-tip" role="tooltip">{hoverTip}</div>
 	</div>
 {/if}
 
 <style>
-	.meter {
+	.meter-wrap {
 		position: relative;
-		margin-bottom: 0.5rem;
+		flex-shrink: 0;
 		z-index: 5;
+	}
+	.meter {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		padding: 0;
+		border: none;
+		background: transparent;
+		border-radius: 50%;
+		cursor: default;
 	}
 	.meter:focus {
 		outline: none;
 	}
-	.meter:focus-visible .track {
+	.meter:focus-visible {
 		box-shadow: 0 0 0 2px #45475a;
-		border-radius: 2px;
-	}
-	.track {
-		height: 4px;
-		border-radius: 2px;
-		background: #313244;
-		overflow: hidden;
-	}
-	.fill {
-		height: 100%;
-		background: #89b4fa;
-		border-radius: 2px;
-		transition: width 0.15s ease;
-	}
-	.fill.warn {
-		background: #fab387;
 	}
 	.hover-tip {
 		position: absolute;
-		left: 0;
-		top: calc(100% + 6px);
+		left: 50%;
+		bottom: calc(100% + 8px);
+		transform: translateX(-50%);
+		width: max-content;
+		min-width: 14rem;
 		max-width: min(22rem, 85vw);
-		padding: 0.45rem 0.55rem;
+		padding: 0.5rem 0.65rem;
 		font-size: 0.72rem;
-		line-height: 1.35;
+		line-height: 1.4;
 		color: #cdd6f4;
 		background: #11111b;
 		border: 1px solid #45475a;
@@ -119,11 +119,12 @@
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
+		text-align: left;
 		transition: opacity 0.12s ease, visibility 0.12s ease;
 		z-index: 30;
 	}
-	.meter:hover .hover-tip,
-	.meter:focus-visible .hover-tip {
+	.meter-wrap:hover .hover-tip,
+	.meter-wrap:focus-within .hover-tip {
 		opacity: 1;
 		visibility: visible;
 	}
