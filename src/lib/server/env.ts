@@ -31,7 +31,7 @@ export const NOMINATIM_BASE_URL = getEnv('NOMINATIM_BASE_URL', 'https://nominati
 /** OSRM router base URL (no trailing slash required). */
 export const OSRM_BASE_URL = getEnv('OSRM_BASE_URL', 'https://router.project-osrm.org');
 /** User-Agent for Nominatim requests (required by usage policy). */
-export const MAP_HTTP_USER_AGENT = getEnv('MAP_HTTP_USER_AGENT', 'AI-Platform/1.0');
+export const MAP_HTTP_USER_AGENT = getEnv('MAP_HTTP_USER_AGENT', 'Inkstream/1.0');
 
 /** When false, non-vision models receive images as before (may error). Default: enabled. */
 export const VISION_RELAY_ENABLED = getEnv('VISION_RELAY_ENABLED', 'true').toLowerCase() !== 'false';

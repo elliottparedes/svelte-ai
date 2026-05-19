@@ -14,7 +14,7 @@ async function main() {
 
 	const baseUrl = process.env.NOMINATIM_BASE_URL ?? 'https://nominatim.openstreetmap.org';
 	const osrmUrl = process.env.OSRM_BASE_URL ?? 'https://router.project-osrm.org';
-	const ua = process.env.MAP_HTTP_USER_AGENT ?? 'AI-Platform/1.0';
+	const ua = process.env.MAP_HTTP_USER_AGENT ?? 'Inkstream/1.0';
 
 	const svc = new MapRouteService(new NominatimGeocoder(baseUrl, ua), new OsrmRouter(osrmUrl));
 	console.log(`Route: ${origin} → ${destination} (${mode})`);

@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>AI Studio</title>
+	<title>Inkstream</title>
 </svelte:head>
 
 <div class="root-shell">

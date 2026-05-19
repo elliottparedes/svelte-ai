@@ -25,7 +25,7 @@
 <div class="auth-page">
 	<div class="auth-card">
 		<header class="auth-header">
-			<p class="auth-brand">AI Studio</p>
+			<p class="auth-brand">Inkstream</p>
 			<h1 class="auth-title">{title}</h1>
 			<p class="auth-subtitle">{subtitle}</p>
 		</header>

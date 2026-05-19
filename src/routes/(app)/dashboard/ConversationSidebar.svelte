@@ -44,7 +44,7 @@
 			<div class="header">
 				<div class="brand">
 					<img src="/logo.svg" alt="" class="logo-mark" width="28" height="28" />
-					<span class="logo">AI Studio</span>
+					<span class="logo">Inkstream</span>
 				</div>
 				<button class="menu-btn" onclick={() => (collapsed = true)} title="Close menu">☰</button>
 			</div>

@@ -22,7 +22,7 @@ function headers(apiKey: string, httpReferer?: string): Record<string, string> {
 	const h: Record<string, string> = {
 		'Content-Type': 'application/json',
 		Authorization: `Bearer ${apiKey}`,
-		'X-Title': 'AI Chat Platform'
+		'X-Title': 'Inkstream'
 	};
 	if (httpReferer) h['HTTP-Referer'] = httpReferer;
 	return h;

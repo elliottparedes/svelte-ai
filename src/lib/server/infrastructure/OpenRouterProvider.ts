@@ -32,7 +32,7 @@ export class OpenRouterProvider implements ChatProvider {
 		const h: Record<string, string> = {
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${this.apiKey}`,
-			'X-Title': 'AI Chat Platform'
+			'X-Title': 'Inkstream'
 		};
 		if (this.httpReferer) h['HTTP-Referer'] = this.httpReferer;
 		return h;

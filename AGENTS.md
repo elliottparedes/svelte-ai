@@ -1,7 +1,7 @@
-# Agent Context: AI Platform
+# Agent Context: Inkstream
 
 ## Project Overview
-SvelteKit 5 AI chat platform using Clean Architecture. Supports streaming chat via OpenRouter (OpenAI-compatible API, any routed model), dual-mode auth (session cookie + Bearer API key), and MySQL persistence via Drizzle ORM.
+Inkstream — SvelteKit 5 AI chat platform using Clean Architecture. Supports streaming chat via OpenRouter (OpenAI-compatible API, any routed model), dual-mode auth (session cookie + Bearer API key), and MySQL persistence via Drizzle ORM.
 
 ## Tech Stack
 - **Framework:** SvelteKit 5 (Runes syntax: `$state`, `$props`, `$bindable`, `$derived`)
@@ -64,7 +64,7 @@ VISION_RELAY_MAX_TOKENS=      # Max tokens for relay description
 SEARXNG_URL=                  # Optional; base URL of self-hosted SearXNG instance (e.g. http://searxng:8080) — enables web search tool
 NOMINATIM_BASE_URL=           # Optional; default https://nominatim.openstreetmap.org
 OSRM_BASE_URL=                # Optional; default https://router.project-osrm.org
-MAP_HTTP_USER_AGENT=          # Optional; required by Nominatim policy (default AI-Platform/1.0)
+MAP_HTTP_USER_AGENT=          # Optional; required by Nominatim policy (default Inkstream/1.0)
 ELEVENLABS_API_KEY=           # Optional; enables dashboard voice mode (streaming TTS)
 ELEVENLABS_VOICE_ID=          # Optional voice id (default Rachel)
 ELEVENLABS_MODEL_ID=          # Optional model (default eleven_flash_v2_5)
@@ -78,6 +78,7 @@ Use **`DATABASE_URL`** when you want one connection string everywhere (local `.e
 - **Port:** `@sveltejs/adapter-node` listens on **`PORT`** (default `3000` in the image). Coolify sets `PORT` automatically.
 - **Env:** pass the same secrets as in `.env` (including `DATABASE_URL` or `MYSQL_*`, `SESSION_SECRET`, `OPENROUTER_API_KEY`, …).
 - **Migrations:** run `npm run db:migrate` or `npm run db:push` once against that database (Coolify “deploy command”, SSH, or CI)—the container entrypoint does not migrate by default.
+- **Health check:** `GET /health` returns `200` with `{ "status": "ok" }` (no auth). Use this path in Coolify or load balancer probes.
 
 ## Database Schema
 
