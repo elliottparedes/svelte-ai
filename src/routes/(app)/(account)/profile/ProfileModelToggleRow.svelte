@@ -1,18 +1,17 @@
 <script lang="ts">
-	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
-	import ChatToolIcon from './ChatToolIcon.svelte';
+	import type { AltModelTier } from '$lib/shared/optionalDashboardModels';
 
 	let {
-		toolId,
 		title,
 		description,
+		tier,
 		checked = false,
 		disabled = false,
 		onChange
 	} = $props<{
-		toolId: ChatToolId;
 		title: string;
 		description: string;
+		tier: AltModelTier;
 		checked?: boolean;
 		disabled?: boolean;
 		onChange: (next: boolean) => void;
@@ -28,11 +27,11 @@
 	{disabled}
 	onclick={() => onChange(!checked)}
 >
-	<span class="ico-wrap" aria-hidden="true">
-		<ChatToolIcon id={toolId} active={checked} />
-	</span>
 	<span class="txt">
-		<span class="tit">{title}</span>
+		<span class="tit-row">
+			<span class="tit">{title}</span>
+			<span class="tier" class:must={tier === 'must'}>{tier === 'must' ? 'Must-have' : 'Nice-to-have'}</span>
+		</span>
 		<span class="sub">{description}</span>
 	</span>
 	<span class="sw" class:on={checked} aria-hidden="true"><span class="knob"></span></span>
@@ -59,31 +58,34 @@
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
-	.ico-wrap {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		flex-shrink: 0;
-		border-radius: 8px;
-		background: #252537;
-	}
-	.row:hover:not(:disabled) .ico-wrap {
-		background: #313244;
-	}
-	.row:hover:not(:disabled) .ico-wrap :global(.ico) {
-		color: #bac2de;
-	}
 	.txt {
 		flex: 1;
 		min-width: 0;
 	}
+	.tit-row {
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		flex-wrap: wrap;
+	}
 	.tit {
-		display: block;
 		font-size: 0.82rem;
 		font-weight: 600;
 		color: #cdd6f4;
+	}
+	.tier {
+		font-size: 0.58rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		padding: 0.1rem 0.4rem;
+		border-radius: 4px;
+		background: #313244;
+		color: #7f849c;
+	}
+	.tier.must {
+		background: #89b4fa22;
+		color: #89b4fa;
 	}
 	.sub {
 		display: block;

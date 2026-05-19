@@ -13,6 +13,7 @@ function toUser(row: UserRow): User {
 		name: row.name,
 		apiKey: row.apiKey,
 		ttsVoiceId: row.ttsVoiceId,
+		altModelIds: row.altModelIds,
 		createdAt: row.createdAt
 	};
 }
@@ -58,6 +59,14 @@ export class UserRepository {
 
 	async updateTtsVoiceId(userId: string, ttsVoiceId: string | null): Promise<User> {
 		await db.update(users).set({ ttsVoiceId }).where(eq(users.id, userId));
+		const user = await this.findById(userId);
+		if (!user) throw new DomainError('User not found', 404);
+		return user;
+	}
+
+	async updateAltModelIds(userId: string, enabledIds: readonly string[]): Promise<User> {
+		const altModelIds = JSON.stringify([...enabledIds]);
+		await db.update(users).set({ altModelIds }).where(eq(users.id, userId));
 		const user = await this.findById(userId);
 		if (!user) throw new DomainError('User not found', 404);
 		return user;

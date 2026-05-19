@@ -1,28 +1,30 @@
 import {
 	ALL_CHAT_TOOL_IDS,
 	CHAT_TOOL_ORDER,
+	DEFAULT_CHAT_TOOL_IDS,
 	normalizeChatToolIds,
 	type ChatToolId
 } from '$lib/shared/chatToolSystemPrompt';
 
-export type ToolRowMeta = { id: ChatToolId; title: string; description: string; icon: string };
+export type ToolRowMeta = { id: ChatToolId; title: string; description: string };
 
 type MetaRow = Omit<ToolRowMeta, 'id'>;
 
 const META: Record<ChatToolId, MetaRow> = {
-	calculator: { title: 'Calculator', description: 'Evaluate math in chat', icon: '🔢' },
-	datetime: { title: 'Date & time', description: 'Use the current date and time', icon: '🕐' },
-	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link', icon: '🔗' },
-	web_search: { title: 'Web search', description: 'Search the web for live information', icon: '🔍' },
-	image_search: { title: 'Image search', description: 'Find images on the web', icon: '🖼️' },
-	map_route: { title: 'Route map', description: 'Directions between two places', icon: '🗺️' }
+	calculator: { title: 'Calculator', description: 'Evaluate math in chat' },
+	datetime: { title: 'Date & time', description: 'Use the current date and time' },
+	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
+	web_search: { title: 'Web search', description: 'Search the web for live information' },
+	image_search: { title: 'Image search', description: 'Find images on the web' },
+	map_route: { title: 'Route map', description: 'Directions between two places' }
 };
 
 export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER.map((id) => ({ id, ...META[id] }));
 
 export const PRESET = {
 	none: [] as ChatToolId[],
-	local: ['calculator', 'datetime', 'fetch_url', 'map_route'] as ChatToolId[],
+	local: ['datetime', 'fetch_url'] as ChatToolId[],
+	default: DEFAULT_CHAT_TOOL_IDS,
 	all: ALL_CHAT_TOOL_IDS
 };
 

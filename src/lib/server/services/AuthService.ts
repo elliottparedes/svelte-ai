@@ -38,6 +38,7 @@ export class AuthService {
 			name: record.name,
 			apiKey: record.apiKey,
 			ttsVoiceId: record.ttsVoiceId,
+			altModelIds: record.altModelIds,
 			createdAt: record.createdAt
 		};
 	}

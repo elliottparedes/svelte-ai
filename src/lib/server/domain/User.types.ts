@@ -4,6 +4,8 @@ export interface User {
 	name: string | null;
 	apiKey: string | null;
 	ttsVoiceId: string | null;
+	/** JSON string[]; null uses must-have optional model defaults. */
+	altModelIds: string | null;
 	createdAt: Date;
 }
 
@@ -14,6 +16,8 @@ export interface UserAuthRecord {
 	passwordHash: string | null;
 	apiKey: string | null;
 	ttsVoiceId: string | null;
+	/** JSON string[]; null uses must-have optional model defaults. */
+	altModelIds: string | null;
 	createdAt: Date;
 }
 

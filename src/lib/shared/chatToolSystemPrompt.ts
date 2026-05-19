@@ -7,6 +7,14 @@ export type ChatToolId = (typeof CHAT_TOOL_ORDER)[number];
 
 export const ALL_CHAT_TOOL_IDS: ChatToolId[] = [...CHAT_TOOL_ORDER];
 
+/** Dashboard default: live/web tools on; calculator and map_route off. */
+export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
+	'datetime',
+	'fetch_url',
+	'web_search',
+	'image_search'
+];
+
 const BULLETS: Record<ChatToolId, string> = {
 	calculator: 'Evaluate a mathematical expression. Use for any math.',
 	datetime:

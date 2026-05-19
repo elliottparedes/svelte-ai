@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { ALL_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
+	import { ALL_CHAT_TOOL_IDS, DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 	import { TOOL_ROWS, applyPresetSelect, toggleToolId } from './dashboardChatToolSelector.js';
 	import ChatToolToggleRow from './ChatToolToggleRow.svelte';
 	import ChatToolsMenuPopover from './ChatToolsMenuPopover.svelte';
 
 	let {
-		enabledIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]),
+		enabledIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]),
 		disabled = false
 	} = $props<{
 		enabledIds?: ChatToolId[];
@@ -70,9 +70,9 @@
 			{#snippet body()}
 				{#each TOOL_ROWS as row (row.id)}
 					<ChatToolToggleRow
+						toolId={row.id}
 						title={row.title}
 						description={row.description}
-						icon={row.icon}
 						checked={enabledIds.includes(row.id)}
 						{disabled}
 						onChange={(on) => toggleTool(row.id, on)}

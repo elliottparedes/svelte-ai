@@ -6,7 +6,7 @@ const chatToolNameSchema = z.enum(CHAT_TOOL_ORDER);
 export const attachmentSchema = z.object({
 	type: z.enum(['image', 'text', 'file']),
 	name: z.string().min(1),
-	dataUrl: z.string().max(8_000_000).optional(),
+	dataUrl: z.string().max(15_000_000).optional(),
 	content: z.string().max(5_000_000).optional(),
 	mimeType: z.string().optional()
 });

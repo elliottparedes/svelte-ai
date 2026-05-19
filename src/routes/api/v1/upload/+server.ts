@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_IMAGE = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']);
 const ALLOWED_PDF = new Set(['application/pdf']);
 const ALLOWED_TEXT = new Set([
@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	if (file.size > MAX_SIZE) {
-		error(413, 'File too large (max 5MB)');
+		error(413, 'File too large (max 10MB)');
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());

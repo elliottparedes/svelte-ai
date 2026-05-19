@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="AI Studio">
+	<defs>
+		<linearGradient id="as-stream" x1="4" y1="44" x2="44" y2="4" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#89b4fa" />
+			<stop offset="1" stop-color="#cba6f7" />
+		</linearGradient>
+		<linearGradient id="as-glow" x1="24" y1="0" x2="24" y2="48" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#89b4fa" stop-opacity="0.22" />
+			<stop offset="1" stop-color="#cba6f7" stop-opacity="0" />
+		</linearGradient>
+	</defs>
+
+	<!-- 印 — seal tile -->
+	<rect width="48" height="48" rx="10" fill="#1e1e2e" />
+	<rect width="48" height="48" rx="10" fill="url(#as-glow)" />
+	<rect x="4" y="4" width="40" height="40" rx="7" stroke="#45475a" stroke-width="1" fill="none" />
+
+	<!-- 祥云 — single auspicious cloud, ink-brush weight -->
+	<path
+		d="M9 31
+		   C9 24.5 15.5 21 20.5 23.5
+		   C19 17 27 15.5 31.5 19
+		   C35.5 15.5 40.5 18.5 39 24
+		   C43.5 25.5 42.5 31 38 32
+		   H11.5
+		   C9.5 32 8 32.5 9 31Z"
+		fill="#313244"
+		stroke="url(#as-stream)"
+		stroke-width="2"
+		stroke-linejoin="round"
+	/>
+	<!-- Scroll curls at cloud horns -->
+	<path
+		d="M12.5 31c-2.8-1.5-2.5-4.8 0.5-6"
+		stroke="url(#as-stream)"
+		stroke-width="1.6"
+		stroke-linecap="round"
+		fill="none"
+	/>
+	<path
+		d="M37 32c2.5-1.2 3-4.2 0.8-5.8"
+		stroke="url(#as-stream)"
+		stroke-width="1.6"
+		stroke-linecap="round"
+		fill="none"
+	/>
+
+	<!-- 流 — three stream strokes (SSE / flowing reply) -->
+	<path
+		d="M15 37.5h18"
+		stroke="#cdd6f4"
+		stroke-width="2"
+		stroke-linecap="round"
+	/>
+	<path
+		d="M18 40.5h12"
+		stroke="#a6adc8"
+		stroke-width="1.75"
+		stroke-linecap="round"
+		opacity="0.65"
+	/>
+	<circle cx="33" cy="40.5" r="1.25" fill="#89b4fa" />
+</svg>

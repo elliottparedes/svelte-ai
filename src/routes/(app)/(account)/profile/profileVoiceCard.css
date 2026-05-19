@@ -64,3 +64,19 @@
 	color: #f38ba8;
 	font-size: 0.85rem;
 }
+.voice-card .group-label {
+	margin: 1rem 0 0.35rem;
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #7f849c;
+}
+.voice-card .group-label:first-of-type {
+	margin-top: 0.5rem;
+}
+.voice-card .rows {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}

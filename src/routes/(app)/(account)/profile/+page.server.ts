@@ -5,6 +5,7 @@ import {
 	isElevenLabsConfigured
 } from '$lib/server/db/config';
 import { fetchElevenLabsVoiceCatalog } from '$lib/server/infrastructure/elevenLabsVoiceCatalog';
+import { resolveUserAltModelIds } from '$lib/shared/optionalDashboardModels';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;
@@ -21,6 +22,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		ttsEnabled: isElevenLabsConfigured(),
 		defaultVoiceId: ELEVENLABS_VOICE_ID,
 		defaultVoiceName,
-		ttsVoiceId: user.ttsVoiceId
+		ttsVoiceId: user.ttsVoiceId,
+		enabledAltModelIds: resolveUserAltModelIds(user.altModelIds)
 	};
 };

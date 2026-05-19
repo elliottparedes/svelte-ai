@@ -5,7 +5,7 @@
 	import ChatMicButton from './ChatMicButton.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 	import {
-		ALL_CHAT_TOOL_IDS,
+		DEFAULT_CHAT_TOOL_IDS,
 		estimateChatToolsTurnTokens,
 		MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT,
 		normalizeChatToolIds,
@@ -29,7 +29,7 @@
 		attachments = [],
 		extraSystemTokens = 0,
 		modelSupportsTools = true,
-		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]),
+		enabledToolIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]),
 	onAppendDictation
 } = $props<{
 		models: Model[];

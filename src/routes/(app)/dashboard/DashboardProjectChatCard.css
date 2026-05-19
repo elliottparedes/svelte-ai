@@ -1,6 +1,7 @@
 .chat-card {
 	display: flex;
 	align-items: stretch;
+	width: 100%;
 	gap: 0.35rem;
 	background: #1e1e2e;
 	border: 1px solid #313244;

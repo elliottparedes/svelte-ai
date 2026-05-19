@@ -1,5 +1,5 @@
 import {
-	ALL_CHAT_TOOL_IDS,
+	DEFAULT_CHAT_TOOL_IDS,
 	buildChatToolSystemPrompt,
 	buildChatToolSystemPromptNoWeb,
 	normalizeChatToolIds,
@@ -23,8 +23,8 @@ export function resolveToolingForTurn(params: {
 				? clientTools.filter((n) => n !== 'web_search')
 				: [...clientTools]
 			: relayApplied
-				? ALL_CHAT_TOOL_IDS.filter((id) => id !== 'web_search')
-				: [...ALL_CHAT_TOOL_IDS];
+				? DEFAULT_CHAT_TOOL_IDS.filter((id) => id !== 'web_search')
+				: [...DEFAULT_CHAT_TOOL_IDS];
 
 	if (!toolsCapable) return { effectiveNames, systemContentForMessages: TOOL_SYSTEM_PROMPT_NO_TOOLS };
 	if (effectiveNames.length === 0) return { effectiveNames, systemContentForMessages: TOOL_PROMPT_NONE_ENABLED };

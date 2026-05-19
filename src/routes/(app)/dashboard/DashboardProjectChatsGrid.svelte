@@ -70,12 +70,11 @@
 		font-size: 1rem;
 	}
 	.chat-cards {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+		display: flex;
+		flex-direction: column;
 		gap: 1rem;
 		margin-inline: auto;
 		max-width: 900px;
 		width: 100%;
-		justify-content: center;
 	}
 </style>

@@ -1,5 +1,5 @@
 import type { DashboardPageLoadData } from '$lib/types/dashboard';
-import { ALL_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
+import { DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type {
 	ChatAttachmentInput,
 	ChatMessage,
@@ -34,7 +34,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	);
 	let sidebarCollapsed = $state(false);
 	let attachments = $state<ChatAttachmentInput[]>([]);
-	let enabledToolIds = $state<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]);
+	let enabledToolIds = $state<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]);
 	const VOICE_MODE_KEY = 'dashboardVoiceMode';
 	let voiceModeEnabled = $state(
 		data.ttsEnabled &&

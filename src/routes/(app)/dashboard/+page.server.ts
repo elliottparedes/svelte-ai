@@ -15,6 +15,8 @@ import {
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
 import { pickCuratedDashboardModels } from '$lib/server/model/curatedDashboardModels';
+import { mergeOptionalDashboardModels } from '$lib/server/model/mergeOptionalDashboardModels';
+import { resolveUserAltModelIds } from '$lib/shared/optionalDashboardModels';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;
@@ -40,7 +42,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!isOpenRouterCapabilitiesHydrated() && catalog.length > 0) {
 		hydrateOpenRouterCapabilities(catalog);
 	}
-	const { models, groups: modelGroups } = pickCuratedDashboardModels(catalog);
+	const core = pickCuratedDashboardModels(catalog);
+	const altIds = resolveUserAltModelIds(user.altModelIds);
+	const { models, groups: modelGroups } = mergeOptionalDashboardModels(core, altIds, catalog);
 
 	logger.info('Dashboard load', {
 		userId: user.id,

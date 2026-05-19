@@ -4,7 +4,7 @@
 	import ChatInputShell from './ChatInputShell.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
-	import { ALL_CHAT_TOOL_IDS } from '$lib/shared/chatToolSystemPrompt';
+	import { DEFAULT_CHAT_TOOL_IDS } from '$lib/shared/chatToolSystemPrompt';
 	import {
 		consumeClipboardForAttachments,
 		chatAttachmentRejectMessage,
@@ -25,7 +25,7 @@
 		messages = [],
 		extraSystemTokens = 0,
 		modelSupportsTools = true,
-		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]),
+		enabledToolIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]),
 } = $props<{
 		value?: string;
 		isStreaming: boolean;

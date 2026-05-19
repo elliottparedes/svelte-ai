@@ -42,7 +42,10 @@
 	{:else}
 		<div class="sidebar-inner">
 			<div class="header">
-				<span class="logo">AI Studio</span>
+				<div class="brand">
+					<img src="/logo.svg" alt="" class="logo-mark" width="28" height="28" />
+					<span class="logo">AI Studio</span>
+				</div>
 				<button class="menu-btn" onclick={() => (collapsed = true)} title="Close menu">☰</button>
 			</div>
 			<button class="new-chat" onclick={() => onNewChat()}>
@@ -97,6 +100,16 @@
 		justify-content: space-between;
 		width: 100%;
 		margin-bottom: 1rem;
+	}
+	.brand {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
+	}
+	.logo-mark {
+		flex-shrink: 0;
+		display: block;
 	}
 	.logo {
 		font-weight: 700;
