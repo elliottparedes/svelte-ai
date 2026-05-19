@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ALL_CHAT_TOOL_IDS, DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
+	import { DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 	import { TOOL_ROWS, applyPresetSelect, toggleToolId } from './dashboardChatToolSelector.js';
 	import ChatToolToggleRow from './ChatToolToggleRow.svelte';
 	import ChatToolsMenuPopover from './ChatToolsMenuPopover.svelte';
@@ -60,9 +60,6 @@
 			<line x1="3" y1="17" x2="21" y2="17" /><circle cx="15" cy="17" r="2" fill="currentColor" stroke="none" />
 		</svg>
 		<span>Tools</span>
-		{#if enabledIds.length < ALL_CHAT_TOOL_IDS.length}
-			<span class="pill">{enabledIds.length}</span>
-		{/if}
 	</button>
 
 	{#if open}
@@ -116,17 +113,5 @@
 		width: 1rem;
 		height: 1rem;
 		opacity: 0.9;
-	}
-	.pill {
-		min-width: 1.1rem;
-		padding: 0 0.35rem;
-		height: 1.1rem;
-		line-height: 1.1rem;
-		text-align: center;
-		font-size: 0.65rem;
-		font-weight: 700;
-		border-radius: 999px;
-		background: #89b4fa;
-		color: #1e1e2e;
 	}
 </style>
