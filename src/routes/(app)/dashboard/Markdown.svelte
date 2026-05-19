@@ -3,10 +3,31 @@
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css';
 	import { markdownBlobifyDataImages } from '$lib/client/markdownBlobifyDataImages';
+	import ImageLightbox from './ImageLightbox.svelte';
 
 	let { content } = $props<{ content: string }>();
 
 	const html = $derived(marked.parse(content ?? '') as string);
+
+	type LightboxState = { src: string; alt: string; sourceUrl?: string } | null;
+	let lightbox = $state<LightboxState>(null);
+
+	function interceptImageClicks(node: HTMLElement) {
+		function onClick(e: MouseEvent) {
+			const target = e.target as HTMLElement;
+			const img = target.closest('a')?.querySelector('img') ?? (target.tagName === 'IMG' ? target as HTMLImageElement : null);
+			if (!img) return;
+			const anchor = img.closest('a') as HTMLAnchorElement | null;
+			e.preventDefault();
+			lightbox = {
+				src: img.src,
+				alt: img.alt || '',
+				sourceUrl: anchor?.href ?? undefined
+			};
+		}
+		node.addEventListener('click', onClick);
+		return { destroy() { node.removeEventListener('click', onClick); } };
+	}
 
 	function enhanceCodeBlocks(node: HTMLElement) {
 		function addButtonsAndHighlight() {
@@ -59,7 +80,16 @@
 	}
 </script>
 
-<div class="markdown-body" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html}>{@html html}</div>
+<div class="markdown-body" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:interceptImageClicks>{@html html}</div>
+
+{#if lightbox}
+	<ImageLightbox
+		src={lightbox.src}
+		alt={lightbox.alt}
+		sourceUrl={lightbox.sourceUrl}
+		onclose={() => lightbox = null}
+	/>
+{/if}
 
 <style>
 	.markdown-body :global(p) {
@@ -100,11 +130,20 @@
 		color: #89b4fa;
 	}
 	.markdown-body :global(img) {
-		max-width: min(100%, 42rem);
+		max-width: 200px;
+		max-height: 200px;
+		width: auto;
 		height: auto;
-		border-radius: 8px;
-		display: block;
-		margin: 0.5rem 0;
+		border-radius: 6px;
+		object-fit: cover;
+		display: inline-block;
+		margin: 4px;
+	}
+	.markdown-body :global(p:has(img)) {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		align-items: flex-start;
 	}
 	.markdown-body :global(strong) {
 		color: #f5c2e7;

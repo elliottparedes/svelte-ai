@@ -38,6 +38,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			setVoiceModeEnabled: (v) => (state.voiceModeEnabled = v),
 			getImmersiveVoiceOpen: () => state.immersiveVoiceOpen,
 			setImmersiveVoiceOpen: (v) => (state.immersiveVoiceOpen = v),
+			getImmersiveGestureToken: () => state.immersiveGestureToken,
 			getImmersivePhase: () => state.immersivePhase,
 			setImmersivePhase: (p) => (state.immersivePhase = p),
 			getImmersiveAudioLevel: () => state.immersiveAudioLevel,

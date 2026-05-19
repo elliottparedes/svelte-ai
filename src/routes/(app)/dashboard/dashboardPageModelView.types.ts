@@ -36,6 +36,7 @@ export type DashboardPageModelStateAccess = {
 	setVoiceModeEnabled: (v: boolean) => void;
 	getImmersiveVoiceOpen: () => boolean;
 	setImmersiveVoiceOpen: (v: boolean) => void;
+	getImmersiveGestureToken: () => number;
 	getImmersivePhase: () => import('$lib/shared/immersiveVoice').ImmersiveVoicePhase;
 	setImmersivePhase: (p: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase) => void;
 	getImmersiveAudioLevel: () => number;

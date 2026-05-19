@@ -49,6 +49,18 @@ export const TOOLS: ToolDefinition[] = [
 		}
 	},
 	{
+		name: 'image_search',
+		description:
+			'Search for images on the web and return image URLs with titles and source pages. Use when the user asks to find, show, or look up images of something.',
+		parameters: {
+			type: 'object',
+			properties: {
+				query: { type: 'string', description: 'Image search query' }
+			},
+			required: ['query']
+		}
+	},
+	{
 		name: 'map_route',
 		description:
 			'Geocode two places and compute a route (driving, walking, or cycling). Returns distance, duration, and route geometry for map display.',

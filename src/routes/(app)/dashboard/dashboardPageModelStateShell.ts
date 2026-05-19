@@ -30,13 +30,14 @@ export type DashboardPageModelStateShell = {
 	enabledToolIds: ChatToolId[];
 	voiceModeEnabled: boolean;
 	immersiveVoiceOpen: boolean;
+	immersiveGestureToken: number;
 	immersivePhase: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase;
 	immersiveAudioLevel: number;
 	immersivePcm: import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null;
 	editingProjectPrompt: boolean;
 	projectPromptValue: string;
-	readonly modelLocked: boolean;
-	readonly isActiveStreaming: boolean;
+	get modelLocked(): boolean;
+	get isActiveStreaming(): boolean;
 	pickModel: (modelId: string | null | undefined) => string;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
@@ -53,8 +54,8 @@ function bindField<T>(target: object, key: string, field: Field<T>): void {
 
 export function createDashboardPageModelStateShell(p: {
 	data: DashboardPageLoadData;
-	modelLocked: boolean;
-	isActiveStreaming: boolean;
+	getModelLocked: () => boolean;
+	getIsActiveStreaming: () => boolean;
 	pickModel: (modelId: string | null | undefined) => string;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
@@ -76,6 +77,7 @@ export function createDashboardPageModelStateShell(p: {
 		enabledToolIds: Field<ChatToolId[]>;
 		voiceModeEnabled: Field<boolean>;
 		immersiveVoiceOpen: Field<boolean>;
+		immersiveGestureToken: Field<number>;
 			immersivePhase: Field<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>;
 		immersiveAudioLevel: Field<number>;
 		immersivePcm: Field<import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null>;
@@ -85,8 +87,12 @@ export function createDashboardPageModelStateShell(p: {
 }): DashboardPageModelStateShell {
 	const shell = {
 		data: p.data,
-		modelLocked: p.modelLocked,
-		isActiveStreaming: p.isActiveStreaming,
+		get modelLocked() {
+			return p.getModelLocked();
+		},
+		get isActiveStreaming() {
+			return p.getIsActiveStreaming();
+		},
 		pickModel: p.pickModel,
 		flushActiveToCache: p.flushActiveToCache,
 		streamStore: p.streamStore

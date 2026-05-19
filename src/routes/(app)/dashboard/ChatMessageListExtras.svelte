@@ -1,23 +1,27 @@
 <script lang="ts">
-	let {
-		isStreaming,
-		assistantHasContent,
-		errorMessage
-	} = $props<{
+	import SidebarChatLoadingDots from './SidebarChatLoadingDots.svelte';
+	import type { ChatMessage } from '$lib/types/dashboard';
+
+	let { messages, isStreaming, errorMessage } = $props<{
+		messages: ChatMessage[];
 		isStreaming: boolean;
-		assistantHasContent: boolean;
 		errorMessage: string;
 	}>();
+
+	const showTypingIndicator = $derived.by(() => {
+		if (!isStreaming) return false;
+		const last = messages.at(-1);
+		if (!last) return true;
+		if (last.role === 'tool') return true;
+		if (last.role === 'assistant' && last.content.trim().length > 0) return false;
+		return true;
+	});
 </script>
 
-{#if isStreaming && !assistantHasContent}
+{#if showTypingIndicator}
 	<div class="assistant-row typing-wrap">
-		<div class="typing">
-			<div class="dots">
-				<span></span>
-				<span></span>
-				<span></span>
-			</div>
+		<div class="typing-bubble">
+			<SidebarChatLoadingDots />
 		</div>
 	</div>
 {/if}
@@ -39,38 +43,20 @@
 		font-size: 0.95rem;
 		line-height: 1.6;
 	}
-	.typing {
+	.typing-bubble {
 		display: inline-flex;
-		padding: 0.5rem 0;
-	}
-	.dots {
-		display: flex;
-		gap: 0.35rem;
 		align-items: center;
-		height: 1.2rem;
+		padding: 0.65rem 0.9rem;
+		background: #45475a;
+		border-radius: 1rem;
 	}
-	.dots span {
+	.typing-bubble :global(.loading-dots) {
+		margin-left: 0;
+		gap: 5px;
+	}
+	.typing-bubble :global(.loading-dots span) {
 		width: 6px;
 		height: 6px;
-		background: #a6adc8;
-		border-radius: 50%;
-		animation: bounce 1.4s infinite ease-in-out both;
-	}
-	.dots span:nth-child(1) {
-		animation-delay: -0.32s;
-	}
-	.dots span:nth-child(2) {
-		animation-delay: -0.16s;
-	}
-	@keyframes bounce {
-		0%,
-		80%,
-		100% {
-			transform: scale(0);
-		}
-		40% {
-			transform: scale(1);
-		}
 	}
 	@keyframes messageIn {
 		from {

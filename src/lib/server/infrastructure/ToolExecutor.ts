@@ -1,15 +1,14 @@
-import { BRAVE_SEARCH_API_KEY, MAP_HTTP_USER_AGENT, NOMINATIM_BASE_URL, OSRM_BASE_URL } from '../env';
+import { SEARXNG_URL, MAP_HTTP_USER_AGENT, NOMINATIM_BASE_URL, OSRM_BASE_URL } from '../env';
 import { MapRouteService } from './mapRouteService';
 import { NominatimGeocoder } from './nominatimGeocoder';
 import { OsrmRouter } from './osrmRouter';
+import { searxngWebSearch, searxngImageSearch } from './searxngClient';
 import type { RouteMode } from '../domain/mapRoute.types';
-
-const BRAVE_WEB_SEARCH_URL = 'https://api.search.brave.com/res/v1/web/search';
 
 export class ToolExecutor {
 	private readonly mapRouteService: MapRouteService;
 
-	constructor(private readonly braveSearchApiKey: string = BRAVE_SEARCH_API_KEY) {
+	constructor(private readonly searxngUrl: string = SEARXNG_URL) {
 		this.mapRouteService = new MapRouteService(
 			new NominatimGeocoder(NOMINATIM_BASE_URL, MAP_HTTP_USER_AGENT),
 			new OsrmRouter(OSRM_BASE_URL)
@@ -25,7 +24,9 @@ export class ToolExecutor {
 			case 'fetch_url':
 				return await this.runFetchUrl(String(args.url ?? ''));
 			case 'web_search':
-				return await this.runWebSearch(String(args.query ?? ''));
+				return await searxngWebSearch(this.searxngUrl, String(args.query ?? ''));
+			case 'image_search':
+				return await searxngImageSearch(this.searxngUrl, String(args.query ?? ''));
 			case 'map_route':
 				return await this.runMapRoute(args);
 			default:
@@ -70,60 +71,6 @@ export class ToolExecutor {
 		}
 	}
 
-	private async runWebSearch(query: string): Promise<string> {
-		const q = query.trim();
-		if (!q) return 'Error: empty search query';
-		if (!this.braveSearchApiKey) return 'Error: web search is not configured (set BRAVE_SEARCH_API_KEY)';
-
-		const params = new URLSearchParams({
-			q: q.slice(0, 400),
-			count: '8',
-			safesearch: 'moderate',
-			text_decorations: 'false'
-		});
-
-		try {
-			const res = await fetch(`${BRAVE_WEB_SEARCH_URL}?${params}`, {
-				headers: {
-					Accept: 'application/json',
-					'X-Subscription-Token': this.braveSearchApiKey
-				}
-			});
-
-			if (!res.ok) {
-				const body = await res.text();
-				return `Error: Brave Search failed (${res.status})${body ? `: ${body.slice(0, 300)}` : ''}`;
-			}
-
-			const data = (await res.json()) as {
-				query?: { original?: string; altered?: string };
-				web?: { results?: Array<{ title?: string; url?: string; description?: string; extra_snippets?: string[] }> };
-			};
-
-			const results = data.web?.results ?? [];
-			if (results.length === 0) return 'No results found.';
-
-			const out: string[] = [];
-			const alt = data.query?.altered;
-			if (alt && alt !== data.query?.original) out.push(`(Query interpreted as: ${alt})`);
-
-			for (const r of results) {
-				const title = r.title?.trim() || '(no title)';
-				const desc = r.description?.trim();
-				const u = r.url?.trim();
-				const bits = [title];
-				if (desc) bits.push(desc);
-				if (u) bits.push(u);
-				const extra = r.extra_snippets?.filter(Boolean).slice(0, 2);
-				if (extra?.length) bits.push(extra.join(' '));
-				out.push(bits.join('\n'));
-			}
-			return out.join('\n\n');
-		} catch {
-			return 'Error: web search failed';
-		}
-	}
-
 	private htmlToText(html: string): string {
 		return html
 			.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -135,5 +82,4 @@ export class ToolExecutor {
 			.replace(/\s+/g, ' ')
 			.trim();
 	}
-
 }

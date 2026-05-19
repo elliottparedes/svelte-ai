@@ -1,5 +1,6 @@
 <script lang="ts">
 	import MapRouteToolBody from './MapRouteToolBody.svelte';
+	import Markdown from './Markdown.svelte';
 	import { parseMapRouteToolResult } from '$lib/shared/mapRouteToolResult';
 
 	let { name, result, mapActive = true } = $props<{
@@ -9,12 +10,15 @@
 	}>();
 
 	const mapRouteData = $derived(name === 'map_route' ? parseMapRouteToolResult(result) : null);
+	const isImageSearch = $derived(name === 'image_search');
 </script>
 
 <div class="tool-section">
 	<div class="tool-label">Result</div>
 	{#if mapRouteData}
 		<MapRouteToolBody data={mapRouteData} rawResult={result} {mapActive} />
+	{:else if isImageSearch}
+		<Markdown content={result} />
 	{:else}
 		<pre class="tool-pre">{result}</pre>
 	{/if}

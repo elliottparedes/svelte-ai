@@ -91,6 +91,7 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 		);
 		state.immersivePcm = bundle.pcm;
 		void bundle.pcm.unlock();
+		state.immersiveGestureToken += 1;
 	}
 
 	function closeImmersiveVoice() {

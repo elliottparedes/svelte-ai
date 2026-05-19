@@ -12,12 +12,6 @@
 	let scrollContainer: HTMLDivElement | null = $state(null);
 	let userScrolledUp = $state(false);
 
-	const assistantHasContent = $derived(
-		messages.length > 0 &&
-			messages[messages.length - 1].role === 'assistant' &&
-			messages[messages.length - 1].content.trim().length > 0
-	);
-
 	function handleScroll() {
 		if (!scrollContainer) return;
 		const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
@@ -43,7 +37,7 @@
 		{#each messages as msg (msg.id)}
 			<ChatMessageRow {msg} {messages} {isStreaming} />
 		{/each}
-		<ChatMessageListExtras {isStreaming} {assistantHasContent} {errorMessage} />
+		<ChatMessageListExtras {messages} {isStreaming} {errorMessage} />
 	</div>
 </div>
 

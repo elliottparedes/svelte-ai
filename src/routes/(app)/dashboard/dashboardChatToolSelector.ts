@@ -13,7 +13,8 @@ const META: Record<ChatToolId, MetaRow> = {
 	calculator: { title: 'Calculator', description: 'Evaluate math in chat', icon: '🔢' },
 	datetime: { title: 'Date & time', description: 'Use the current date and time', icon: '🕐' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link', icon: '🔗' },
-	web_search: { title: 'Web search', description: 'Brave Search for live information', icon: '🔍' },
+	web_search: { title: 'Web search', description: 'Search the web for live information', icon: '🔍' },
+	image_search: { title: 'Image search', description: 'Find images on the web', icon: '🖼️' },
 	map_route: { title: 'Route map', description: 'Directions between two places', icon: '🗺️' }
 };
 

@@ -105,6 +105,9 @@ export function createDashboardPageModelView(
 		get immersiveVoiceOpen() {
 			return s.getImmersiveVoiceOpen();
 		},
+		get immersiveGestureToken() {
+			return s.getImmersiveGestureToken();
+		},
 		get immersivePhase() {
 			return s.getImmersivePhase();
 		},

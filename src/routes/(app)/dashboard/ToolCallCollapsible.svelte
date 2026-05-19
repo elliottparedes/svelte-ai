@@ -16,10 +16,6 @@
 	const title = $derived(name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()));
 	const pending = $derived(result === undefined);
 
-	$effect(() => {
-		if (result !== undefined) open = true;
-	});
-
 	function previewArgs(a: Record<string, unknown> | undefined): string {
 		if (!a || Object.keys(a).length === 0) return '';
 		try {

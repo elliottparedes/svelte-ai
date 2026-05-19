@@ -48,6 +48,8 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	});
 
 	let immersiveVoiceOpen = $state(false);
+	/** Bumped when ◎ is clicked so overlay starts STT in the gesture window. */
+	let immersiveGestureToken = $state(0);
 	let immersivePhase = $state<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>('idle');
 	let immersiveAudioLevel = $state(0);
 	let immersivePcm = $state<import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null>(
@@ -56,11 +58,6 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 
 	let editingProjectPrompt = $state(false);
 	let projectPromptValue = $state('');
-	const modelLocked = $derived(messages.length > 0);
-	const isActiveStreaming = $derived(
-		activeConversationId !== null && streamingConversationIds.has(activeConversationId)
-	);
-
 	function stampConversationModel(id: string, modelId: string) {
 		const patched = stampConversationModelLists(conversations, projectConversations, id, modelId);
 		conversations = patched.conversations;
@@ -71,8 +68,9 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 
 	return createDashboardPageModelStateShell({
 		data,
-		modelLocked,
-		isActiveStreaming,
+		getModelLocked: () => messages.length > 0,
+		getIsActiveStreaming: () =>
+			activeConversationId !== null && streamingConversationIds.has(activeConversationId),
 		pickModel: (modelId) => pickDashboardModelId(data.models, modelId, data.defaultModelId),
 		flushActiveToCache: () => {
 			messageCache = flushActiveMessageCache(messageCache, activeConversationId, messages);
@@ -119,6 +117,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			enabledToolIds: field(() => enabledToolIds, (v) => (enabledToolIds = v)),
 			voiceModeEnabled: field(() => voiceModeEnabled, (v) => (voiceModeEnabled = v)),
 			immersiveVoiceOpen: field(() => immersiveVoiceOpen, (v) => (immersiveVoiceOpen = v)),
+			immersiveGestureToken: field(() => immersiveGestureToken, (v) => (immersiveGestureToken = v)),
 			immersivePhase: field(() => immersivePhase, (v) => (immersivePhase = v)),
 			immersiveAudioLevel: field(() => immersiveAudioLevel, (v) => (immersiveAudioLevel = v)),
 			immersivePcm: field(() => immersivePcm, (v) => (immersivePcm = v)),

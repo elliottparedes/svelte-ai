@@ -25,6 +25,8 @@ type SpeechRecognitionCtor = new () => {
 	abort: () => void;
 };
 
+const TRANSIENT_ERRORS = new Set(['aborted', 'no-speech']);
+
 function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
 	if (typeof window === 'undefined') return null;
 	const w = window as Window & {
@@ -40,6 +42,8 @@ export function createSpeechRecognizer(opts: {
 	onInterim?: (text: string) => void;
 	onError?: (message: string) => void;
 	onEnd?: () => void;
+	/** Keep mic open between phrases (recommended for immersive voice). */
+	continuous?: boolean;
 	lang?: string;
 }): SpeechRecognizer | null {
 	const Ctor = getSpeechRecognitionCtor();
@@ -48,7 +52,10 @@ export function createSpeechRecognizer(opts: {
 	}
 
 	const rec = new Ctor();
-	rec.continuous = false;
+	let listening = false;
+	let restartTimer: ReturnType<typeof setTimeout> | undefined;
+
+	rec.continuous = opts.continuous ?? false;
 	rec.interimResults = true;
 	rec.lang = opts.lang ?? 'en-US';
 
@@ -65,19 +72,50 @@ export function createSpeechRecognizer(opts: {
 		if (final.trim()) opts.onFinal(final.trim());
 	};
 
-	rec.onerror = (ev) => opts.onError?.(ev.error === 'not-allowed' ? 'Microphone access denied' : ev.error);
-	rec.onend = () => opts.onEnd?.();
+	rec.onerror = (ev) => {
+		if (TRANSIENT_ERRORS.has(ev.error)) return;
+		const msg =
+			ev.error === 'not-allowed'
+				? 'Microphone access denied — allow mic in browser settings'
+				: ev.error === 'network'
+					? 'Speech recognition network error'
+					: `Speech error: ${ev.error}`;
+		opts.onError?.(msg);
+	};
+
+	rec.onend = () => {
+		listening = false;
+		opts.onEnd?.();
+	};
+
+	const safeStart = () => {
+		if (listening) return;
+		try {
+			rec.start();
+			listening = true;
+		} catch {
+			restartTimer = setTimeout(() => {
+				try {
+					rec.start();
+					listening = true;
+				} catch {
+					/* still busy */
+				}
+			}, 280);
+		}
+	};
 
 	return {
 		isSupported: true,
-		start: () => {
-			try {
-				rec.start();
-			} catch {
-				/* already started */
-			}
+		start: safeStart,
+		stop: () => {
+			if (restartTimer) clearTimeout(restartTimer);
+			if (listening) rec.stop();
 		},
-		stop: () => rec.stop(),
-		abort: () => rec.abort()
+		abort: () => {
+			if (restartTimer) clearTimeout(restartTimer);
+			listening = false;
+			rec.abort();
+		}
 	};
 }

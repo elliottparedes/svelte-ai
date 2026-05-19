@@ -24,7 +24,8 @@ export const OPENROUTER_DEFAULT_MODEL = getEnv(
 	'OPENROUTER_DEFAULT_MODEL',
 	'qwen/qwen3.5-flash-02-23'
 );
-export const BRAVE_SEARCH_API_KEY = getEnv('BRAVE_SEARCH_API_KEY', '');
+/** SearXNG base URL (e.g. http://searxng:8080). Empty string disables web search. */
+export const SEARXNG_URL = getEnv('SEARXNG_URL', '');
 /** Nominatim geocoder base URL (no trailing slash required). */
 export const NOMINATIM_BASE_URL = getEnv('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org');
 /** OSRM router base URL (no trailing slash required). */
