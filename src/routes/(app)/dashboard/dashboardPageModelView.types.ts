@@ -32,6 +32,14 @@ export type DashboardPageModelStateAccess = {
 	setProjectPromptValue: (v: string) => void;
 	getEnabledToolIds: () => ChatToolId[];
 	setEnabledToolIds: (v: ChatToolId[]) => void;
+	getVoiceModeEnabled: () => boolean;
+	setVoiceModeEnabled: (v: boolean) => void;
+	getImmersiveVoiceOpen: () => boolean;
+	setImmersiveVoiceOpen: (v: boolean) => void;
+	getImmersivePhase: () => import('$lib/shared/immersiveVoice').ImmersiveVoicePhase;
+	setImmersivePhase: (p: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase) => void;
+	getImmersiveAudioLevel: () => number;
+	getTtsEnabled: () => boolean;
 	getModelLocked: () => boolean;
 };
 
@@ -45,5 +53,7 @@ export type DashboardPageModelHandlers = {
 	deleteConversation: (id: string) => Promise<void>;
 	renameConversation: (id: string, title: string) => Promise<void>;
 	logout: () => Promise<void>;
-	sendMessage: () => Promise<void>;
+	sendMessage: (textOverride?: string) => Promise<void>;
+	openImmersiveVoice: () => void;
+	closeImmersiveVoice: () => void;
 };

@@ -62,6 +62,12 @@ VISION_RELAY_ENABLED=         # true/false — summarize images for non-vision m
 VISION_RELAY_MODEL=           # OpenRouter vision model for relay
 VISION_RELAY_MAX_TOKENS=      # Max tokens for relay description
 BRAVE_SEARCH_API_KEY=         # Optional web search tool
+NOMINATIM_BASE_URL=           # Optional; default https://nominatim.openstreetmap.org
+OSRM_BASE_URL=                # Optional; default https://router.project-osrm.org
+MAP_HTTP_USER_AGENT=          # Optional; required by Nominatim policy (default AI-Platform/1.0)
+ELEVENLABS_API_KEY=           # Optional; enables dashboard voice mode (streaming TTS)
+ELEVENLABS_VOICE_ID=          # Optional voice id (default Rachel)
+ELEVENLABS_MODEL_ID=          # Optional model (default eleven_flash_v2_5)
 ```
 
 Use **`DATABASE_URL`** when you want one connection string everywhere (local `.env` and production). If it is unset, the discrete `MYSQL_*` variables are used as before.
@@ -82,6 +88,7 @@ Use **`DATABASE_URL`** when you want one connection string everywhere (local `.e
 | email | varchar(255) | UNIQUE |
 | name | varchar(255) | nullable |
 | api_key | varchar(255) | nullable, used for Bearer auth |
+| tts_voice_id | varchar(64) | nullable, ElevenLabs voice for TTS |
 | created_at | timestamp | auto |
 
 ### conversations
@@ -124,6 +131,9 @@ Use **`DATABASE_URL`** when you want one connection string everywhere (local `.e
 | GET | /api/v1/conversations/:id/messages | Yes | Get messages |
 | POST | /api/v1/chat | Yes | Streaming chat (SSE) |
 | GET | /api/v1/models | Yes | List available AI models |
+| GET | /api/v1/tts/voices | Yes | List ElevenLabs voices (voice mode) |
+| GET | /api/v1/tts/voices/:id/preview | Yes | Play ElevenLabs sample preview MP3 |
+| PATCH | /api/v1/profile/tts-voice | Yes | Save user TTS voice preference |
 
 ### Chat Stream Format
 Server-Sent Events (SSE). Each line: `data: {"type":"chunk","content":"..."}\n\n`

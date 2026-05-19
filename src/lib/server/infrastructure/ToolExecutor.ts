@@ -1,9 +1,20 @@
-import { BRAVE_SEARCH_API_KEY } from '../env';
+import { BRAVE_SEARCH_API_KEY, MAP_HTTP_USER_AGENT, NOMINATIM_BASE_URL, OSRM_BASE_URL } from '../env';
+import { MapRouteService } from './mapRouteService';
+import { NominatimGeocoder } from './nominatimGeocoder';
+import { OsrmRouter } from './osrmRouter';
+import type { RouteMode } from '../domain/mapRoute.types';
 
 const BRAVE_WEB_SEARCH_URL = 'https://api.search.brave.com/res/v1/web/search';
 
 export class ToolExecutor {
-	constructor(private readonly braveSearchApiKey: string = BRAVE_SEARCH_API_KEY) {}
+	private readonly mapRouteService: MapRouteService;
+
+	constructor(private readonly braveSearchApiKey: string = BRAVE_SEARCH_API_KEY) {
+		this.mapRouteService = new MapRouteService(
+			new NominatimGeocoder(NOMINATIM_BASE_URL, MAP_HTTP_USER_AGENT),
+			new OsrmRouter(OSRM_BASE_URL)
+		);
+	}
 
 	async run(name: string, args: Record<string, unknown>): Promise<string> {
 		switch (name) {
@@ -15,9 +26,18 @@ export class ToolExecutor {
 				return await this.runFetchUrl(String(args.url ?? ''));
 			case 'web_search':
 				return await this.runWebSearch(String(args.query ?? ''));
+			case 'map_route':
+				return await this.runMapRoute(args);
 			default:
 				return `Error: unknown tool ${name}`;
 		}
+	}
+
+	private async runMapRoute(args: Record<string, unknown>): Promise<string> {
+		const mode = String(args.mode ?? 'driving') as RouteMode;
+		const valid: RouteMode[] = ['driving', 'walking', 'cycling'];
+		const m = valid.includes(mode) ? mode : 'driving';
+		return this.mapRouteService.run(String(args.origin ?? ''), String(args.destination ?? ''), m);
 	}
 
 	private runCalculator(expression: string): string {

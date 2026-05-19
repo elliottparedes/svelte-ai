@@ -28,6 +28,11 @@ export type DashboardPageModelStateShell = {
 	sidebarCollapsed: boolean;
 	attachments: ChatAttachmentInput[];
 	enabledToolIds: ChatToolId[];
+	voiceModeEnabled: boolean;
+	immersiveVoiceOpen: boolean;
+	immersivePhase: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase;
+	immersiveAudioLevel: number;
+	immersivePcm: import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null;
 	editingProjectPrompt: boolean;
 	projectPromptValue: string;
 	readonly modelLocked: boolean;
@@ -69,6 +74,11 @@ export function createDashboardPageModelStateShell(p: {
 		sidebarCollapsed: Field<boolean>;
 		attachments: Field<ChatAttachmentInput[]>;
 		enabledToolIds: Field<ChatToolId[]>;
+		voiceModeEnabled: Field<boolean>;
+		immersiveVoiceOpen: Field<boolean>;
+			immersivePhase: Field<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>;
+		immersiveAudioLevel: Field<number>;
+		immersivePcm: Field<import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null>;
 		editingProjectPrompt: Field<boolean>;
 		projectPromptValue: Field<string>;
 	};

@@ -6,6 +6,8 @@ export const users = mysqlTable('users', {
 	name: varchar('name', { length: 255 }),
 	passwordHash: varchar('password_hash', { length: 255 }),
 	apiKey: varchar('api_key', { length: 255 }),
+	/** ElevenLabs voice_id for dashboard TTS; null = server default. */
+	ttsVoiceId: varchar('tts_voice_id', { length: 64 }),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [
 	index('email_idx').on(table.email),

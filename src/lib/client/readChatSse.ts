@@ -1,5 +1,6 @@
 export type ChatSseEvent =
 	| { type: 'chunk'; content: string }
+	| { type: 'audio'; data: string }
 	| { type: 'tool_call'; name: string; arguments?: Record<string, unknown> }
 	| { type: 'tool_result'; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
@@ -28,6 +29,8 @@ export async function* readChatSseStream(
 					const t = parsed.type;
 					if (t === 'chunk') {
 						yield { type: 'chunk', content: String(parsed.content ?? '') };
+					} else if (t === 'audio') {
+						yield { type: 'audio', data: String(parsed.data ?? '') };
 					} else if (t === 'tool_call') {
 						yield {
 							type: 'tool_call',

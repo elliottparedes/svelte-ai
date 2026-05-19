@@ -2,6 +2,8 @@
 	import ChatInputModelSend from './ChatInputModelSend.svelte';
 	import ChatContextMeter from './ChatContextMeter.svelte';
 	import ChatToolSelector from './ChatToolSelector.svelte';
+	import ChatVoiceModeToggle from './ChatVoiceModeToggle.svelte';
+	import ChatImmersiveEnter from './ChatImmersiveEnter.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 	import {
 		ALL_CHAT_TOOL_IDS,
@@ -28,7 +30,11 @@
 		attachments = [],
 		extraSystemTokens = 0,
 		modelSupportsTools = true,
-		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS])
+		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]),
+		ttsEnabled = false,
+		voiceModeEnabled = $bindable(false),
+		immersiveVoiceOpen = false,
+		onEnterImmersive
 	} = $props<{
 		models: Model[];
 		modelGroups: ModelProviderGroup[];
@@ -46,6 +52,10 @@
 		extraSystemTokens?: number;
 		modelSupportsTools?: boolean;
 		enabledToolIds?: ChatToolId[];
+		ttsEnabled?: boolean;
+		voiceModeEnabled?: boolean;
+		immersiveVoiceOpen?: boolean;
+		onEnterImmersive?: () => void;
 	}>();
 
 	const toolStackEstimate = $derived(
@@ -79,6 +89,15 @@
 		{/if}
 		{#if modelSupportsTools}
 			<ChatToolSelector bind:enabledIds={enabledToolIds} disabled={isStreaming} />
+		{/if}
+		{#if ttsEnabled}
+			<ChatVoiceModeToggle bind:enabled={voiceModeEnabled} disabled={isStreaming} />
+			<ChatImmersiveEnter
+				{ttsEnabled}
+				active={immersiveVoiceOpen}
+				disabled={isStreaming}
+				onEnter={() => onEnterImmersive?.()}
+			/>
 		{/if}
 	</div>
 	<ChatInputModelSend {models} {modelGroups} bind:selectedModel {modelLocked} {value} {attachmentsLen} {isStreaming} {onSend} />

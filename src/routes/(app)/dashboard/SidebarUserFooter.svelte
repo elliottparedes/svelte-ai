@@ -5,7 +5,7 @@
 </script>
 
 <div class="user-footer">
-	<span class="user-name">{user.name ?? user.email}</span>
+	<a class="user-name" href="/profile" title="View profile">{user.name ?? user.email}</a>
 	<button class="logout-btn" onclick={onLogout}>Logout</button>
 </div>
 
@@ -25,6 +25,12 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		text-decoration: none;
+		flex: 1;
+		min-width: 0;
+	}
+	.user-name:hover {
+		color: #89b4fa;
 	}
 	.logout-btn {
 		background: none;

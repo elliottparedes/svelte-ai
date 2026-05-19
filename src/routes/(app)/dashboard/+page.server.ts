@@ -6,9 +6,9 @@ import { OpenRouterProvider } from '$lib/server/infrastructure/OpenRouterProvide
 import {
 	OPENROUTER_API_KEY,
 	OPENROUTER_HTTP_REFERER,
-	OPENROUTER_DEFAULT_MODEL
+	OPENROUTER_DEFAULT_MODEL,
+	isElevenLabsConfigured
 } from '$lib/server/db/config';
-import { redirect } from '@sveltejs/kit';
 import { logger } from '$lib/server/logger';
 import {
 	hydrateOpenRouterCapabilities,
@@ -17,8 +17,7 @@ import {
 import { pickCuratedDashboardModels } from '$lib/server/model/curatedDashboardModels';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const user = locals.user;
-	if (!user) redirect(302, '/login');
+	const user = locals.user!;
 
 	const chatRepo = new ChatRepository();
 	const projectRepo = new ProjectRepository();
@@ -51,5 +50,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		curatedModels: models.length
 	});
 
-	return { conversations, projects, models, modelGroups, defaultModelId: OPENROUTER_DEFAULT_MODEL };
+	return {
+		conversations,
+		projects,
+		models,
+		modelGroups,
+		defaultModelId: OPENROUTER_DEFAULT_MODEL,
+		ttsEnabled: isElevenLabsConfigured()
+	};
 };

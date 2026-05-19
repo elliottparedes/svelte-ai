@@ -35,6 +35,25 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let sidebarCollapsed = $state(false);
 	let attachments = $state<ChatAttachmentInput[]>([]);
 	let enabledToolIds = $state<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]);
+	const VOICE_MODE_KEY = 'dashboardVoiceMode';
+	let voiceModeEnabled = $state(
+		data.ttsEnabled &&
+			typeof localStorage !== 'undefined' &&
+			localStorage.getItem(VOICE_MODE_KEY) === '1'
+	);
+
+	$effect(() => {
+		if (!data.ttsEnabled) return;
+		localStorage.setItem(VOICE_MODE_KEY, voiceModeEnabled ? '1' : '0');
+	});
+
+	let immersiveVoiceOpen = $state(false);
+	let immersivePhase = $state<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>('idle');
+	let immersiveAudioLevel = $state(0);
+	let immersivePcm = $state<import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null>(
+		null
+	);
+
 	let editingProjectPrompt = $state(false);
 	let projectPromptValue = $state('');
 	const modelLocked = $derived(messages.length > 0);
@@ -98,6 +117,11 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			sidebarCollapsed: field(() => sidebarCollapsed, (v) => (sidebarCollapsed = v)),
 			attachments: field(() => attachments, (v) => (attachments = v)),
 			enabledToolIds: field(() => enabledToolIds, (v) => (enabledToolIds = v)),
+			voiceModeEnabled: field(() => voiceModeEnabled, (v) => (voiceModeEnabled = v)),
+			immersiveVoiceOpen: field(() => immersiveVoiceOpen, (v) => (immersiveVoiceOpen = v)),
+			immersivePhase: field(() => immersivePhase, (v) => (immersivePhase = v)),
+			immersiveAudioLevel: field(() => immersiveAudioLevel, (v) => (immersiveAudioLevel = v)),
+			immersivePcm: field(() => immersivePcm, (v) => (immersivePcm = v)),
 			editingProjectPrompt: field(() => editingProjectPrompt, (v) => (editingProjectPrompt = v)),
 			projectPromptValue: field(() => projectPromptValue, (v) => (projectPromptValue = v))
 		}

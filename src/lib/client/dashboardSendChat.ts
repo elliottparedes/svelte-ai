@@ -1,6 +1,8 @@
 import type { ChatAttachmentInput, ChatMessage } from '$lib/types/dashboard';
 import { readChatSseStream } from '$lib/client/readChatSse';
 import { accumulateChatSse } from '$lib/client/dashboardChatSseReducer';
+import { ElevenLabsPcmPlayer, type PcmPlayerHooks } from '$lib/client/elevenLabsPcmPlayer';
+import type { ImmersiveVoicePhase } from '$lib/shared/immersiveVoice';
 import {
 	isPendingConversationId,
 	type StreamFinishResult
@@ -22,6 +24,13 @@ export type DashboardSendDeps = {
 	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
 	onStreamFinish: (result: StreamFinishResult) => Promise<void>;
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
+	voiceModeEnabled?: boolean;
+	/** Immersive orb UI: drives phase + reuses one PCM player. */
+	immersive?: {
+		onPhase: (phase: ImmersiveVoicePhase) => void;
+		pcm: ElevenLabsPcmPlayer;
+		pcmHooks: PcmPlayerHooks;
+	};
 };
 
 export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<void> {
@@ -67,6 +76,7 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		if (d.getModelSupportsTools()) {
 			payload.enabledToolNames = [...d.getEnabledToolNames()];
 		}
+		if (d.voiceModeEnabled) payload.voiceMode = true;
 		res = await fetch('/api/v1/chat', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -90,15 +100,31 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		errorMessage: ''
 	};
 
+	const useVoice = Boolean(d.voiceModeEnabled || d.immersive);
+	const pcm = d.immersive?.pcm ?? (useVoice ? new ElevenLabsPcmPlayer() : null);
+	if (pcm) {
+		if (d.immersive) pcm.setHooks(d.immersive.pcmHooks);
+		await pcm.unlock();
+	}
+	d.immersive?.onPhase('thinking');
+
 	try {
 		for await (const ev of readChatSseStream(res.body)) {
 			if (ev.type === 'title') {
 				d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
 				continue;
 			}
+			if (ev.type === 'audio' && pcm && ev.data) {
+				const bin = atob(ev.data);
+				const bytes = new Uint8Array(bin.length);
+				for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+				pcm.playPcm(bytes);
+				continue;
+			}
 			acc = accumulateChatSse(acc, ev, assistantId);
 			d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
 		}
+		d.immersive?.onPhase('idle');
 		await d.onStreamFinish({
 			streamKey: d.streamKey,
 			conversationId: acc.doneConversationId ?? (isPendingConversationId(d.streamKey) ? null : d.streamKey),
@@ -107,6 +133,8 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 			projectId: d.getActiveProjectId()
 		});
 	} catch {
+		pcm?.stop();
+		d.immersive?.onPhase('error');
 		d.onStreamFailed(d.streamKey, 'Stream interrupted');
 	}
 }

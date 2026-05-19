@@ -93,6 +93,27 @@ export function createDashboardPageModelView(
 		set enabledToolIds(v: ChatToolId[]) {
 			s.setEnabledToolIds(v);
 		},
+		get voiceModeEnabled() {
+			return s.getVoiceModeEnabled();
+		},
+		set voiceModeEnabled(v: boolean) {
+			s.setVoiceModeEnabled(v);
+		},
+		get ttsEnabled() {
+			return s.getTtsEnabled();
+		},
+		get immersiveVoiceOpen() {
+			return s.getImmersiveVoiceOpen();
+		},
+		get immersivePhase() {
+			return s.getImmersivePhase();
+		},
+		set immersivePhase(p: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase) {
+			s.setImmersivePhase(p);
+		},
+		get immersiveAudioLevel() {
+			return s.getImmersiveAudioLevel();
+		},
 		get modelLocked() {
 			return s.getModelLocked();
 		},
@@ -106,6 +127,8 @@ export function createDashboardPageModelView(
 		renameConversation: actions.renameConversation,
 		logout: actions.logout,
 		sendMessage: actions.sendMessage,
+		openImmersiveVoice: actions.openImmersiveVoice,
+		closeImmersiveVoice: actions.closeImmersiveVoice,
 		models,
 		modelGroups
 	};

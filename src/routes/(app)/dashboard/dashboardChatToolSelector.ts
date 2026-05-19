@@ -13,14 +13,15 @@ const META: Record<ChatToolId, MetaRow> = {
 	calculator: { title: 'Calculator', description: 'Evaluate math in chat', icon: '🔢' },
 	datetime: { title: 'Date & time', description: 'Use the current date and time', icon: '🕐' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link', icon: '🔗' },
-	web_search: { title: 'Web search', description: 'Brave Search for live information', icon: '🔍' }
+	web_search: { title: 'Web search', description: 'Brave Search for live information', icon: '🔍' },
+	map_route: { title: 'Route map', description: 'Directions between two places', icon: '🗺️' }
 };
 
 export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER.map((id) => ({ id, ...META[id] }));
 
 export const PRESET = {
 	none: [] as ChatToolId[],
-	local: ['calculator', 'datetime', 'fetch_url'] as ChatToolId[],
+	local: ['calculator', 'datetime', 'fetch_url', 'map_route'] as ChatToolId[],
 	all: ALL_CHAT_TOOL_IDS
 };
 

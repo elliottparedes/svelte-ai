@@ -25,7 +25,11 @@
 		messages = [],
 		extraSystemTokens = 0,
 		modelSupportsTools = true,
-		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS])
+		enabledToolIds = $bindable<ChatToolId[]>([...ALL_CHAT_TOOL_IDS]),
+		ttsEnabled = false,
+		voiceModeEnabled = $bindable(false),
+		immersiveVoiceOpen = false,
+		onEnterImmersive
 	} = $props<{
 		value?: string;
 		isStreaming: boolean;
@@ -39,6 +43,10 @@
 		extraSystemTokens?: number;
 		modelSupportsTools?: boolean;
 		enabledToolIds?: ChatToolId[];
+		ttsEnabled?: boolean;
+		voiceModeEnabled?: boolean;
+		immersiveVoiceOpen?: boolean;
+		onEnterImmersive?: () => void;
 	}>();
 	let fileInput: HTMLInputElement | null = $state(null);
 	let dragOver = $state(false);
@@ -145,6 +153,10 @@
 			{extraSystemTokens}
 			{modelSupportsTools}
 			bind:enabledToolIds
+			{ttsEnabled}
+			bind:voiceModeEnabled
+			{immersiveVoiceOpen}
+			{onEnterImmersive}
 		/>
 	{/snippet}
 </ChatInputShell>

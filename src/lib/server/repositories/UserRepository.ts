@@ -12,6 +12,7 @@ function toUser(row: UserRow): User {
 		email: row.email,
 		name: row.name,
 		apiKey: row.apiKey,
+		ttsVoiceId: row.ttsVoiceId,
 		createdAt: row.createdAt
 	};
 }
@@ -52,6 +53,13 @@ export class UserRepository {
 		});
 		const user = await this.findById(id);
 		if (!user) throw new DomainError('Failed to create user', 500);
+		return user;
+	}
+
+	async updateTtsVoiceId(userId: string, ttsVoiceId: string | null): Promise<User> {
+		await db.update(users).set({ ttsVoiceId }).where(eq(users.id, userId));
+		const user = await this.findById(userId);
+		if (!user) throw new DomainError('User not found', 404);
 		return user;
 	}
 }

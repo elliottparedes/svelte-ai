@@ -25,6 +25,12 @@ export const OPENROUTER_DEFAULT_MODEL = getEnv(
 	'qwen/qwen3.5-flash-02-23'
 );
 export const BRAVE_SEARCH_API_KEY = getEnv('BRAVE_SEARCH_API_KEY', '');
+/** Nominatim geocoder base URL (no trailing slash required). */
+export const NOMINATIM_BASE_URL = getEnv('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org');
+/** OSRM router base URL (no trailing slash required). */
+export const OSRM_BASE_URL = getEnv('OSRM_BASE_URL', 'https://router.project-osrm.org');
+/** User-Agent for Nominatim requests (required by usage policy). */
+export const MAP_HTTP_USER_AGENT = getEnv('MAP_HTTP_USER_AGENT', 'AI-Platform/1.0');
 
 /** When false, non-vision models receive images as before (may error). Default: enabled. */
 export const VISION_RELAY_ENABLED = getEnv('VISION_RELAY_ENABLED', 'true').toLowerCase() !== 'false';
@@ -34,3 +40,12 @@ export const VISION_RELAY_MAX_TOKENS = Number(getEnv('VISION_RELAY_MAX_TOKENS', 
 /** Cheap OpenRouter model for auto-generated chat titles after the first reply. */
 export const CHAT_TITLE_MODEL = getEnv('CHAT_TITLE_MODEL', 'google/gemini-2.0-flash-lite-001');
 export const CHAT_TITLE_ENABLED = getEnv('CHAT_TITLE_ENABLED', 'true').toLowerCase() !== 'false';
+
+/** ElevenLabs streaming TTS; empty disables voice mode. */
+export const ELEVENLABS_API_KEY = getEnv('ELEVENLABS_API_KEY', '');
+export const ELEVENLABS_VOICE_ID = getEnv('ELEVENLABS_VOICE_ID', '21m00Tcm4TlvDq8ikWAM');
+export const ELEVENLABS_MODEL_ID = getEnv('ELEVENLABS_MODEL_ID', 'eleven_flash_v2_5');
+
+export function isElevenLabsConfigured(): boolean {
+	return ELEVENLABS_API_KEY.trim().length > 0;
+}

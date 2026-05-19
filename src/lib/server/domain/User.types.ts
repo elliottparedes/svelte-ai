@@ -3,6 +3,7 @@ export interface User {
 	email: string;
 	name: string | null;
 	apiKey: string | null;
+	ttsVoiceId: string | null;
 	createdAt: Date;
 }
 
@@ -12,6 +13,7 @@ export interface UserAuthRecord {
 	name: string | null;
 	passwordHash: string | null;
 	apiKey: string | null;
+	ttsVoiceId: string | null;
 	createdAt: Date;
 }
 

@@ -54,10 +54,7 @@ export interface ChatAttachmentInput {
 	mimeType?: string;
 }
 
-export interface DashboardUser {
-	name: string | null;
-	email: string;
-}
+export type { PublicUser as DashboardUser } from './app';
 
 /** Matches dashboard `+page.server` load shape. */
 export interface DashboardPageLoadData {
@@ -66,4 +63,6 @@ export interface DashboardPageLoadData {
 	models: Model[];
 	modelGroups: ModelProviderGroup[];
 	defaultModelId: string;
+	/** True when ELEVENLABS_API_KEY is configured. */
+	ttsEnabled: boolean;
 }

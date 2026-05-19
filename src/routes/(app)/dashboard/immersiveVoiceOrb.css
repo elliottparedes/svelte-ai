@@ -1,0 +1,82 @@
+.immersive-root {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: radial-gradient(ellipse 80% 70% at 50% 45%, #252538 0%, #181825 65%);
+	padding: 1.5rem;
+}
+.immersive-top {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	left: 0.75rem;
+	display: flex;
+	justify-content: flex-end;
+}
+.immersive-close {
+	background: rgba(49, 50, 68, 0.9);
+	border: 1px solid #45475a;
+	color: #cdd6f4;
+	border-radius: 8px;
+	padding: 0.4rem 0.75rem;
+	cursor: pointer;
+	font-size: 0.85rem;
+}
+.immersive-status {
+	margin-top: 1.5rem;
+	font-size: 0.95rem;
+	color: #a6adc8;
+	text-align: center;
+	min-height: 1.4rem;
+}
+.immersive-interim {
+	margin-top: 0.5rem;
+	max-width: 28rem;
+	text-align: center;
+	color: #bac2de;
+	font-size: 0.9rem;
+	min-height: 2.5rem;
+}
+.immersive-mic {
+	margin-top: 1.25rem;
+	width: 4rem;
+	height: 4rem;
+	border-radius: 50%;
+	border: 2px solid #89b4fa;
+	background: rgba(137, 180, 250, 0.12);
+	color: #cdd6f4;
+	font-size: 1.5rem;
+	cursor: pointer;
+	transition: transform 0.15s, box-shadow 0.15s;
+}
+.immersive-mic:hover:not(:disabled) {
+	transform: scale(1.05);
+	box-shadow: 0 0 24px rgba(137, 180, 250, 0.35);
+}
+.immersive-mic.listening {
+	background: rgba(243, 139, 168, 0.2);
+	border-color: #f38ba8;
+	animation: mic-pulse 1.2s ease-in-out infinite;
+}
+.immersive-mic:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.immersive-warn {
+	margin-top: 0.5rem;
+	color: #f9e2af;
+	font-size: 0.85rem;
+}
+@keyframes mic-pulse {
+	0%,
+	100% {
+		box-shadow: 0 0 0 0 rgba(243, 139, 168, 0.35);
+	}
+	50% {
+		box-shadow: 0 0 0 12px rgba(243, 139, 168, 0);
+	}
+}

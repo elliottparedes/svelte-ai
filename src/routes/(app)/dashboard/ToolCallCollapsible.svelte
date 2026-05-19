@@ -1,4 +1,6 @@
 <script lang="ts">
+	import ToolCallResultSection from './ToolCallResultSection.svelte';
+
 	let {
 		name,
 		args = undefined,
@@ -9,8 +11,15 @@
 		result?: string;
 	}>();
 
+	let open = $state(false);
+
 	const title = $derived(name.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()));
 	const pending = $derived(result === undefined);
+
+	$effect(() => {
+		if (result !== undefined) open = true;
+	});
+
 	function previewArgs(a: Record<string, unknown> | undefined): string {
 		if (!a || Object.keys(a).length === 0) return '';
 		try {
@@ -23,7 +32,7 @@
 	const argsText = $derived(previewArgs(args));
 </script>
 
-<details class="tool-call">
+<details class="tool-call" class:tool-call--map={name === 'map_route'} bind:open>
 	<summary class="tool-summary">
 		<span class="tool-summary-chevron" aria-hidden="true"></span>
 		<span class="tool-summary-badge">Tools</span>
@@ -40,10 +49,7 @@
 			</div>
 		{/if}
 		{#if result !== undefined}
-			<div class="tool-section">
-				<div class="tool-label">Result</div>
-				<pre class="tool-pre">{result}</pre>
-			</div>
+			<ToolCallResultSection {name} {result} mapActive={open} />
 		{/if}
 	</div>
 </details>
@@ -58,6 +64,9 @@
 		overflow: hidden;
 		font-size: 0.82rem;
 	}
+	.tool-call--map {
+		width: 100%;
+	}
 	.tool-summary {
 		list-style: none;
 		display: flex;
@@ -70,17 +79,9 @@
 		border-bottom: 1px solid transparent;
 		user-select: none;
 	}
-	.tool-summary::-webkit-details-marker {
-		display: none;
-	}
-	.tool-summary:hover {
-		background: #1e1e2e;
-		color: #a6adc8;
-	}
-	.tool-call[open] .tool-summary {
-		border-bottom-color: #313244;
-		color: #a6adc8;
-	}
+	.tool-summary::-webkit-details-marker { display: none; }
+	.tool-summary:hover { background: #1e1e2e; color: #a6adc8; }
+	.tool-call[open] .tool-summary { border-bottom-color: #313244; color: #a6adc8; }
 	.tool-summary-chevron {
 		display: inline-block;
 		width: 0.35rem;
@@ -92,9 +93,7 @@
 		margin-right: 0.1rem;
 		opacity: 0.7;
 	}
-	.tool-call[open] .tool-summary-chevron {
-		transform: rotate(45deg);
-	}
+	.tool-call[open] .tool-summary-chevron { transform: rotate(45deg); }
 	.tool-summary-badge {
 		font-size: 0.65rem;
 		font-weight: 600;
@@ -105,15 +104,8 @@
 		padding: 0.12rem 0.38rem;
 		border-radius: 4px;
 	}
-	.tool-summary-name {
-		font-weight: 500;
-		color: #cdd6f4;
-	}
-	.tool-summary-pending {
-		font-size: 0.72rem;
-		color: #89b4fa;
-		opacity: 0.9;
-	}
+	.tool-summary-name { font-weight: 500; color: #cdd6f4; }
+	.tool-summary-pending { font-size: 0.72rem; color: #89b4fa; opacity: 0.9; }
 	.tool-body { padding: 0.5rem 0.65rem 0.65rem; display: flex; flex-direction: column; gap: 0.65rem; }
 	.tool-section { display: flex; flex-direction: column; gap: 0.25rem; }
 	.tool-label {

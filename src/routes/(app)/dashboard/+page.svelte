@@ -6,6 +6,7 @@
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import DashboardProjectPanel from './DashboardProjectPanel.svelte';
 	import ProjectChatBackButton from './ProjectChatBackButton.svelte';
+	import ImmersiveVoiceOverlay from './ImmersiveVoiceOverlay.svelte';
 	import { createDashboardPageModel } from './dashboardPageModel.svelte.js';
 	import type { DashboardPageLoadData, DashboardUser } from '$lib/types/dashboard';
 
@@ -68,6 +69,19 @@
 	/>
 
 	<main class="chat-main">
+		{#if model.immersiveVoiceOpen && model.ttsEnabled}
+			<ImmersiveVoiceOverlay
+				phase={model.immersivePhase}
+				audioLevel={model.immersiveAudioLevel}
+				isStreaming={model.isStreaming}
+				onClose={model.closeImmersiveVoice}
+				onPhaseChange={(p) => (model.immersivePhase = p)}
+				onSend={async (text) => {
+					model.immersivePhase = 'thinking';
+					await model.sendMessage(text);
+				}}
+			/>
+		{/if}
 		{#if showProjectChatBack && chatBackProjectId}
 			<ProjectChatBackButton projectId={chatBackProjectId} onBack={model.loadProject} />
 		{/if}
@@ -89,12 +103,14 @@
 				onDeleteChat={model.deleteConversation}
 				streamingConversationIds={model.streamingConversationIds}
 			/>
-		{:else if model.messages.length === 0 && !model.projectComposeMode}
-			<WelcomeScreen />
-		{:else}
-			<ChatMessageList messages={model.messages} isStreaming={model.isStreaming} errorMessage={model.errorMessage} />
+		{:else if !model.immersiveVoiceOpen}
+			{#if model.messages.length === 0 && !model.projectComposeMode}
+				<WelcomeScreen />
+			{:else}
+				<ChatMessageList messages={model.messages} isStreaming={model.isStreaming} errorMessage={model.errorMessage} />
+			{/if}
 		{/if}
-		{#if !model.activeProjectId || model.projectComposeMode}
+		{#if (!model.activeProjectId || model.projectComposeMode) && !model.immersiveVoiceOpen}
 			<div class="chat-input-area">
 				{#key model.activeConversationId ?? (model.projectComposeMode ? `compose-${model.activeProjectId}` : 'new')}
 					<ChatInput
@@ -110,6 +126,10 @@
 					extraSystemTokens={chatContextExtraTokens}
 					{modelSupportsTools}
 					bind:enabledToolIds={model.enabledToolIds}
+					ttsEnabled={model.ttsEnabled}
+					bind:voiceModeEnabled={model.voiceModeEnabled}
+					immersiveVoiceOpen={model.immersiveVoiceOpen}
+					onEnterImmersive={model.openImmersiveVoice}
 				/>
 				{/key}
 			</div>

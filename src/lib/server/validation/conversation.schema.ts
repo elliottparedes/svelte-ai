@@ -18,7 +18,9 @@ export const chatPromptSchema = z.object({
 	attachments: z.array(attachmentSchema).optional(),
 	projectId: z.string().uuid().optional(),
 	/** Omit for legacy “all tools” (minus vision-relay web strip). Empty = no tools. */
-	enabledToolNames: z.array(chatToolNameSchema).max(CHAT_TOOL_ORDER.length).optional()
+	enabledToolNames: z.array(chatToolNameSchema).max(CHAT_TOOL_ORDER.length).optional(),
+	/** Stream assistant reply audio via ElevenLabs on the same SSE connection. */
+	voiceMode: z.boolean().optional()
 });
 
 export const conversationIdSchema = z.object({

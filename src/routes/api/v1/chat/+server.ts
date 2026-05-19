@@ -15,8 +15,15 @@ import {
 	VISION_RELAY_MODEL,
 	VISION_RELAY_MAX_TOKENS,
 	CHAT_TITLE_MODEL,
-	CHAT_TITLE_ENABLED
+	CHAT_TITLE_ENABLED,
+	ELEVENLABS_API_KEY,
+	ELEVENLABS_VOICE_ID,
+	ELEVENLABS_MODEL_ID,
+	isElevenLabsConfigured
 } from '$lib/server/db/config';
+import { ChatStreamVoiceRelay } from '$lib/server/services/ChatStreamVoiceRelay';
+import { pumpChatSseWithVoice } from '$lib/server/services/chatSseVoicePump';
+import { TtsVoiceService } from '$lib/server/services/TtsVoiceService';
 import { logger } from '$lib/server/logger';
 import { VisionRelayService } from '$lib/server/services/VisionRelayService';
 import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
@@ -41,15 +48,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(400, parseResult.error.issues.map((i) => i.message).join(', '));
 	}
 
-	const { conversationId, message, model, attachments, projectId, enabledToolNames } =
+	const { conversationId, message, model, attachments, projectId, enabledToolNames, voiceMode } =
 		parseResult.data;
+	const useVoice = Boolean(voiceMode && isElevenLabsConfigured());
 	const effectiveModel = model?.trim() || OPENROUTER_DEFAULT_MODEL;
 	logger.info('Chat request', {
 		userId: user.id,
 		conversationId,
 		model: effectiveModel,
 		attachmentCount: attachments?.length ?? 0,
-		projectId
+		projectId,
+		voiceMode: useVoice
 	});
 
 	const provider = new OpenRouterProvider(
@@ -95,18 +104,33 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			const started = performance.now();
 			let resolvedConversationId: string | undefined;
 			try {
-				for await (const chunk of service.processPrompt(
-					user.id,
-					conversationId,
-					message,
-					attachments,
-					effectiveModel,
-					projectId,
-					enabledToolNames
-				)) {
-					if (chunk.type === 'done') resolvedConversationId = chunk.conversationId;
-					controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+				const writeLine = (line: string) => controller.enqueue(encoder.encode(line));
+				let voice: ChatStreamVoiceRelay | null = null;
+				if (useVoice) {
+					const ttsVoice = new TtsVoiceService(ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID);
+					voice = new ChatStreamVoiceRelay(
+						{
+							apiKey: ELEVENLABS_API_KEY,
+							voiceId: ttsVoice.resolveVoiceId(user),
+							modelId: ELEVENLABS_MODEL_ID
+						},
+						(b64) => writeLine(`data: ${JSON.stringify({ type: 'audio', data: b64 })}\n\n`)
+					);
+					await voice.connect();
 				}
+				resolvedConversationId = await pumpChatSseWithVoice(
+					service.processPrompt(
+						user.id,
+						conversationId,
+						message,
+						attachments,
+						effectiveModel,
+						projectId,
+						enabledToolNames
+					),
+					writeLine,
+					voice
+				);
 				logger.info('Chat stream complete', {
 					userId: user.id,
 					conversationId: resolvedConversationId,

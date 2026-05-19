@@ -8,6 +8,7 @@ import {
 	updateDashboardStreamMessages
 } from '$lib/client/dashboardStreamLifecycle';
 import { runDashboardSendMessage } from './dashboardPageModelSend.js';
+import { createImmersiveSendBundle } from './dashboardImmersiveVoice.js';
 import { createDashboardNavActions } from './dashboardPageModelNavActions';
 import type { DashboardPageModelStateShell } from './dashboardPageModelStateShell';
 
@@ -43,11 +44,12 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 		goto('/login');
 	}
 
-	async function sendMessage() {
-		const text = state.inputValue.trim();
+	async function sendMessage(textOverride?: string) {
+		const text = (textOverride ?? state.inputValue).trim();
 		if (!text && state.attachments.length === 0) return;
 		const store = state.streamStore();
 		await runDashboardSendMessage({
+			state,
 			models: state.data.models,
 			text,
 			attachments: [...state.attachments],
@@ -60,15 +62,52 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 				state.messageCache[key] ?? (state.activeConversationId === key ? state.messages : []),
 			setInputValue: (v) => (state.inputValue = v),
 			setAttachments: (a) => (state.attachments = a),
-			getProjectComposeMode: () => state.projectComposeMode,
-			getActiveProjectId: () => state.activeProjectId,
 			onStreamMessages: (key, m, err) => updateDashboardStreamMessages(store, key, m, err),
 			onStreamTitle: (key, conversationId, title) =>
 				applyDashboardStreamTitle(store, key, conversationId, title),
-			onStreamFinish: (result) => finishDashboardStream(store, result),
-			onStreamFailed: (key, err) => failDashboardStream(store, key, err)
+			onStreamFinish: async (result) => {
+				await finishDashboardStream(store, result);
+				if (state.immersiveVoiceOpen && state.immersivePhase !== 'error') {
+					state.immersivePhase = 'idle';
+				}
+			},
+			onStreamFailed: (key, err) => {
+				failDashboardStream(store, key, err);
+				if (state.immersiveVoiceOpen) state.immersivePhase = 'error';
+			}
 		});
 	}
 
-	return { ...nav, deleteConversation, renameConversation, logout, sendMessage };
+	function openImmersiveVoice() {
+		if (!state.data.ttsEnabled) return;
+		state.voiceModeEnabled = true;
+		state.immersiveVoiceOpen = true;
+		state.immersivePhase = 'idle';
+		state.immersiveAudioLevel = 0;
+		const bundle = createImmersiveSendBundle(
+			(phase) => (state.immersivePhase = phase),
+			(level) => (state.immersiveAudioLevel = level),
+			() => state.streamingConversationIds.size > 0
+		);
+		state.immersivePcm = bundle.pcm;
+		void bundle.pcm.unlock();
+	}
+
+	function closeImmersiveVoice() {
+		state.immersiveVoiceOpen = false;
+		state.immersivePcm?.stop();
+		state.immersivePcm = null;
+		state.immersivePhase = 'idle';
+		state.immersiveAudioLevel = 0;
+	}
+
+	return {
+		...nav,
+		deleteConversation,
+		renameConversation,
+		logout,
+		sendMessage,
+		openImmersiveVoice,
+		closeImmersiveVoice
+	};
 }

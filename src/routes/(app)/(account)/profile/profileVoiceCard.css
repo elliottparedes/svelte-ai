@@ -1,0 +1,66 @@
+.voice-card {
+	max-width: 32rem;
+	margin-top: 1.25rem;
+	padding: 1.5rem;
+	border-radius: 12px;
+	background: #1e1e2e;
+	border: 1px solid #313244;
+}
+.voice-card .section-title {
+	margin: 0 0 0.35rem;
+	font-size: 1rem;
+	color: #cdd6f4;
+}
+.voice-card .hint,
+.voice-card .muted,
+.voice-card .picked {
+	margin: 0 0 1rem;
+	font-size: 0.85rem;
+	color: #a6adc8;
+}
+.voice-card .field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	margin-bottom: 0.75rem;
+}
+.voice-card .label {
+	font-size: 0.8rem;
+	color: #bac2de;
+}
+.voice-card select {
+	padding: 0.55rem 0.75rem;
+	border-radius: 8px;
+	border: 1px solid #313244;
+	background: #252537;
+	color: #cdd6f4;
+}
+.voice-card .actions {
+	display: flex;
+	gap: 0.5rem;
+}
+.voice-card .btn {
+	padding: 0.45rem 0.9rem;
+	border-radius: 8px;
+	border: 1px solid #45475a;
+	cursor: pointer;
+}
+.voice-card .btn.primary {
+	background: #89b4fa;
+	color: #1e1e2e;
+}
+.voice-card .btn.secondary {
+	background: #313244;
+	color: #cdd6f4;
+}
+.voice-card .btn:disabled {
+	opacity: 0.55;
+}
+.voice-card .ok {
+	color: #a6e3a1;
+	font-size: 0.85rem;
+}
+.voice-card .err {
+	color: #f38ba8;
+	font-size: 0.85rem;
+}
