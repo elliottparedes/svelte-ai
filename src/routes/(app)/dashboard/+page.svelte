@@ -13,7 +13,6 @@
 	let { data } = $props<{ data: DashboardPageLoadData }>();
 
 	const user = $derived(($page.data.user as DashboardUser | null) ?? null);
-	// Model + chat UI state stay client-side for this navigation; load `data` is only initial snapshot.
 	// svelte-ignore state_referenced_locally
 	const model = createDashboardPageModel(data);
 
@@ -69,10 +68,6 @@
 	/>
 
 	<main class="chat-main">
-		<!-- Immersive voice overlay disabled (ElevenLabs Scribe STT) -->
-		<!-- {#if model.immersiveVoiceOpen && model.ttsEnabled}
-			<ImmersiveVoiceOverlay ... />
-		{/if} -->
 		{#if showProjectChatBack && chatBackProjectId}
 			<ProjectChatBackButton projectId={chatBackProjectId} onBack={model.loadProject} />
 		{/if}
@@ -141,7 +136,6 @@
 		min-width: 0;
 		min-height: 0;
 		position: relative;
-		/* Below sidebar so conversation ⋮ menus can overlap this pane */
 		z-index: 1;
 	}
 	.chat-input-area {

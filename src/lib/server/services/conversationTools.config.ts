@@ -39,7 +39,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'web_search',
 		description:
-			'Search the web via Brave Search API and return top results with titles, snippets, and URLs. Use for current events, news, or any topic that may have changed since your training data.',
+			'Search the web via SearXNG and return top results with titles, snippets, and URLs. Use for current events, news, or any topic that may have changed since your training data.',
 		parameters: {
 			type: 'object',
 			properties: {
@@ -76,6 +76,22 @@ export const TOOLS: ToolDefinition[] = [
 				}
 			},
 			required: ['origin', 'destination']
+		}
+	},
+	{
+		name: 'generate_image',
+		description: 'Generate an image from a text description using the configured image model.',
+		parameters: {
+			type: 'object',
+			properties: {
+				prompt: { type: 'string', description: 'Detailed description of the image to create' },
+				aspect_ratio: {
+					type: 'string',
+					enum: ['square', 'portrait', 'landscape'],
+					description: 'Optional composition hint'
+				}
+			},
+			required: ['prompt']
 		}
 	}
 ];

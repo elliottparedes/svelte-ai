@@ -6,7 +6,6 @@ import { createDashboardPageModelView } from './dashboardPageModelView';
 export function createDashboardPageModel(data: DashboardPageLoadData) {
 	const state = createDashboardPageModelState(data);
 	const actions = createDashboardPageModelActions(state);
-
 	return createDashboardPageModelView(
 		{
 			getConversations: () => state.conversations,
@@ -43,7 +42,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			setImmersivePhase: (p) => (state.immersivePhase = p),
 			getImmersiveAudioLevel: () => state.immersiveAudioLevel,
 			getTtsEnabled: () => data.ttsEnabled,
-			getModelLocked: () => state.modelLocked
+			getModelLocked: () => state.modelLocked,
 		},
 		actions,
 		data.models,

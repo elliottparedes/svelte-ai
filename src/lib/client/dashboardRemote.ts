@@ -1,4 +1,16 @@
 import type { ChatMessage, Conversation, Project } from '$lib/types/dashboard';
+import { parseImageGenerationToolResult } from '$lib/shared/imageGenerationToolResult';
+
+function inferToolNameFromContent(content: string): string {
+	if (parseImageGenerationToolResult(content)) return 'generate_image';
+	try {
+		const j = JSON.parse(content) as { ok?: boolean };
+		if (typeof j.ok === 'boolean') return 'generate_image';
+	} catch {
+		// not JSON tool payload
+	}
+	return 'tool';
+}
 
 export type ConversationThread = {
 	messages: ChatMessage[];
@@ -10,11 +22,16 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 	if (!res.ok) return null;
 	const json = await res.json();
 	const conv = json.conversation as { modelId?: string | null };
-	const messages = json.messages.map((m: { id: string; role: string; content: string; createdAt: string }) => ({
-		...m,
-		role: m.role as 'user' | 'assistant',
-		createdAt: new Date(m.createdAt)
-	}));
+	const messages = json.messages.map(
+		(m: { id: string; role: string; content: string; createdAt: string; toolCallId?: string }) => ({
+			...m,
+			role: m.role as ChatMessage['role'],
+			createdAt: new Date(m.createdAt),
+			...(m.role === 'tool' && m.content
+				? { toolCall: { name: inferToolNameFromContent(m.content), result: m.content } }
+				: {})
+		})
+	);
 	return { messages, modelId: conv.modelId ?? null };
 }
 

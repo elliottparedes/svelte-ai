@@ -16,7 +16,8 @@ const META: Record<ChatToolId, MetaRow> = {
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
 	web_search: { title: 'Web search', description: 'Search the web for live information' },
 	image_search: { title: 'Image search', description: 'Find images on the web' },
-	map_route: { title: 'Route map', description: 'Directions between two places' }
+	map_route: { title: 'Route map', description: 'Directions between two places' },
+	generate_image: { title: 'Generate image', description: 'Create images from a text prompt' }
 };
 
 export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER.map((id) => ({ id, ...META[id] }));

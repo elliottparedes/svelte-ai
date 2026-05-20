@@ -24,7 +24,9 @@ export async function executeToolLogged(
 	});
 
 	const t0 = performance.now();
-	const result = await executor.run(call.name, call.arguments);
+	const result = await executor.run(call.name, call.arguments, {
+		conversationId: ctx.conversationId
+	});
 	const durationMs = Math.round(performance.now() - t0);
 
 	logger.info('Tool call finished', {

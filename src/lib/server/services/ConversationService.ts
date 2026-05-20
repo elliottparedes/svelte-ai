@@ -12,6 +12,7 @@ import { modelSupportsTools } from '../model/modelCapabilities';
 import { runConversationToolTurns } from './conversationToolTurns';
 import { toolDefinitionsForOrderedNames } from './conversationToolsPick';
 import { prepareConversationTurn } from './conversationTurnPrepare';
+import { normalizeHistoryForProvider } from './conversationHistoryForProvider';
 
 const HISTORY_FETCH_LIMIT = 2000;
 
@@ -55,7 +56,8 @@ export class ConversationService {
 				.join(' ') ?? '';
 		const storedContent = attachmentSummary ? `${prompt}\n${attachmentSummary}` : prompt;
 		await this.messageRepo.create(convId, 'user', storedContent);
-		const history = await this.messageRepo.findByConversationId(convId, HISTORY_FETCH_LIMIT);
+		const rawHistory = await this.messageRepo.findByConversationId(convId, HISTORY_FETCH_LIMIT);
+		const history = normalizeHistoryForProvider(rawHistory);
 
 		const conv = await this.chatRepo.findById(convId);
 		const effectiveProjectId = conv?.projectId ?? projectId ?? null;

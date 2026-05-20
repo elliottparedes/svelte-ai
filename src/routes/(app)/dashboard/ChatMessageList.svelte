@@ -2,12 +2,15 @@
 	import ChatMessageRow from './ChatMessageRow.svelte';
 	import ChatMessageListExtras from './ChatMessageListExtras.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
+	import { hydrateGenerateImageMessages } from '$lib/client/hydrateGenerateImageMessages';
 
 	let { messages, isStreaming, errorMessage } = $props<{
 		messages: ChatMessage[];
 		isStreaming: boolean;
 		errorMessage: string;
 	}>();
+
+	const displayMessages = $derived(hydrateGenerateImageMessages(messages));
 
 	let scrollContainer: HTMLDivElement | null = $state(null);
 	let userScrolledUp = $state(false);
@@ -26,7 +29,7 @@
 	}
 
 	$effect(() => {
-		if (messages.length && scrollContainer && !userScrolledUp) {
+		if (displayMessages.length && scrollContainer && !userScrolledUp) {
 			scrollToBottom();
 		}
 	});
@@ -34,10 +37,10 @@
 
 <div class="chat-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
 	<div class="messages-wrapper">
-		{#each messages as msg (msg.id)}
-			<ChatMessageRow {msg} {messages} {isStreaming} />
+		{#each displayMessages as msg (msg.id)}
+			<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
 		{/each}
-		<ChatMessageListExtras {messages} {isStreaming} {errorMessage} />
+		<ChatMessageListExtras messages={displayMessages} {isStreaming} {errorMessage} />
 	</div>
 </div>
 

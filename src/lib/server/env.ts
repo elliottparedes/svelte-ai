@@ -50,3 +50,15 @@ export const ELEVENLABS_MODEL_ID = getEnv('ELEVENLABS_MODEL_ID', 'eleven_flash_v
 export function isElevenLabsConfigured(): boolean {
 	return ELEVENLABS_API_KEY.trim().length > 0;
 }
+
+/** OpenRouter image model for generate_image tool. */
+export const OPENROUTER_IMAGE_MODEL = getEnv(
+	'OPENROUTER_IMAGE_MODEL',
+	'google/gemini-2.5-flash-image'
+);
+export const OPENROUTER_IMAGE_GEN_ENABLED =
+	getEnv('OPENROUTER_IMAGE_GEN_ENABLED', 'true').toLowerCase() !== 'false';
+
+export function isImageGenerationConfigured(): boolean {
+	return OPENROUTER_IMAGE_GEN_ENABLED && OPENROUTER_IMAGE_MODEL.trim().length > 0;
+}

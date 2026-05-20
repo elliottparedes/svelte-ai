@@ -16,6 +16,8 @@ import type { ChatRepository } from '../repositories/ChatRepository';
 import type { ConversationTitleService } from './ConversationTitleService';
 import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
 import { MAX_TOOL_TURNS } from './conversationTools.config';
+import { parseImageGenerationToolResult, toolResultForLlmHistory } from '$lib/shared/imageGenerationToolResult';
+import { yieldGenerateImageSuccess } from './conversationGenerateImageTurn';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -96,13 +98,31 @@ export async function* runConversationToolTurns(params: {
 		);
 		toolInvocations++;
 
+		const historyResult = toolResultForLlmHistory(pendingToolCall.name, result);
+
+		if (pendingToolCall.name === 'generate_image' && parseImageGenerationToolResult(result)?.ok) {
+			yield* yieldGenerateImageSuccess({
+				userId: params.userId,
+				conversationId: params.conversationId,
+				isNewThread: params.isNewThread,
+				userPrompt: params.userPrompt,
+				assistantPreamble: assistantContent,
+				result,
+				pendingToolCall,
+				messageRepo: params.messageRepo,
+				chatRepo: params.chatRepo,
+				titleService: params.titleService
+			});
+			return;
+		}
+
 		yield { type: 'tool_result' as const, name: pendingToolCall.name, result };
 
 		augmentedHistory = appendToolExchangeToHistory(
 			augmentedHistory,
 			pendingToolCall,
 			assistantReasoning,
-			result
+			historyResult
 		);
 	}
 

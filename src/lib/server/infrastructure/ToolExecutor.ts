@@ -4,9 +4,13 @@ import { NominatimGeocoder } from './nominatimGeocoder';
 import { OsrmRouter } from './osrmRouter';
 import { searxngWebSearch, searxngImageSearch } from './searxngClient';
 import type { RouteMode } from '../domain/mapRoute.types';
+import { ImageGenerationService } from './imageGenerationService';
+
+export type ToolRunContext = { conversationId: string };
 
 export class ToolExecutor {
 	private readonly mapRouteService: MapRouteService;
+	private readonly imageGenerationService = new ImageGenerationService();
 
 	constructor(private readonly searxngUrl: string = SEARXNG_URL) {
 		this.mapRouteService = new MapRouteService(
@@ -15,7 +19,11 @@ export class ToolExecutor {
 		);
 	}
 
-	async run(name: string, args: Record<string, unknown>): Promise<string> {
+	async run(
+		name: string,
+		args: Record<string, unknown>,
+		ctx?: ToolRunContext
+	): Promise<string> {
 		switch (name) {
 			case 'calculator':
 				return this.runCalculator(String(args.expression ?? ''));
@@ -29,6 +37,8 @@ export class ToolExecutor {
 				return await searxngImageSearch(this.searxngUrl, String(args.query ?? ''));
 			case 'map_route':
 				return await this.runMapRoute(args);
+			case 'generate_image':
+				return await this.imageGenerationService.run(args);
 			default:
 				return `Error: unknown tool ${name}`;
 		}

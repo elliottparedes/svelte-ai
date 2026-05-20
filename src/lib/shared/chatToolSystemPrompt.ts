@@ -2,7 +2,15 @@ import { estimateTokensFromText } from './estimateContextTokens';
 
 /** Legacy meter baseline: full tool stack (system copy + OpenRouter tool JSON overhead). */
 export const ESTIMATED_FULL_TOOL_STACK_TOKENS = 3200;
-export const CHAT_TOOL_ORDER = ['calculator', 'datetime', 'fetch_url', 'web_search', 'image_search', 'map_route'] as const;
+export const CHAT_TOOL_ORDER = [
+	'calculator',
+	'datetime',
+	'fetch_url',
+	'web_search',
+	'image_search',
+	'map_route',
+	'generate_image'
+] as const;
 export type ChatToolId = (typeof CHAT_TOOL_ORDER)[number];
 
 export const ALL_CHAT_TOOL_IDS: ChatToolId[] = [...CHAT_TOOL_ORDER];
@@ -26,7 +34,9 @@ const BULLETS: Record<ChatToolId, string> = {
 	image_search:
 		'Search the web for images. Use when the user wants to see images of something. IMPORTANT: after the tool returns, copy the markdown image links from the result verbatim into your response exactly as-is — do not describe or summarize them. The markdown will render as real images in the UI.',
 	map_route:
-		'Get driving, walking, or cycling route between two places (geocode + OSM routing). Use for directions, distance, travel time, or comparing locations. Pass clear place names or "lat,lon" coordinates; summarize distance and duration in natural language after the tool returns.'
+		'Get driving, walking, or cycling route between two places (geocode + OSM routing). Use for directions, distance, travel time, or comparing locations. Pass clear place names or "lat,lon" coordinates; summarize distance and duration in natural language after the tool returns.',
+	generate_image:
+		'Generate an image from a text prompt. Use when the user asks to create, draw, or generate an image. Pass a detailed prompt. The image appears as its own chat message; reply briefly in text only (no image URLs).'
 };
 
 export const TOOL_PROMPT_NONE_ENABLED =

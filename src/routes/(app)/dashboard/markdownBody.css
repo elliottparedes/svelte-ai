@@ -1,0 +1,110 @@
+.markdown-body :global(p) {
+	margin-bottom: 0.75rem;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+.markdown-body :global(p:last-child) {
+	margin-bottom: 0;
+}
+.markdown-body :global(code) {
+	background: #1e1e2e;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-family: 'Fira Code', 'Consolas', monospace;
+}
+.markdown-body :global(pre) {
+	background: #1e1e2e;
+	padding: 1rem;
+	border-radius: 8px;
+	overflow-x: auto;
+}
+.markdown-body :global(pre code) {
+	background: none;
+	padding: 0;
+}
+.markdown-body :global(ul),
+.markdown-body :global(ol) {
+	padding-left: 1.5rem;
+	margin-bottom: 0.75rem;
+}
+.markdown-body :global(blockquote) {
+	border-left: 3px solid #45475a;
+	padding-left: 1rem;
+	color: #a6adc8;
+	margin-bottom: 0.75rem;
+}
+.markdown-body :global(a) {
+	color: #89b4fa;
+}
+.markdown-body :global(.chat-gen-image) {
+	display: block;
+	margin: 0.75rem 0;
+	max-width: min(100%, 520px);
+}
+.markdown-body :global(.chat-gen-image img) {
+	display: block;
+	width: 100%;
+	height: auto;
+	max-width: 100%;
+	max-height: min(70vh, 520px);
+	object-fit: contain;
+	border-radius: 8px;
+	border: 1px solid #313244;
+	margin: 0;
+	cursor: zoom-in;
+}
+.markdown-body :global(p:has(> img:only-child)),
+.markdown-body :global(p:has(> a:only-child > img)) {
+	display: block;
+	max-width: min(100%, 520px);
+	margin: 0.75rem 0;
+}
+.markdown-body :global(p:has(> img:only-child) img),
+.markdown-body :global(p:has(> a:only-child > img) img) {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	max-height: min(70vh, 520px);
+	object-fit: contain;
+	margin: 0;
+	cursor: zoom-in;
+}
+.markdown-body :global(img) {
+	max-width: 200px;
+	max-height: 200px;
+	width: auto;
+	height: auto;
+	border-radius: 6px;
+	object-fit: cover;
+	display: inline-block;
+	margin: 4px;
+}
+.markdown-body :global(strong) {
+	color: #f5c2e7;
+}
+.markdown-body :global(.code-copy-btn) {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	background: #313244;
+	border: 1px solid #45475a;
+	border-radius: 6px;
+	color: #a6adc8;
+	cursor: pointer;
+	padding: 0.3rem;
+	line-height: 1;
+	opacity: 0;
+	transition: opacity 0.2s, color 0.15s, background 0.15s;
+}
+.markdown-body :global(pre:hover .code-copy-btn) {
+	opacity: 1;
+}
+.markdown-body :global(.code-copy-btn:hover) {
+	color: #cdd6f4;
+	background: #45475a;
+}
+.markdown-body :global(.code-copy-btn.copied) {
+	color: #a6e3a1;
+	border-color: #a6e3a1;
+	opacity: 1;
+}

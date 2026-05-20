@@ -48,7 +48,6 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	});
 
 	let immersiveVoiceOpen = $state(false);
-	/** Bumped when ◎ is clicked so overlay starts STT in the gesture window. */
 	let immersiveGestureToken = $state(0);
 	let immersivePhase = $state<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>('idle');
 	let immersiveAudioLevel = $state(0);

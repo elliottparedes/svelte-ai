@@ -7,6 +7,10 @@ import {
 	isPendingConversationId,
 	type StreamFinishResult
 } from '$lib/client/dashboardStreamLifecycle';
+import {
+	imageGenToolSucceeded,
+	refetchMessagesAfterImageGen
+} from '$lib/client/refetchConversationAfterImageGen';
 
 export type DashboardSendDeps = {
 	streamKey: string;
@@ -108,33 +112,74 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	}
 	d.immersive?.onPhase('thinking');
 
+	const CHAT_STREAM_MS = 5 * 60 * 1000;
+	let streamTimer: ReturnType<typeof setTimeout> | undefined;
+	const streamTimedOut = new Promise<never>((_, reject) => {
+		streamTimer = setTimeout(
+			() => reject(new Error('Chat stream timed out')),
+			CHAT_STREAM_MS
+		);
+	});
+
+	let imageGenNeedsRefetch = false;
+
 	try {
-		for await (const ev of readChatSseStream(res.body)) {
-			if (ev.type === 'title') {
-				d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
-				continue;
+		const readAll = (async () => {
+			for await (const ev of readChatSseStream(res.body!)) {
+				if (ev.type === 'title') {
+					d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
+					continue;
+				}
+				if (ev.type === 'audio' && pcm && ev.data) {
+					const bin = atob(ev.data);
+					const bytes = new Uint8Array(bin.length);
+					for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+					pcm.playPcm(bytes);
+					continue;
+				}
+				if (ev.type === 'tool_result' && ev.name === 'generate_image' && imageGenToolSucceeded(ev.result)) {
+					imageGenNeedsRefetch = true;
+				}
+				acc = accumulateChatSse(acc, ev, assistantId);
+				d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
 			}
-			if (ev.type === 'audio' && pcm && ev.data) {
-				const bin = atob(ev.data);
-				const bytes = new Uint8Array(bin.length);
-				for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-				pcm.playPcm(bytes);
-				continue;
+		})();
+
+		await Promise.race([readAll, streamTimedOut]);
+
+		if (imageGenNeedsRefetch) {
+			try {
+				const persisted = await refetchMessagesAfterImageGen(acc.doneConversationId);
+				if (persisted) {
+					acc.messages = persisted;
+					d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
+				}
+			} catch {
+				// Image is saved server-side; user can reload the chat if refetch fails.
 			}
-			acc = accumulateChatSse(acc, ev, assistantId);
-			d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
 		}
+
 		d.immersive?.onPhase('idle');
-		await d.onStreamFinish({
-			streamKey: d.streamKey,
-			conversationId: acc.doneConversationId ?? (isPendingConversationId(d.streamKey) ? null : d.streamKey),
-			modelId: d.getSelectedModel(),
-			wasProjectCompose: d.getProjectComposeMode(),
-			projectId: d.getActiveProjectId()
-		});
-	} catch {
+		try {
+			await d.onStreamFinish({
+				streamKey: d.streamKey,
+				conversationId:
+					acc.doneConversationId ?? (isPendingConversationId(d.streamKey) ? null : d.streamKey),
+				modelId: d.getSelectedModel(),
+				wasProjectCompose: d.getProjectComposeMode(),
+				projectId: d.getActiveProjectId()
+			});
+		} catch {
+			d.onStreamFailed(d.streamKey, 'Failed to finalize response');
+		}
+	} catch (err) {
 		pcm?.stop();
 		d.immersive?.onPhase('error');
-		d.onStreamFailed(d.streamKey, 'Stream interrupted');
+		const msg = err instanceof Error && err.message.includes('timed out')
+			? 'Request timed out. You can try again.'
+			: 'Stream interrupted';
+		d.onStreamFailed(d.streamKey, msg);
+	} finally {
+		if (streamTimer) clearTimeout(streamTimer);
 	}
 }
