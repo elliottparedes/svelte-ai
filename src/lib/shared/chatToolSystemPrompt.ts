@@ -27,7 +27,7 @@ export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
 
 const BULLETS: Record<ChatToolId, string> = {
 	execute_python:
-		'Run Python 3 (sandbox has outbound HTTP via urllib). Use for: math/logic/statistics; live weather (e.g. wttr.in/Dallas?format=3 or open-meteo.com APIs); JSON HTTP APIs; parsing text from prior tool results. Always print() results. Stdlib only — not for complex HTML scraping (use fetch_url for page text, web_search to find pages).',
+		'Run Python 3.12. Includes numpy, pandas, scipy, sympy + urllib HTTP. Use for: DataFrames, CSV/TSV you paste, stats, plots as text, weather APIs, Monte Carlo, exact math. No requests/beautifulsoup/matplotlib — use fetch_url for HTML then parse with pandas. Always print() results.',
 	calculator: 'Evaluate a simple one-line math expression only (e.g. 25 * 47). Prefer execute_python for harder problems.',
 	datetime:
 		'Get the current date and time. Use when the user asks about "now", "today", or current time.',
