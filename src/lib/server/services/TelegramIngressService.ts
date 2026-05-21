@@ -1,6 +1,7 @@
 import { DomainError } from '../domain/DomainError';
 import { decryptSecret } from '../infrastructure/secretCrypto';
 import { sendTelegramMessage } from '../infrastructure/telegramApiClient';
+import { markdownToTelegramHtml } from '../infrastructure/telegramMarkdownHtml';
 import { logger } from '../logger';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import { TelegramChatBindingRepository } from '../repositories/TelegramChatBindingRepository';
@@ -79,7 +80,11 @@ export class TelegramIngressService {
 			if (event.type === 'done') resolvedConversationId = event.conversationId;
 		}
 		const reply = out.trim() || 'I could not generate a response this time.';
-		await sendTelegramMessage(token, chatId, reply.slice(0, 4096));
+		const clipped = reply.slice(0, 4096);
+		await sendTelegramMessage(token, chatId, markdownToTelegramHtml(clipped), {
+			parseMode: 'HTML',
+			fallbackText: clipped
+		});
 		await this.usage.recordOutbound(bot.userId, bot.id, modelId, reply, toolCalls);
 		if (!resolvedConversationId) throw new DomainError('Conversation resolution failed', 500);
 		if (!binding) {

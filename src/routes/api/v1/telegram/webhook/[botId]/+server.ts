@@ -1,5 +1,7 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
 import {
+	CHAT_TITLE_ENABLED,
+	CHAT_TITLE_MODEL,
 	OPENROUTER_API_KEY,
 	OPENROUTER_DEFAULT_MODEL,
 	OPENROUTER_HTTP_REFERER,
@@ -15,6 +17,7 @@ import { TelegramBotRepository } from '$lib/server/repositories/TelegramBotRepos
 import { TelegramChatBindingRepository } from '$lib/server/repositories/TelegramChatBindingRepository';
 import { UsageDailyRepository } from '$lib/server/repositories/UsageDailyRepository';
 import { ConversationService } from '$lib/server/services/ConversationService';
+import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
 import { ModelRoutingService } from '$lib/server/services/ModelRoutingService';
 import { TelegramIngressService } from '$lib/server/services/TelegramIngressService';
 import { UsageMeteringService } from '$lib/server/services/UsageMeteringService';
@@ -28,12 +31,21 @@ import { telegramWebhookUpdateSchema } from '$lib/server/validation/telegram.sch
 function buildIngress(): TelegramIngressService {
 	const provider = new OpenRouterProvider(OPENROUTER_API_KEY, OPENROUTER_HTTP_REFERER || undefined);
 	const chatRepo = new ChatRepository();
+	const titleService = CHAT_TITLE_ENABLED
+		? new ConversationTitleService(
+				OPENROUTER_API_KEY,
+				CHAT_TITLE_MODEL,
+				OPENROUTER_HTTP_REFERER || undefined
+			)
+		: undefined;
 	const conversationService = new ConversationService(
 		provider,
 		chatRepo,
 		new MessageRepository(),
 		new ToolExecutor(),
-		new ProjectRepository()
+		new ProjectRepository(),
+		undefined,
+		titleService
 	);
 	return new TelegramIngressService(
 		new TelegramBotRepository(),

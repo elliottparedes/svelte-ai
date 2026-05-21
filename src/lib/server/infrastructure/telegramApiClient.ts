@@ -57,11 +57,15 @@ export async function getTelegramWebhookInfo(token: string): Promise<TelegramWeb
 export async function sendTelegramMessage(
 	token: string,
 	chatId: string | number,
-	text: string
+	text: string,
+	options?: { parseMode?: 'HTML'; fallbackText?: string }
 ): Promise<void> {
-	const payload = await callTelegram<boolean>(token, 'sendMessage', {
-		chat_id: chatId,
-		text
-	});
+	const body: Record<string, unknown> = { chat_id: chatId, text: text.slice(0, 4096) };
+	if (options?.parseMode) body.parse_mode = options.parseMode;
+	const payload = await callTelegram<boolean>(token, 'sendMessage', body);
+	if (!payload.ok && options?.parseMode) {
+		await sendTelegramMessage(token, chatId, options.fallbackText ?? text);
+		return;
+	}
 	if (!payload.ok) throw new Error(payload.description || 'Telegram sendMessage failed');
 }
