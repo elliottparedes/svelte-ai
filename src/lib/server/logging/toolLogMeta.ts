@@ -15,6 +15,8 @@ export function toolArgsForLog(name: string, args: Record<string, unknown>): Rec
 			const q = String(args.query ?? '');
 			return { queryChars: q.length, queryPreview: q.slice(0, 100) };
 		}
+		case 'execute_python':
+			return { codeChars: String(args.code ?? '').length };
 		case 'calculator':
 			return { expressionChars: String(args.expression ?? '').length };
 		case 'datetime':

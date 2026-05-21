@@ -3,6 +3,7 @@ import { estimateTokensFromText } from './estimateContextTokens';
 /** Legacy meter baseline: full tool stack (system copy + OpenRouter tool JSON overhead). */
 export const ESTIMATED_FULL_TOOL_STACK_TOKENS = 3200;
 export const CHAT_TOOL_ORDER = [
+	'execute_python',
 	'calculator',
 	'datetime',
 	'fetch_url',
@@ -17,6 +18,7 @@ export const ALL_CHAT_TOOL_IDS: ChatToolId[] = [...CHAT_TOOL_ORDER];
 
 /** Dashboard default: live/web tools on; calculator and map_route off. */
 export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
+	'execute_python',
 	'datetime',
 	'fetch_url',
 	'web_search',
@@ -24,13 +26,15 @@ export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
 ];
 
 const BULLETS: Record<ChatToolId, string> = {
-	calculator: 'Evaluate a mathematical expression. Use for any math.',
+	execute_python:
+		'Run Python 3 (sandbox has outbound HTTP via urllib). Use for: math/logic/statistics; live weather (e.g. wttr.in/Dallas?format=3 or open-meteo.com APIs); JSON HTTP APIs; parsing text from prior tool results. Always print() results. Stdlib only — not for complex HTML scraping (use fetch_url for page text, web_search to find pages).',
+	calculator: 'Evaluate a simple one-line math expression only (e.g. 25 * 47). Prefer execute_python for harder problems.',
 	datetime:
 		'Get the current date and time. Use when the user asks about "now", "today", or current time.',
 	fetch_url:
-		'Fetch the text content of a specific webpage URL. Use when the user provides a URL or asks about a specific page.',
+		'Fetch and strip text from a specific webpage URL (HTML → plain text). Use when the user gives a link or you need the body of one known page. For weather or simple APIs, execute_python with urllib is often faster than fetch_url.',
 	web_search:
-		'Search the web for current information. Use for news, current events, sports scores, weather, stock prices, or anything that may have changed since your training data. Do not use repeated web searches to identify something shown only in an in-chat [Vision summary] unless the user asks for web lookup or verification.',
+		'Search the web via SearXNG (snippets + links). Use to discover sources or current news; not required for simple weather if execute_python can call wttr.in or open-meteo. Do not use repeated web searches to identify something shown only in an in-chat [Vision summary] unless the user asks for web lookup or verification.',
 	image_search:
 		'Search the web for images. Use when the user wants to see images of something. IMPORTANT: after the tool returns, copy the markdown image links from the result verbatim into your response exactly as-is — do not describe or summarize them. The markdown will render as real images in the UI.',
 	map_route:
@@ -56,7 +60,7 @@ export function normalizeChatToolIds(ids: readonly string[]): ChatToolId[] {
 
 export function buildChatToolSystemPrompt(ids: readonly ChatToolId[]): string {
 	const lines = ids.map((id) => `- ${id}: ${BULLETS[id]}`).join('\n');
-	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: If the user asks about current events, news, real-time data, or specific webpages, you MUST use the appropriate tool rather than relying on your training data.`;
+	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Weather in a city: prefer execute_python fetching wttr.in or open-meteo.com. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then execute_python to parse).`;
 }
 
 export function buildChatToolSystemPromptNoWeb(ids: readonly ChatToolId[]): string {

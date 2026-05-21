@@ -11,7 +11,8 @@ export type ToolRowMeta = { id: ChatToolId; title: string; description: string }
 type MetaRow = Omit<ToolRowMeta, 'id'>;
 
 const META: Record<ChatToolId, MetaRow> = {
-	calculator: { title: 'Calculator', description: 'Evaluate math in chat' },
+	execute_python: { title: 'Python', description: 'Math, APIs, light weather/HTTP' },
+	calculator: { title: 'Calculator', description: 'Quick one-line math' },
 	datetime: { title: 'Date & time', description: 'Use the current date and time' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
 	web_search: { title: 'Web search', description: 'Search the web for live information' },

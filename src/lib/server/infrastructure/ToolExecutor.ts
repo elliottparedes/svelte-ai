@@ -5,6 +5,7 @@ import { OsrmRouter } from './osrmRouter';
 import { searxngWebSearch, searxngImageSearch } from './searxngClient';
 import type { RouteMode } from '../domain/mapRoute.types';
 import { ImageGenerationService } from './imageGenerationService';
+import { executePythonOnPiston } from './pistonClient';
 
 export type ToolRunContext = { conversationId: string };
 
@@ -25,6 +26,8 @@ export class ToolExecutor {
 		ctx?: ToolRunContext
 	): Promise<string> {
 		switch (name) {
+			case 'execute_python':
+				return await executePythonOnPiston(String(args.code ?? ''));
 			case 'calculator':
 				return this.runCalculator(String(args.expression ?? ''));
 			case 'datetime':

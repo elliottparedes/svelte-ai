@@ -6,7 +6,13 @@ import {
 	TOOL_PROMPT_NONE_ENABLED,
 	type ChatToolId
 } from '$lib/shared/chatToolSystemPrompt';
+import { isPistonConfigured } from '../env';
 import { TOOL_SYSTEM_PROMPT_NO_TOOLS } from './conversationTools.config';
+
+function stripUnconfiguredTools(ids: ChatToolId[]): ChatToolId[] {
+	if (isPistonConfigured()) return ids;
+	return ids.filter((id) => id !== 'execute_python');
+}
 
 export function resolveToolingForTurn(params: {
 	toolsCapable: boolean;
@@ -16,7 +22,7 @@ export function resolveToolingForTurn(params: {
 	const { toolsCapable, relayApplied, enabledToolNames } = params;
 	const clientTools =
 		enabledToolNames !== undefined ? normalizeChatToolIds(enabledToolNames) : null;
-	const effectiveNames: ChatToolId[] = !toolsCapable
+	let effectiveNames: ChatToolId[] = !toolsCapable
 		? []
 		: clientTools !== null
 			? relayApplied
@@ -25,6 +31,7 @@ export function resolveToolingForTurn(params: {
 			: relayApplied
 				? DEFAULT_CHAT_TOOL_IDS.filter((id) => id !== 'web_search')
 				: [...DEFAULT_CHAT_TOOL_IDS];
+	effectiveNames = stripUnconfiguredTools(effectiveNames);
 
 	if (!toolsCapable) return { effectiveNames, systemContentForMessages: TOOL_SYSTEM_PROMPT_NO_TOOLS };
 	if (effectiveNames.length === 0) return { effectiveNames, systemContentForMessages: TOOL_PROMPT_NONE_ENABLED };

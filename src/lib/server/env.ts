@@ -62,3 +62,19 @@ export const OPENROUTER_IMAGE_GEN_ENABLED =
 export function isImageGenerationConfigured(): boolean {
 	return OPENROUTER_IMAGE_GEN_ENABLED && OPENROUTER_IMAGE_MODEL.trim().length > 0;
 }
+
+/** Piston API base URL (e.g. https://piston.paredes.cloud). Empty disables execute_python. */
+export const PISTON_URL = getEnv('PISTON_URL', '');
+/** Installed Python semver on Piston; empty = probe /api/v2/runtimes once. */
+export const PISTON_PYTHON_VERSION = getEnv('PISTON_PYTHON_VERSION', '3.12.0');
+export const PISTON_RUN_TIMEOUT_MS = Math.min(
+	30_000,
+	Math.max(1000, Number(getEnv('PISTON_RUN_TIMEOUT_MS', '3000')) || 3000)
+);
+export const PISTON_MAX_OUTPUT_CHARS =
+	Math.min(131_072, Math.max(1024, Number(getEnv('PISTON_MAX_OUTPUT_CHARS', '32768')) || 32768)) ||
+	32768;
+
+export function isPistonConfigured(): boolean {
+	return PISTON_URL.trim().length > 0;
+}

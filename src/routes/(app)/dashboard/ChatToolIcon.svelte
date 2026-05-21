@@ -21,7 +21,11 @@
 	stroke-linejoin="round"
 	aria-hidden="true"
 >
-	{#if id === 'calculator'}
+	{#if id === 'execute_python'}
+		<polyline points="8 6 8 18 16 18" />
+		<line x1="8" y1="12" x2="14" y2="12" />
+		<line x1="8" y1="15" x2="12" y2="15" />
+	{:else if id === 'calculator'}
 		<rect x="5" y="3" width="14" height="18" rx="2" />
 		<line x1="8" y1="7" x2="16" y2="7" />
 		<circle cx="8.5" cy="11" r="0.75" fill="currentColor" stroke="none" />

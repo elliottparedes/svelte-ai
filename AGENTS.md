@@ -70,6 +70,10 @@ ELEVENLABS_VOICE_ID=          # Optional voice id (default Rachel)
 ELEVENLABS_MODEL_ID=          # Optional model (default eleven_flash_v2_5)
 OPENROUTER_IMAGE_MODEL=       # Image model for generate_image tool (e.g. google/gemini-2.5-flash-image)
 OPENROUTER_IMAGE_GEN_ENABLED= # true/false — enable generate_image tool (default true)
+PISTON_URL=                   # Optional; Piston base URL (e.g. https://piston.paredes.cloud) — enables execute_python
+PISTON_PYTHON_VERSION=        # Optional; installed Python semver (default 3.12.0)
+PISTON_RUN_TIMEOUT_MS=        # Optional; max run stage ms sent to Piston (default 3000; server may cap lower)
+PISTON_MAX_OUTPUT_CHARS=      # Optional; truncate tool result for the model (default 32768)
 ```
 
 Use **`DATABASE_URL`** when you want one connection string everywhere (local `.env` and production). If it is unset, the discrete `MYSQL_*` variables are used as before.
@@ -179,6 +183,7 @@ npm run db:migrate   # Run migrations
 npm run db:studio    # Drizzle Studio GUI
 npm run vision:ping  # OpenRouter vision relay smoke test (OPENROUTER_API_KEY)
 npm run image:ping   # Image generation smoke test (OPENROUTER_API_KEY, OPENROUTER_IMAGE_MODEL)
+npm run piston:ping  # Piston Python execute_python smoke test (PISTON_URL)
 ```
 - The app uses `type: "module"` in package.json (ESM only)
 - No file should exceed 150 lines — extract components/functions when growing

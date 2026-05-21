@@ -5,10 +5,12 @@ import {
 	buildChatToolSystemPromptNoWeb,
 	MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT
 } from '$lib/shared/chatToolSystemPrompt';
+import { EXECUTE_PYTHON_TOOL } from './conversationToolsExecutePython';
 
 export const MAX_TOOL_TURNS = 12;
 
 export const TOOLS: ToolDefinition[] = [
+	EXECUTE_PYTHON_TOOL,
 	{
 		name: 'calculator',
 		description: 'Evaluate a mathematical expression and return the result.',

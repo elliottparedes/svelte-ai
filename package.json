@@ -15,7 +15,8 @@
 		"db:studio": "drizzle-kit studio",
 		"vision:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/vision-ping.ts",
 		"map:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/map-route-ping.ts",
-		"image:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/image-gen-ping.ts"
+		"image:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/image-gen-ping.ts",
+		"piston:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/piston-ping.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.4",
