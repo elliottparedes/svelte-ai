@@ -1,4 +1,13 @@
-import { mysqlTable, varchar, text, longtext, timestamp, index } from 'drizzle-orm/mysql-core';
+import {
+	index,
+	int,
+	longtext,
+	mysqlTable,
+	text,
+	timestamp,
+	uniqueIndex,
+	varchar
+} from 'drizzle-orm/mysql-core';
 
 export const users = mysqlTable('users', {
 	id: varchar('id', { length: 36 }).primaryKey(),
@@ -50,4 +59,56 @@ export const messages = mysqlTable('messages', {
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [
 	index('msg_conversation_id_idx').on(table.conversationId)
+]);
+
+export const telegramBots = mysqlTable('telegram_bots', {
+	id: varchar('id', { length: 36 }).primaryKey(),
+	userId: varchar('user_id', { length: 36 }).notNull(),
+	projectId: varchar('project_id', { length: 36 }),
+	name: varchar('name', { length: 120 }).notNull(),
+	botUsername: varchar('bot_username', { length: 64 }),
+	tokenCiphertext: text('token_ciphertext').notNull(),
+	tokenHint: varchar('token_hint', { length: 16 }).notNull(),
+	webhookSecret: varchar('webhook_secret', { length: 64 }).notNull(),
+	status: varchar('status', { length: 20 }).notNull().default('active'),
+	defaultModelId: varchar('default_model_id', { length: 128 }),
+	enabledToolNames: text('enabled_tool_names'),
+	dailyMessageLimit: int('daily_message_limit').notNull().default(200),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => [
+	index('tg_bot_user_id_idx').on(table.userId),
+	index('tg_bot_project_id_idx').on(table.projectId)
+]);
+
+export const telegramChatBindings = mysqlTable('telegram_chat_bindings', {
+	id: varchar('id', { length: 36 }).primaryKey(),
+	botId: varchar('bot_id', { length: 36 }).notNull(),
+	telegramChatId: varchar('telegram_chat_id', { length: 64 }).notNull(),
+	conversationId: varchar('conversation_id', { length: 36 }).notNull(),
+	lastUpdateId: varchar('last_update_id', { length: 32 }),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => [
+	uniqueIndex('tg_binding_bot_chat_uq').on(table.botId, table.telegramChatId),
+	index('tg_binding_conversation_id_idx').on(table.conversationId)
+]);
+
+export const usageDaily = mysqlTable('usage_daily', {
+	id: varchar('id', { length: 36 }).primaryKey(),
+	userId: varchar('user_id', { length: 36 }).notNull(),
+	botId: varchar('bot_id', { length: 36 }),
+	modelId: varchar('model_id', { length: 128 }).notNull(),
+	usageDate: varchar('usage_date', { length: 10 }).notNull(),
+	messagesIn: int('messages_in').notNull().default(0),
+	messagesOut: int('messages_out').notNull().default(0),
+	toolCalls: int('tool_calls').notNull().default(0),
+	inputChars: int('input_chars').notNull().default(0),
+	outputChars: int('output_chars').notNull().default(0),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => [
+	uniqueIndex('usage_daily_unique').on(table.userId, table.botId, table.modelId, table.usageDate),
+	index('usage_daily_user_date_idx').on(table.userId, table.usageDate),
+	index('usage_daily_bot_date_idx').on(table.botId, table.usageDate)
 ]);

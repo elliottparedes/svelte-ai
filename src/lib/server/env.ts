@@ -16,6 +16,7 @@ export const DB_USER = _mysql.user;
 export const DB_PASSWORD = _mysql.password;
 export const DB_NAME = _mysql.database;
 export const SESSION_SECRET = getEnv('SESSION_SECRET', 'dev-secret-change-me');
+export const TELEGRAM_TOKEN_ENCRYPTION_KEY = getEnv('TELEGRAM_TOKEN_ENCRYPTION_KEY', SESSION_SECRET);
 export const OPENROUTER_API_KEY = getEnv('OPENROUTER_API_KEY');
 /** Optional; sent as HTTP-Referer for OpenRouter rankings. */
 export const OPENROUTER_HTTP_REFERER = getEnv('OPENROUTER_HTTP_REFERER', '');
@@ -74,6 +75,10 @@ export const PISTON_RUN_TIMEOUT_MS = Math.min(
 export const PISTON_MAX_OUTPUT_CHARS =
 	Math.min(131_072, Math.max(1024, Number(getEnv('PISTON_MAX_OUTPUT_CHARS', '32768')) || 32768)) ||
 	32768;
+/** Optional public base URL used to set Telegram webhook endpoints. */
+export const TELEGRAM_WEBHOOK_BASE_URL = getEnv('TELEGRAM_WEBHOOK_BASE_URL', '');
+/** Optional route secret segment appended to Telegram webhook endpoints. */
+export const TELEGRAM_WEBHOOK_ROUTE_SECRET = getEnv('TELEGRAM_WEBHOOK_ROUTE_SECRET', '');
 
 export function isPistonConfigured(): boolean {
 	return PISTON_URL.trim().length > 0;

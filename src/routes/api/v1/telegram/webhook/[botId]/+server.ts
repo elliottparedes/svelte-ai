@@ -1,0 +1,82 @@
+import { error, json, type RequestHandler } from '@sveltejs/kit';
+import {
+	OPENROUTER_API_KEY,
+	OPENROUTER_DEFAULT_MODEL,
+	OPENROUTER_HTTP_REFERER,
+	TELEGRAM_TOKEN_ENCRYPTION_KEY
+} from '$lib/server/db/config';
+import { handleDomainError } from '$lib/server/domain/DomainError';
+import { OpenRouterProvider } from '$lib/server/infrastructure/OpenRouterProvider';
+import { ToolExecutor } from '$lib/server/infrastructure/ToolExecutor';
+import { MessageRepository } from '$lib/server/repositories/MessageRepository';
+import { ChatRepository } from '$lib/server/repositories/ChatRepository';
+import { ProjectRepository } from '$lib/server/repositories/ProjectRepository';
+import { TelegramBotRepository } from '$lib/server/repositories/TelegramBotRepository';
+import { TelegramChatBindingRepository } from '$lib/server/repositories/TelegramChatBindingRepository';
+import { UsageDailyRepository } from '$lib/server/repositories/UsageDailyRepository';
+import { ConversationService } from '$lib/server/services/ConversationService';
+import { ModelRoutingService } from '$lib/server/services/ModelRoutingService';
+import { TelegramIngressService } from '$lib/server/services/TelegramIngressService';
+import { UsageMeteringService } from '$lib/server/services/UsageMeteringService';
+import {
+	hydrateOpenRouterCapabilities,
+	isOpenRouterCapabilitiesHydrated
+} from '$lib/server/model/modelCapabilities';
+import { logger } from '$lib/server/logger';
+import { telegramWebhookUpdateSchema } from '$lib/server/validation/telegram.schema';
+
+function buildIngress(): TelegramIngressService {
+	const provider = new OpenRouterProvider(OPENROUTER_API_KEY, OPENROUTER_HTTP_REFERER || undefined);
+	const conversationService = new ConversationService(
+		provider,
+		new ChatRepository(),
+		new MessageRepository(),
+		new ToolExecutor(),
+		new ProjectRepository()
+	);
+	return new TelegramIngressService(
+		new TelegramBotRepository(),
+		new TelegramChatBindingRepository(),
+		conversationService,
+		new UsageMeteringService(new UsageDailyRepository()),
+		new ModelRoutingService(),
+		TELEGRAM_TOKEN_ENCRYPTION_KEY,
+		OPENROUTER_DEFAULT_MODEL
+	);
+}
+
+export const POST: RequestHandler = async ({ params, request }) => {
+	if (!params.botId) error(400, 'Invalid webhook path');
+	logger.info('Telegram webhook hit', { botId: params.botId });
+	let body: unknown;
+	try {
+		body = await request.json();
+	} catch {
+		error(400, 'Invalid JSON');
+	}
+	const parsed = telegramWebhookUpdateSchema.safeParse(body);
+	if (!parsed.success) return json({ ok: true, ignored: true });
+	const provider = new OpenRouterProvider(OPENROUTER_API_KEY, OPENROUTER_HTTP_REFERER || undefined);
+	if (!isOpenRouterCapabilitiesHydrated()) {
+		try {
+			const models = await provider.listModels();
+			if (models.length > 0) hydrateOpenRouterCapabilities(models);
+		} catch {
+			// ignore hydration errors for webhook ingestion
+		}
+	}
+	try {
+		await buildIngress().handleWebhook(
+			params.botId,
+			request.headers.get('x-telegram-bot-api-secret-token'),
+			parsed.data
+		);
+		return json({ ok: true });
+	} catch (err) {
+		logger.error('Telegram webhook failed', {
+			botId: params.botId,
+			error: err instanceof Error ? err.message : String(err)
+		});
+		handleDomainError(err);
+	}
+};

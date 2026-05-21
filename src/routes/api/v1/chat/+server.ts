@@ -27,6 +27,7 @@ import { TtsVoiceService } from '$lib/server/services/TtsVoiceService';
 import { logger } from '$lib/server/logger';
 import { VisionRelayService } from '$lib/server/services/VisionRelayService';
 import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
+import { ModelRoutingService } from '$lib/server/services/ModelRoutingService';
 import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
@@ -51,7 +52,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const { conversationId, message, model, attachments, projectId, enabledToolNames, voiceMode } =
 		parseResult.data;
 	const useVoice = Boolean(voiceMode && isElevenLabsConfigured());
-	const effectiveModel = model?.trim() || OPENROUTER_DEFAULT_MODEL;
+	const effectiveModel = new ModelRoutingService().resolve({
+		prompt: message,
+		requestedModel: model,
+		attachments,
+		enabledToolNames,
+		defaultModel: OPENROUTER_DEFAULT_MODEL
+	});
 	logger.info('Chat request', {
 		userId: user.id,
 		conversationId,
