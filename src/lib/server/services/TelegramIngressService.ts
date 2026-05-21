@@ -2,6 +2,7 @@ import { DomainError } from '../domain/DomainError';
 import { decryptSecret } from '../infrastructure/secretCrypto';
 import { sendTelegramMessage } from '../infrastructure/telegramApiClient';
 import { logger } from '../logger';
+import type { ChatRepository } from '../repositories/ChatRepository';
 import { TelegramChatBindingRepository } from '../repositories/TelegramChatBindingRepository';
 import { TelegramBotRepository } from '../repositories/TelegramBotRepository';
 import { ModelRoutingService } from './ModelRoutingService';
@@ -17,6 +18,7 @@ export class TelegramIngressService {
 	constructor(
 		private readonly botRepo: TelegramBotRepository,
 		private readonly bindingRepo: TelegramChatBindingRepository,
+		private readonly chatRepo: ChatRepository,
 		private readonly conversationService: ConversationService,
 		private readonly usage: UsageMeteringService,
 		private readonly modelRouter: ModelRoutingService,
@@ -40,7 +42,13 @@ export class TelegramIngressService {
 		if (!update.message?.text?.trim()) return { ok: true, ignored: true };
 		const chatId = String(update.message.chat.id);
 		const binding = await this.bindingRepo.findByBotAndChatId(bot.id, chatId);
-		if (binding?.lastUpdateId && Number(binding.lastUpdateId) >= update.update_id) {
+		const linkedConv =
+			binding?.conversationId != null
+				? await this.chatRepo.findById(binding.conversationId)
+				: null;
+		const activeBinding =
+			binding && linkedConv && linkedConv.userId === bot.userId ? binding : null;
+		if (activeBinding?.lastUpdateId && Number(activeBinding.lastUpdateId) >= update.update_id) {
 			return { ok: true, ignored: true };
 		}
 		await this.usage.assertBotWithinDailyLimit(bot.userId, bot);
@@ -56,10 +64,10 @@ export class TelegramIngressService {
 		const token = decryptSecret(bot.tokenCiphertext, this.encryptionKey);
 		let out = '';
 		let toolCalls = 0;
-		let resolvedConversationId = binding?.conversationId;
+		let resolvedConversationId = activeBinding?.conversationId;
 		for await (const event of this.conversationService.processPrompt(
 			bot.userId,
-			binding?.conversationId,
+			activeBinding?.conversationId,
 			prompt,
 			undefined,
 			modelId,
@@ -83,7 +91,8 @@ export class TelegramIngressService {
 			});
 		} else {
 			await this.bindingRepo.updateByBotAndChatId(bot.id, chatId, {
-				lastUpdateId: String(update.update_id)
+				lastUpdateId: String(update.update_id),
+				conversationId: resolvedConversationId
 			});
 		}
 		logger.info('Telegram webhook processed', {

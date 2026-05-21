@@ -40,6 +40,12 @@ export class TelegramChatBindingRepository {
 		return binding;
 	}
 
+	async deleteByConversationId(conversationId: string): Promise<void> {
+		await db
+			.delete(telegramChatBindings)
+			.where(eq(telegramChatBindings.conversationId, conversationId));
+	}
+
 	async updateByBotAndChatId(
 		botId: string,
 		telegramChatId: string,

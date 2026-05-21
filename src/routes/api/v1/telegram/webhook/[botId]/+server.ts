@@ -27,9 +27,10 @@ import { telegramWebhookUpdateSchema } from '$lib/server/validation/telegram.sch
 
 function buildIngress(): TelegramIngressService {
 	const provider = new OpenRouterProvider(OPENROUTER_API_KEY, OPENROUTER_HTTP_REFERER || undefined);
+	const chatRepo = new ChatRepository();
 	const conversationService = new ConversationService(
 		provider,
-		new ChatRepository(),
+		chatRepo,
 		new MessageRepository(),
 		new ToolExecutor(),
 		new ProjectRepository()
@@ -37,6 +38,7 @@ function buildIngress(): TelegramIngressService {
 	return new TelegramIngressService(
 		new TelegramBotRepository(),
 		new TelegramChatBindingRepository(),
+		chatRepo,
 		conversationService,
 		new UsageMeteringService(new UsageDailyRepository()),
 		new ModelRoutingService(),

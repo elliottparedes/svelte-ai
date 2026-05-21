@@ -2,6 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { ChatRepository } from '$lib/server/repositories/ChatRepository';
 import { MessageRepository } from '$lib/server/repositories/MessageRepository';
+import { TelegramChatBindingRepository } from '$lib/server/repositories/TelegramChatBindingRepository';
 
 export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	const user = locals.user;
@@ -43,6 +44,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 
 	const messageRepo = new MessageRepository();
 	await messageRepo.deleteByConversationId(conversationId);
+	await new TelegramChatBindingRepository().deleteByConversationId(conversationId);
 	await chatRepo.delete(conversationId);
 
 	return json({ success: true });
