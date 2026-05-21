@@ -73,9 +73,11 @@ export const POST: RequestHandler = async ({ params, request }) => {
 		);
 		return json({ ok: true });
 	} catch (err) {
+		const msg = err instanceof Error ? err.message : String(err);
 		logger.error('Telegram webhook failed', {
 			botId: params.botId,
-			error: err instanceof Error ? err.message : String(err)
+			error: msg,
+			hasSecretHeader: Boolean(request.headers.get('x-telegram-bot-api-secret-token'))
 		});
 		handleDomainError(err);
 	}

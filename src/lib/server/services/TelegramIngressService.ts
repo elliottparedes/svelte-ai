@@ -31,7 +31,12 @@ export class TelegramIngressService {
 	): Promise<{ ok: boolean; ignored?: boolean }> {
 		const bot = await this.botRepo.findById(botId);
 		if (!bot || bot.status !== 'active') throw new DomainError('Telegram bot not found', 404);
-		if (headerSecret !== bot.webhookSecret) throw new DomainError('Invalid Telegram secret', 401);
+		if (headerSecret !== bot.webhookSecret) {
+			const hint = headerSecret
+				? 'Webhook secret mismatch'
+				: 'Telegram sent no secret header — click Register webhook in Profile';
+			throw new DomainError(hint, 401);
+		}
 		if (!update.message?.text?.trim()) return { ok: true, ignored: true };
 		const chatId = String(update.message.chat.id);
 		const binding = await this.bindingRepo.findByBotAndChatId(bot.id, chatId);
