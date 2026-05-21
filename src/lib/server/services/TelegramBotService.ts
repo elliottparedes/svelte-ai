@@ -88,9 +88,26 @@ export class TelegramBotService {
 		await this.repo.deleteByUserId(botId, userId);
 	}
 
-	async syncWebhook(userId: string, botId: string): Promise<TelegramWebhookStatus> {
+	async syncWebhook(
+		userId: string,
+		botId: string,
+		tokenPlain?: string
+	): Promise<TelegramWebhookStatus> {
 		const bot = await this.requireOwnership(userId, botId);
-		return syncTelegramBotWebhook(bot, null, this.config.encryptionKey, this.config.webhookBaseUrl);
+		if (tokenPlain) {
+			await this.repo.update(bot.id, {
+				tokenCiphertext: encryptSecret(tokenPlain, this.config.encryptionKey),
+				tokenHint: maskToken(tokenPlain)
+			});
+		}
+		const current = await this.repo.findById(bot.id);
+		if (!current) throw new DomainError('Telegram bot not found', 404);
+		return syncTelegramBotWebhook(
+			current,
+			tokenPlain ?? null,
+			this.config.encryptionKey,
+			this.config.webhookBaseUrl
+		);
 	}
 
 	async requireOwnership(userId: string, botId: string): Promise<TelegramBot> {

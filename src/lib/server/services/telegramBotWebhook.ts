@@ -29,7 +29,19 @@ export async function syncTelegramBotWebhook(
 			503
 		);
 	}
-	const token = tokenPlain ?? decryptSecret(bot.tokenCiphertext, encryptionKey);
+	let token: string;
+	if (tokenPlain) {
+		token = tokenPlain;
+	} else {
+		try {
+			token = decryptSecret(bot.tokenCiphertext, encryptionKey);
+		} catch {
+			throw new DomainError(
+				'Stored bot token cannot be decrypted on this server. Paste your BotFather token again when registering the webhook.',
+				400
+			);
+		}
+	}
 	const expectedUrl = buildTelegramWebhookUrl(base, bot.id);
 	await setTelegramWebhook(token, expectedUrl, bot.webhookSecret);
 	return readWebhookStatus(expectedUrl, await getTelegramWebhookInfo(token));

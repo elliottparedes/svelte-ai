@@ -3,12 +3,14 @@
 
 	let {
 		bots,
+		relinkToken = $bindable(''),
 		saving,
 		onToggle,
 		onSync,
 		onRemove
 	} = $props<{
 		bots: TelegramBotView[];
+		relinkToken?: string;
 		saving: boolean;
 		onToggle: (bot: TelegramBotView) => Promise<void>;
 		onSync: (bot: TelegramBotView) => Promise<void>;
@@ -18,6 +20,16 @@
 
 <section class="tg-section" aria-labelledby="connected-bots-heading">
 	<h3 id="connected-bots-heading" class="tg-section__title">Connected bots</h3>
+	<label class="tg-field tg-field--wide">
+		<span class="tg-label">Re-link token (paste if register fails on this server)</span>
+		<input
+			class="tg-control"
+			type="password"
+			placeholder="BotFather token"
+			bind:value={relinkToken}
+			autocomplete="off"
+		/>
+	</label>
 	{#if bots.length === 0}
 		<p class="tg-empty">No bots connected yet.</p>
 	{:else}

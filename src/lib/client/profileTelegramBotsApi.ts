@@ -85,9 +85,14 @@ export async function getTelegramSetupInfo(): Promise<TelegramSetupInfo> {
 }
 
 export async function syncTelegramBotWebhook(
-	id: string
+	id: string,
+	token?: string
 ): Promise<TelegramWebhookStatus> {
-	const res = await fetch(`/api/v1/telegram/bots/${id}/sync-webhook`, { method: 'POST' });
+	const res = await fetch(`/api/v1/telegram/bots/${id}/sync-webhook`, {
+		method: 'POST',
+		headers: token ? { 'Content-Type': 'application/json' } : undefined,
+		body: token ? JSON.stringify({ token }) : undefined
+	});
 	const data = await readJson<{ webhook: TelegramWebhookStatus }>(res);
 	return data.webhook;
 }

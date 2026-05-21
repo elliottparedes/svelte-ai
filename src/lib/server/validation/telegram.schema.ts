@@ -27,6 +27,10 @@ export const telegramWebhookPathSchema = z.object({
 	routeSecret: z.string().optional()
 });
 
+export const telegramSyncWebhookSchema = z.object({
+	token: z.string().min(20).max(200).optional()
+});
+
 export const telegramWebhookUpdateSchema = z.object({
 	update_id: z.number().int(),
 	message: z

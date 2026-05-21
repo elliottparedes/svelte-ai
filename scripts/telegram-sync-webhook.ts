@@ -3,7 +3,7 @@
  * Run on the server (Coolify terminal) with production .env loaded.
  *
  * Usage: npm run telegram:sync-webhook -- <bot-uuid>
- *    or: TELEGRAM_BOT_ID=<uuid> npm run telegram:sync-webhook
+ *    or: TELEGRAM_BOT_TOKEN=<token> npm run telegram:sync-webhook -- <bot-uuid>
  */
 import 'dotenv/config';
 import { TelegramBotRepository } from '../src/lib/server/repositories/TelegramBotRepository';
@@ -25,9 +25,10 @@ async function main() {
 		console.error('Bot not found:', botId);
 		process.exit(1);
 	}
+	const tokenPlain = process.env.TELEGRAM_BOT_TOKEN?.trim() || null;
 	const status = await syncTelegramBotWebhook(
 		bot,
-		null,
+		tokenPlain,
 		TELEGRAM_TOKEN_ENCRYPTION_KEY,
 		TELEGRAM_WEBHOOK_BASE_URL
 	);

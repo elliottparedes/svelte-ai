@@ -27,6 +27,7 @@
 	let token = $state('');
 	let defaultModelId = $state('qwen/qwen3.5-flash-02-23');
 	let dailyMessageLimit = $state(500);
+	let relinkToken = $state('');
 
 	$effect(() => {
 		void refresh();
@@ -95,7 +96,11 @@
 		error = '';
 		ok = '';
 		try {
-			const status = await syncTelegramBotWebhook(bot.id);
+			const status = await syncTelegramBotWebhook(
+				bot.id,
+				relinkToken.trim() || undefined
+			);
+			relinkToken = '';
 			ok = status.registered
 				? 'Webhook registered. Send a message to your bot on Telegram.'
 				: 'Webhook call succeeded but URL mismatch — check TELEGRAM_WEBHOOK_BASE_URL.';
@@ -152,6 +157,7 @@
 
 	<ProfileTelegramBotList
 		bots={bots}
+		bind:relinkToken
 		{saving}
 		onToggle={toggleStatus}
 		onSync={syncWebhook}
