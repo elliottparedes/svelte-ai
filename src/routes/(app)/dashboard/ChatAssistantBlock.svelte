@@ -34,10 +34,12 @@
 <style>
 	.assistant-row {
 		width: 100%;
-		color: #cdd6f4;
 		font-size: 0.95rem;
 		line-height: 1.6;
 		animation: messageIn 0.25s ease-out;
+	}
+	.assistant-row :global(.inkstream-markdown) {
+		color: #b4befe;
 	}
 	.assistant-row :global(pre) {
 		white-space: pre-wrap;

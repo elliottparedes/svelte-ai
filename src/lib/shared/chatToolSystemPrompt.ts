@@ -30,11 +30,11 @@ const BULLETS: Record<ChatToolId, string> = {
 		'Run Python 3.12. Includes numpy, pandas, scipy, sympy + urllib HTTP. Use for: DataFrames, CSV/TSV you paste, stats, plots as text, weather APIs, Monte Carlo, exact math. No requests/beautifulsoup/matplotlib — use fetch_url for HTML then parse with pandas. Always print() results.',
 	calculator: 'Evaluate a simple one-line math expression only (e.g. 25 * 47). Prefer execute_python for harder problems.',
 	datetime:
-		'Get the current date and time. Use when the user asks about "now", "today", or current time.',
+		'Get the current date and time (ISO). The system message already states today; call this if you need to re-check mid-conversation.',
 	fetch_url:
 		'Fetch and strip text from a specific webpage URL (HTML → plain text). Use when the user gives a link or you need the body of one known page. For weather or simple APIs, execute_python with urllib is often faster than fetch_url.',
 	web_search:
-		'Search the web via SearXNG (snippets + links). Use to discover sources or current news; not required for simple weather if execute_python can call wttr.in or open-meteo. Do not use repeated web searches to identify something shown only in an in-chat [Vision summary] unless the user asks for web lookup or verification.',
+		'Search the web via SearXNG (answers, infoboxes, many snippets + URLs). Results are live indexed pages — report them as real news/facts, never as fictional or "future" because of training cutoff. Call fetch_url on key URLs for full page text. Not required for simple weather if execute_python can call wttr.in or open-meteo. Do not loop web_search for [Vision summary] unless the user asks for web lookup.',
 	image_search:
 		'Search the web for images. Use when the user wants to see images of something. IMPORTANT: after the tool returns, copy the markdown image links from the result verbatim into your response exactly as-is — do not describe or summarize them. The markdown will render as real images in the UI.',
 	map_route:
@@ -60,7 +60,7 @@ export function normalizeChatToolIds(ids: readonly string[]): ChatToolId[] {
 
 export function buildChatToolSystemPrompt(ids: readonly ChatToolId[]): string {
 	const lines = ids.map((id) => `- ${id}: ${BULLETS[id]}`).join('\n');
-	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Weather in a city: prefer execute_python fetching wttr.in or open-meteo.com. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then execute_python to parse).`;
+	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Trust web_search and fetch_url dates over your training memory; do not disclaim results as fictional. Weather in a city: prefer execute_python fetching wttr.in or open-meteo.com. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then execute_python to parse).`;
 }
 
 export function buildChatToolSystemPromptNoWeb(ids: readonly ChatToolId[]): string {

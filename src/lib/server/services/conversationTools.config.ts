@@ -41,7 +41,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'web_search',
 		description:
-			'Search the web via SearXNG and return top results with titles, snippets, and URLs. Use for current events, news, or any topic that may have changed since your training data.',
+			'Search the web via SearXNG: live indexed results (not fiction). Report dates and headlines as real; never dismiss as future-dated vs training. Follow with fetch_url on best 1–2 links for full articles. Use for current events, news, or anything not in training data.',
 		parameters: {
 			type: 'object',
 			properties: {

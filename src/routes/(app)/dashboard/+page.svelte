@@ -9,12 +9,22 @@
 	import ImmersiveVoiceOverlay from './ImmersiveVoiceOverlay.svelte';
 	import { createDashboardPageModel } from './dashboardPageModel.svelte.js';
 	import type { DashboardPageLoadData, DashboardUser } from '$lib/types/dashboard';
+	import { useDashboardViewport } from './useDashboardViewport.svelte';
+	import { useDashboardBodyScrollLock } from './useDashboardBodyScrollLock.svelte';
+	import DashboardMobileChrome from './DashboardMobileChrome.svelte';
+	import { createDashboardMobileNav } from './dashboardMobileNav';
+	import './dashboardPageLayout.css';
+	import './dashboardMobile.css';
+	import { computeChatContextExtraTokens } from './dashboardChatContextExtra';
 
 	let { data } = $props<{ data: DashboardPageLoadData }>();
 
 	const user = $derived(($page.data.user as DashboardUser | null) ?? null);
 	// svelte-ignore state_referenced_locally
 	const model = createDashboardPageModel(data);
+	const viewport = useDashboardViewport();
+	const mobileNav = createDashboardMobileNav(viewport, model);
+	useDashboardBodyScrollLock(() => viewport.isMobile && !model.sidebarCollapsed);
 
 	const chatBackProjectId = $derived.by(() => {
 		if (model.projectComposeMode && model.activeProjectId) return model.activeProjectId;
@@ -33,21 +43,16 @@
 		model.models.find((m) => m.id === model.selectedModel)?.supportsTools !== false
 	);
 
-	const chatContextExtraTokens = $derived.by(() => {
-		if (model.projectComposeMode && model.activeProjectId) {
-			const sp = model.projects.find((p) => p.id === model.activeProjectId)?.systemPrompt ?? '';
-			return Math.ceil(sp.length / 4);
-		}
-		const cid = model.activeConversationId;
-		if (!cid) return 0;
-		const conv =
-			model.projectConversations.find((c) => c.id === cid) ??
-			model.conversations.find((c) => c.id === cid);
-		const pid = conv?.projectId;
-		if (!pid) return 0;
-		const sp = model.projects.find((p) => p.id === pid)?.systemPrompt ?? '';
-		return Math.ceil(sp.length / 4);
-	});
+	const chatContextExtraTokens = $derived.by(() =>
+		computeChatContextExtraTokens({
+			projectComposeMode: model.projectComposeMode,
+			activeProjectId: model.activeProjectId,
+			activeConversationId: model.activeConversationId,
+			projects: model.projects,
+			projectConversations: model.projectConversations,
+			conversations: model.conversations
+		})
+	);
 </script>
 
 <div class="app-layout">
@@ -56,20 +61,30 @@
 		projects={model.projects}
 		activeId={model.activeConversationId}
 		activeProjectId={model.activeProjectId}
-		onSelect={model.loadMessages}
-		onSelectProject={model.loadProject}
-		onNewChat={model.startNewChat}
+		onSelect={mobileNav.onSelectConversation}
+		onSelectProject={mobileNav.onSelectProject}
+		onNewChat={mobileNav.onNewChat}
 		onDelete={model.deleteConversation}
 		onRename={model.renameConversation}
 		streamingConversationIds={model.streamingConversationIds}
 		{user}
 		onLogout={model.logout}
 		bind:collapsed={model.sidebarCollapsed}
+		isMobile={viewport.isMobile}
 	/>
 
-	<main class="chat-main">
+	<main
+		class="chat-main"
+		class:has-back-btn={showProjectChatBack && !!chatBackProjectId}
+	>
+		<DashboardMobileChrome
+			sidebarOpen={viewport.isMobile && !model.sidebarCollapsed}
+			showMenuButton={viewport.isMobile && model.sidebarCollapsed}
+			onOpenSidebar={mobileNav.openMobileSidebar}
+			onCloseSidebar={mobileNav.closeMobileSidebar}
+		/>
 		{#if showProjectChatBack && chatBackProjectId}
-			<ProjectChatBackButton projectId={chatBackProjectId} onBack={model.loadProject} />
+			<ProjectChatBackButton projectId={chatBackProjectId} onBack={mobileNav.onProjectBack} />
 		{/if}
 		{#if model.activeProjectId && !model.projectComposeMode}
 			<DashboardProjectPanel
@@ -84,7 +99,7 @@
 				onCancelEditPrompt={() => {
 					model.editingProjectPrompt = false;
 				}}
-				onOpenConversation={model.loadMessages}
+				onOpenConversation={mobileNav.onOpenProjectConversation}
 				onRenameChat={model.renameConversation}
 				onDeleteChat={model.deleteConversation}
 				streamingConversationIds={model.streamingConversationIds}
@@ -118,30 +133,3 @@
 		{/if}
 	</main>
 </div>
-
-<style>
-	.app-layout {
-		display: flex;
-		flex: 1;
-		min-height: 0;
-		width: 100%;
-		max-width: 100%;
-		overflow: hidden;
-	}
-	.chat-main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		background: #181825;
-		min-width: 0;
-		min-height: 0;
-		position: relative;
-		z-index: 1;
-	}
-	.chat-input-area {
-		position: sticky;
-		bottom: 0;
-		padding: 0 1rem 2rem;
-		background: linear-gradient(transparent, #181825 30%);
-	}
-</style>

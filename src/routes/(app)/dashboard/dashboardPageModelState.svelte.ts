@@ -7,6 +7,7 @@ import type {
 	Project
 } from '$lib/types/dashboard';
 import { pickDashboardModelId } from '$lib/client/dashboardPickModel';
+import { getDashboardIsMobile } from '$lib/client/dashboardViewport';
 import type { MessageCache } from '$lib/client/dashboardMessageCache';
 import {
 	buildDashboardStreamStore,
@@ -32,7 +33,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			? data.defaultModelId
 			: (data.models[0]?.id ?? '')
 	);
-	let sidebarCollapsed = $state(false);
+	let sidebarCollapsed = $state(getDashboardIsMobile());
 	let attachments = $state<ChatAttachmentInput[]>([]);
 	let enabledToolIds = $state<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]);
 	const VOICE_MODE_KEY = 'dashboardVoiceMode';

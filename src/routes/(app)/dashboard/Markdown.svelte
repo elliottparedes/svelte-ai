@@ -2,8 +2,10 @@
 	import { marked } from 'marked';
 	import hljs from 'highlight.js';
 	import 'highlight.js/styles/github-dark.css';
+	import './markdownBody.css';
 	import { markdownBlobifyDataImages } from '$lib/client/markdownBlobifyDataImages';
 	import ImageLightbox from './ImageLightbox.svelte';
+	import { portalToBody } from '$lib/client/portalToBody';
 
 	let { content } = $props<{ content: string }>();
 
@@ -80,15 +82,21 @@
 	}
 </script>
 
-<div class="markdown-body" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:interceptImageClicks>{@html html}</div>
+<style>
+	.lightbox-portal {
+		display: contents;
+	}
+</style>
+
+<div class="inkstream-markdown" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:interceptImageClicks>{@html html}</div>
 
 {#if lightbox}
-	<ImageLightbox
-		src={lightbox.src}
-		alt={lightbox.alt}
-		sourceUrl={lightbox.sourceUrl}
-		onclose={() => lightbox = null}
-	/>
+	<div class="lightbox-portal" use:portalToBody>
+		<ImageLightbox
+			src={lightbox.src}
+			alt={lightbox.alt}
+			sourceUrl={lightbox.sourceUrl}
+			onclose={() => (lightbox = null)}
+		/>
+	</div>
 {/if}
-
-<style src="./markdownBody.css"></style>

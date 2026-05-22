@@ -27,6 +27,23 @@ export const OPENROUTER_DEFAULT_MODEL = getEnv(
 );
 /** SearXNG base URL (e.g. http://searxng:8080). Empty string disables web search. */
 export const SEARXNG_URL = getEnv('SEARXNG_URL', '');
+/** Max unique web results passed to the model (1–30). */
+export const SEARXNG_MAX_RESULTS = Math.min(
+	30,
+	Math.max(1, Number(getEnv('SEARXNG_MAX_RESULTS', '15')) || 15)
+);
+/** Max characters in web_search tool output (2k–64k). */
+export const SEARXNG_MAX_OUTPUT_CHARS = Math.min(
+	65_536,
+	Math.max(2000, Number(getEnv('SEARXNG_MAX_OUTPUT_CHARS', '24000')) || 24_000)
+);
+/** Optional comma-separated SearXNG engines; empty = instance default (more engines). */
+export const SEARXNG_ENGINES = getEnv('SEARXNG_ENGINES', '');
+/** Max images returned by image_search (1–24). SearXNG may return fewer per page. */
+export const SEARXNG_IMAGE_MAX_RESULTS = Math.min(
+	24,
+	Math.max(1, Number(getEnv('SEARXNG_IMAGE_MAX_RESULTS', '12')) || 12)
+);
 /** Nominatim geocoder base URL (no trailing slash required). */
 export const NOMINATIM_BASE_URL = getEnv('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org');
 /** OSRM router base URL (no trailing slash required). */

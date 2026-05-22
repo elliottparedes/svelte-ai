@@ -62,6 +62,10 @@ VISION_RELAY_ENABLED=         # true/false — summarize images for non-vision m
 VISION_RELAY_MODEL=           # OpenRouter vision model for relay
 VISION_RELAY_MAX_TOKENS=      # Max tokens for relay description
 SEARXNG_URL=                  # Optional; base URL of self-hosted SearXNG instance (e.g. http://searxng:8080) — enables web search tool
+SEARXNG_MAX_RESULTS=          # Optional; unique results for web_search (default 15, max 30)
+SEARXNG_MAX_OUTPUT_CHARS=     # Optional; cap tool output size (default 24000)
+SEARXNG_IMAGE_MAX_RESULTS=    # Optional; images for image_search tool (default 12, max 24; fetches extra pages if needed)
+SEARXNG_ENGINES=              # Optional; comma-separated engines filter; empty = instance default
 NOMINATIM_BASE_URL=           # Optional; default https://nominatim.openstreetmap.org
 OSRM_BASE_URL=                # Optional; default https://router.project-osrm.org
 MAP_HTTP_USER_AGENT=          # Optional; required by Nominatim policy (default Inkstream/1.0)

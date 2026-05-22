@@ -1,47 +1,83 @@
-.markdown-body :global(p) {
+/* Global (imported from Markdown.svelte) — not component-scoped */
+.inkstream-markdown {
+	color: #b4befe;
+	font-size: inherit;
+	line-height: inherit;
+}
+.inkstream-markdown p {
 	margin-bottom: 0.75rem;
 	overflow-wrap: anywhere;
 	word-break: break-word;
 }
-.markdown-body :global(p:last-child) {
+.inkstream-markdown p:last-child {
 	margin-bottom: 0;
 }
-.markdown-body :global(code) {
+.inkstream-markdown li {
+	color: #b4befe;
+}
+.inkstream-markdown strong {
+	color: #f5c2e7 !important;
+	font-weight: 600;
+}
+.inkstream-markdown em {
+	color: #cba6f7 !important;
+	font-style: italic;
+}
+.inkstream-markdown em strong,
+.inkstream-markdown strong em {
+	color: #ffc0e8 !important;
+}
+.inkstream-markdown h1,
+.inkstream-markdown h2,
+.inkstream-markdown h3,
+.inkstream-markdown h4,
+.inkstream-markdown h5,
+.inkstream-markdown h6 {
+	color: #f5c2e7;
+	font-weight: 600;
+	margin: 0.75rem 0 0.35rem;
+}
+.inkstream-markdown code {
 	background: #1e1e2e;
 	padding: 0.2em 0.4em;
 	border-radius: 3px;
 	font-family: 'Fira Code', 'Consolas', monospace;
+	color: #cdd6f4;
 }
-.markdown-body :global(pre) {
+.inkstream-markdown pre {
 	background: #1e1e2e;
 	padding: 1rem;
 	border-radius: 8px;
 	overflow-x: auto;
+	color: #cdd6f4;
 }
-.markdown-body :global(pre code) {
+.inkstream-markdown pre code {
 	background: none;
 	padding: 0;
 }
-.markdown-body :global(ul),
-.markdown-body :global(ol) {
+.inkstream-markdown ul,
+.inkstream-markdown ol {
 	padding-left: 1.5rem;
 	margin-bottom: 0.75rem;
 }
-.markdown-body :global(blockquote) {
+.inkstream-markdown li::marker {
+	color: #cba6f7;
+}
+.inkstream-markdown blockquote {
 	border-left: 3px solid #45475a;
 	padding-left: 1rem;
-	color: #a6adc8;
+	color: #cba6f7;
 	margin-bottom: 0.75rem;
 }
-.markdown-body :global(a) {
+.inkstream-markdown a {
 	color: #89b4fa;
 }
-.markdown-body :global(.chat-gen-image) {
+.inkstream-markdown .chat-gen-image {
 	display: block;
 	margin: 0.75rem 0;
 	max-width: min(100%, 520px);
 }
-.markdown-body :global(.chat-gen-image img) {
+.inkstream-markdown .chat-gen-image img {
 	display: block;
 	width: 100%;
 	height: auto;
@@ -53,14 +89,14 @@
 	margin: 0;
 	cursor: zoom-in;
 }
-.markdown-body :global(p:has(> img:only-child)),
-.markdown-body :global(p:has(> a:only-child > img)) {
+.inkstream-markdown p:has(> img:only-child),
+.inkstream-markdown p:has(> a:only-child > img) {
 	display: block;
 	max-width: min(100%, 520px);
 	margin: 0.75rem 0;
 }
-.markdown-body :global(p:has(> img:only-child) img),
-.markdown-body :global(p:has(> a:only-child > img) img) {
+.inkstream-markdown p:has(> img:only-child) img,
+.inkstream-markdown p:has(> a:only-child > img) img {
 	display: block;
 	width: 100%;
 	max-width: 100%;
@@ -69,7 +105,13 @@
 	margin: 0;
 	cursor: zoom-in;
 }
-.markdown-body :global(img) {
+.inkstream-markdown table {
+	display: block;
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+.inkstream-markdown img {
 	max-width: 200px;
 	max-height: 200px;
 	width: auto;
@@ -79,10 +121,7 @@
 	display: inline-block;
 	margin: 4px;
 }
-.markdown-body :global(strong) {
-	color: #f5c2e7;
-}
-.markdown-body :global(.code-copy-btn) {
+.inkstream-markdown .code-copy-btn {
 	position: absolute;
 	top: 0.5rem;
 	right: 0.5rem;
@@ -96,14 +135,14 @@
 	opacity: 0;
 	transition: opacity 0.2s, color 0.15s, background 0.15s;
 }
-.markdown-body :global(pre:hover .code-copy-btn) {
+.inkstream-markdown pre:hover .code-copy-btn {
 	opacity: 1;
 }
-.markdown-body :global(.code-copy-btn:hover) {
+.inkstream-markdown .code-copy-btn:hover {
 	color: #cdd6f4;
 	background: #45475a;
 }
-.markdown-body :global(.code-copy-btn.copied) {
+.inkstream-markdown .code-copy-btn.copied {
 	color: #a6e3a1;
 	border-color: #a6e3a1;
 	opacity: 1;

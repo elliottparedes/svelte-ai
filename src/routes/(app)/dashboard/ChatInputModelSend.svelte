@@ -74,10 +74,11 @@
 	<button
 		type="button"
 		class="send-btn"
-		onclick={onSend}
+		onclick={() => onSend()}
 		disabled={isStreaming || (!value.trim() && attachmentsLen === 0)}
+		aria-label="Send message"
 	>
-		<span>➤</span>
+		<span aria-hidden="true">➤</span>
 	</button>
 </div>
 
@@ -124,9 +125,18 @@
 		color: #1e1e2e;
 		font-size: 1rem;
 	}
+	.send-btn:not(:disabled) {
+		cursor: pointer;
+	}
+	.send-btn:not(:disabled):hover {
+		background: #b4befe;
+	}
+	.send-btn:not(:disabled):active {
+		background: #74c7ec;
+	}
 	.send-btn:disabled {
-		opacity: 0.3;
-		cursor: default;
+		opacity: 0.35;
+		cursor: not-allowed;
 	}
 	:global(.dropdown.is-up .dropdown-menu) {
 		top: auto;

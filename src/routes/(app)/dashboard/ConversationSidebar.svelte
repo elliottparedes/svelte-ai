@@ -18,7 +18,8 @@
 		streamingConversationIds,
 		user,
 		onLogout,
-		collapsed = $bindable(false)
+		collapsed = $bindable(false),
+		isMobile = false
 	} = $props<{
 		conversations: Conversation[];
 		projects: Project[];
@@ -33,12 +34,15 @@
 		user: DashboardUser | null;
 		onLogout: () => void;
 		collapsed?: boolean;
+		isMobile?: boolean;
 	}>();
 </script>
 
-<aside class="sidebar" class:collapsed>
+<aside class="sidebar" class:collapsed class:mobile={isMobile}>
 	{#if collapsed}
-		<SidebarNarrowBar {onNewChat} onExpand={() => (collapsed = false)} />
+		{#if !isMobile}
+			<SidebarNarrowBar {onNewChat} onExpand={() => (collapsed = false)} />
+		{/if}
 	{:else}
 		<div class="sidebar-inner">
 			<div class="header">
@@ -46,7 +50,14 @@
 					<img src="/logo.svg" alt="" class="logo-mark" width="28" height="28" />
 					<span class="logo">Inkstream</span>
 				</div>
-				<button class="menu-btn" onclick={() => (collapsed = true)} title="Close menu">☰</button>
+				<button
+					class="menu-btn"
+					onclick={() => (collapsed = true)}
+					title={isMobile ? 'Close menu' : 'Collapse menu'}
+					aria-label={isMobile ? 'Close menu' : 'Collapse menu'}
+				>
+					{isMobile ? '✕' : '☰'}
+				</button>
 			</div>
 			<button class="new-chat" onclick={() => onNewChat()}>
 				<span>✚</span>

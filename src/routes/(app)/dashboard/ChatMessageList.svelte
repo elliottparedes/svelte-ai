@@ -73,30 +73,39 @@
 	});
 </script>
 
-<div class="chat-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
-	<div class="messages-wrapper" bind:this={messagesWrapper}>
-		{#each displayMessages as msg (msg.id)}
-			<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
-		{/each}
-		<ChatMessageListExtras messages={displayMessages} {isStreaming} {errorMessage} />
+<div class="chat-messages-pane">
+	<div class="chat-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
+		<div class="messages-wrapper" bind:this={messagesWrapper}>
+			{#each displayMessages as msg (msg.id)}
+				<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
+			{/each}
+			<ChatMessageListExtras messages={displayMessages} {isStreaming} {errorMessage} />
+		</div>
 	</div>
+
+	{#if userScrolledUp}
+		<button class="scroll-to-bottom" onclick={scrollToBottom} title="Scroll to bottom" aria-label="Scroll to bottom">
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<polyline points="6 9 12 15 18 9"></polyline>
+			</svg>
+		</button>
+	{/if}
 </div>
 
-{#if userScrolledUp}
-	<button class="scroll-to-bottom" onclick={scrollToBottom} title="Scroll to bottom">
-		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-			<polyline points="6 9 12 15 18 9"></polyline>
-		</svg>
-	</button>
-{/if}
-
 <style>
+	.chat-messages-pane {
+		flex: 1;
+		min-height: 0;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
 	.chat-scroll {
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
 		background: #181825;
-		padding: 1rem 1rem 6rem;
+		padding: 1rem 1rem 2.5rem;
 		scrollbar-width: thin;
 		scrollbar-color: #45475a transparent;
 	}
@@ -118,20 +127,21 @@
 		gap: 2rem;
 	}
 	.scroll-to-bottom {
-		position: fixed;
-		bottom: 140px;
-		right: 2rem;
+		position: absolute;
+		right: 1rem;
+		bottom: 1rem;
 		background: #313244;
 		border: 1px solid #45475a;
 		border-radius: 50%;
-		width: 36px;
-		height: 36px;
+		width: 2.75rem;
+		height: 2.75rem;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
 		color: #cdd6f4;
 		z-index: 10;
+		box-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
 		transition: background 0.15s;
 	}
 	.scroll-to-bottom:hover {

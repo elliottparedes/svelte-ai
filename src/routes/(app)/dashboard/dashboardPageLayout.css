@@ -1,0 +1,24 @@
+.app-layout {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+	max-width: 100%;
+	overflow: hidden;
+}
+.chat-main {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	background: #181825;
+	min-width: 0;
+	min-height: 0;
+	position: relative;
+	z-index: 1;
+}
+.chat-input-area {
+	position: sticky;
+	bottom: 0;
+	padding: 0 1rem 2rem;
+	background: linear-gradient(transparent, #181825 30%);
+}
