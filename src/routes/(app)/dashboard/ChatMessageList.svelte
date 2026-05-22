@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import ChatMessageRow from './ChatMessageRow.svelte';
 	import ChatMessageListExtras from './ChatMessageListExtras.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
@@ -13,7 +14,20 @@
 	const displayMessages = $derived(hydrateGenerateImageMessages(messages));
 
 	let scrollContainer: HTMLDivElement | null = $state(null);
+	let messagesWrapper: HTMLDivElement | null = $state(null);
 	let userScrolledUp = $state(false);
+
+	const threadAnchorId = $derived(displayMessages[0]?.id ?? '');
+
+	const scrollTrackKey = $derived.by(() => {
+		const last = displayMessages.at(-1);
+		return [
+			displayMessages.length,
+			last?.content.length ?? 0,
+			last?.reasoningContent?.length ?? 0,
+			isStreaming ? 1 : 0
+		].join(':');
+	});
 
 	function handleScroll() {
 		if (!scrollContainer) return;
@@ -28,15 +42,39 @@
 		}
 	}
 
+	async function scrollToBottomIfPinned() {
+		await tick();
+		if (!scrollContainer || userScrolledUp) return;
+		scrollContainer.scrollTop = scrollContainer.scrollHeight;
+	}
+
 	$effect(() => {
-		if (displayMessages.length && scrollContainer && !userScrolledUp) {
-			scrollToBottom();
+		threadAnchorId;
+		userScrolledUp = false;
+	});
+
+	$effect(() => {
+		scrollTrackKey;
+		if (displayMessages.length && scrollContainer) {
+			void scrollToBottomIfPinned();
 		}
+	});
+
+	$effect(() => {
+		const el = messagesWrapper;
+		if (!el) return;
+		const ro = new ResizeObserver(() => {
+			if (!userScrolledUp && scrollContainer) {
+				scrollContainer.scrollTop = scrollContainer.scrollHeight;
+			}
+		});
+		ro.observe(el);
+		return () => ro.disconnect();
 	});
 </script>
 
 <div class="chat-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
-	<div class="messages-wrapper">
+	<div class="messages-wrapper" bind:this={messagesWrapper}>
 		{#each displayMessages as msg (msg.id)}
 			<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
 		{/each}
@@ -44,7 +82,7 @@
 	</div>
 </div>
 
-{#if userScrolledUp && isStreaming}
+{#if userScrolledUp}
 	<button class="scroll-to-bottom" onclick={scrollToBottom} title="Scroll to bottom">
 		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<polyline points="6 9 12 15 18 9"></polyline>
@@ -55,6 +93,7 @@
 <style>
 	.chat-scroll {
 		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
 		background: #181825;
 		padding: 1rem 1rem 6rem;
