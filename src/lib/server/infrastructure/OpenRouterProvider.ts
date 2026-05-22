@@ -15,6 +15,8 @@ import {
 	fetchOpenRouterChatModelsCached,
 	promptInputBudgetForModel
 } from './openRouterModelsCatalog';
+import { applyOpenRouterReasoningOption } from './openRouterChatRequest.util';
+import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
 
 const BASE = 'https://openrouter.ai/api/v1';
 
@@ -61,6 +63,7 @@ export class OpenRouterProvider implements ChatProvider {
 		const pdfPlugins = openRouterPdfPluginsForChat(attachments, options?.model as string | undefined);
 		if (pdfPlugins) payload.plugins = pdfPlugins;
 		applyOpenRouterStreamPayloadOptions(payload, options);
+		applyOpenRouterReasoningOption(payload, options?.model as string | undefined);
 
 		const res = await fetch(`${BASE}/chat/completions`, {
 			method: 'POST',
@@ -90,7 +93,12 @@ export class OpenRouterProvider implements ChatProvider {
 				for (const line of lines) {
 					const parsed = parseGoSseDataLine(line);
 					if (!parsed) continue;
-					if (parsed.reasoningChunk) reasoningBuffer += parsed.reasoningChunk;
+					if (parsed.reasoningChunk) {
+						const prev = reasoningBuffer;
+						reasoningBuffer = appendReasoningStream(reasoningBuffer, parsed.reasoningChunk);
+						const delta = reasoningBuffer.slice(prev.length);
+						if (delta) yield { content: '', reasoningContent: delta, done: false };
+					}
 					if (parsed.textChunk) yield { content: parsed.textChunk, done: false };
 					if (parsed.toolDeltas) toolAccumulator.feed(parsed.toolDeltas);
 					if (parsed.done) {

@@ -13,16 +13,17 @@
 		const last = messages.at(-1);
 		if (!last) return true;
 		if (last.role === 'tool') return true;
-		if (last.role === 'assistant' && last.content.trim().length > 0) return false;
+		if (last.role === 'assistant') {
+			if (last.content.trim().length > 0) return false;
+			if ((last.reasoningContent?.trim().length ?? 0) > 0) return false;
+		}
 		return true;
 	});
 </script>
 
 {#if showTypingIndicator}
 	<div class="assistant-row typing-wrap">
-		<div class="typing-bubble">
-			<SidebarChatLoadingDots />
-		</div>
+		<SidebarChatLoadingDots size="chat" />
 	</div>
 {/if}
 
@@ -42,21 +43,6 @@
 	.error-wrap {
 		font-size: 0.95rem;
 		line-height: 1.6;
-	}
-	.typing-bubble {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.65rem 0.9rem;
-		background: #45475a;
-		border-radius: 1rem;
-	}
-	.typing-bubble :global(.loading-dots) {
-		margin-left: 0;
-		gap: 5px;
-	}
-	.typing-bubble :global(.loading-dots span) {
-		width: 6px;
-		height: 6px;
 	}
 	@keyframes messageIn {
 		from {

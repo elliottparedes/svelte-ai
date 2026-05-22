@@ -23,6 +23,7 @@ export class MessageRepository {
 			id: r.id,
 			role: r.role as 'user' | 'assistant' | 'system' | 'tool',
 			content: r.content,
+			reasoningContent: r.reasoningContent ?? undefined,
 			createdAt: r.createdAt,
 			toolCallId: r.toolCallId ?? undefined
 		}));
@@ -32,7 +33,8 @@ export class MessageRepository {
 		conversationId: string,
 		role: 'user' | 'assistant' | 'system' | 'tool',
 		content: string,
-		toolCallId?: string
+		toolCallId?: string,
+		reasoningContent?: string
 	): Promise<ChatMessage> {
 		const id = crypto.randomUUID();
 		await db.insert(messages).values({
@@ -40,9 +42,10 @@ export class MessageRepository {
 			conversationId,
 			role,
 			content,
+			reasoningContent: reasoningContent ?? null,
 			toolCallId: toolCallId ?? null
 		});
-		return { id, role, content, createdAt: new Date(), toolCallId };
+		return { id, role, content, reasoningContent, createdAt: new Date(), toolCallId };
 	}
 
 	async deleteByConversationId(conversationId: string): Promise<void> {

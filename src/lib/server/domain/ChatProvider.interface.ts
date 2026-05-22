@@ -40,6 +40,8 @@ export interface ChatModel {
 	supportsFiles?: boolean;
 	/** From OpenRouter; when false, do not send function tools for this model. */
 	supportsTools?: boolean;
+	/** OpenRouter `supported_parameters` includes `reasoning`. */
+	supportsReasoning?: boolean;
 	/** From OpenRouter `modalities` for image-generation models (e.g. `['image','text']`). */
 	openRouterModalities?: readonly string[];
 	/** OpenRouter total context window (tokens), when provided by the catalog. */

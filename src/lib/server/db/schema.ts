@@ -55,6 +55,8 @@ export const messages = mysqlTable('messages', {
 	conversationId: varchar('conversation_id', { length: 36 }).notNull(),
 	role: varchar('role', { length: 20 }).notNull(),
 	content: longtext('content').notNull(),
+	/** Chain-of-thought / reasoning tokens from reasoning models (optional). */
+	reasoningContent: longtext('reasoning_content'),
 	toolCallId: varchar('tool_call_id', { length: 64 }),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [

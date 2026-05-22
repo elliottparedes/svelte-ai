@@ -27,5 +27,5 @@
 {:else if msg.role === 'tool'}
 	<ChatToolBlock {msg} />
 {:else}
-	<ChatAssistantBlock {msg} showCopy={!streamingThis} />
+	<ChatAssistantBlock {msg} showCopy={!streamingThis} streaming={streamingThis} />
 {/if}

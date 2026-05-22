@@ -18,6 +18,7 @@ import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
 import { MAX_TOOL_TURNS } from './conversationTools.config';
 import { parseImageGenerationToolResult, toolResultForLlmHistory } from '$lib/shared/imageGenerationToolResult';
 import { yieldGenerateImageSuccess } from './conversationGenerateImageTurn';
+import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -57,13 +58,24 @@ export async function* runConversationToolTurns(params: {
 				break;
 			}
 			if (chunk.done) break;
-			if (chunk.reasoningContent) assistantReasoning += chunk.reasoningContent;
+			if (chunk.reasoningContent) {
+				const prev = assistantReasoning;
+				assistantReasoning = appendReasoningStream(assistantReasoning, chunk.reasoningContent);
+				const delta = assistantReasoning.slice(prev.length);
+				if (delta) yield { type: 'reasoning' as const, content: delta };
+			}
 			assistantContent += chunk.content ?? '';
 			yield { type: 'chunk' as const, content: chunk.content ?? '' };
 		}
 
 		if (!pendingToolCall) {
-			await params.messageRepo.create(params.conversationId, 'assistant', assistantContent);
+			await params.messageRepo.create(
+				params.conversationId,
+				'assistant',
+				assistantContent,
+				undefined,
+				assistantReasoning.trim() || undefined
+			);
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
 				conversationId: params.conversationId,
@@ -138,9 +150,16 @@ export async function* runConversationToolTurns(params: {
 		params.streamAttachments,
 		params.options
 	)) {
-		if (ev.kind === 'chunk') yield { type: 'chunk' as const, content: ev.content };
+		if (ev.kind === 'reasoning') yield { type: 'reasoning' as const, content: ev.content };
+		else if (ev.kind === 'chunk') yield { type: 'chunk' as const, content: ev.content };
 		else {
-			await params.messageRepo.create(params.conversationId, 'assistant', ev.reply);
+			await params.messageRepo.create(
+				params.conversationId,
+				'assistant',
+				ev.reply,
+				undefined,
+				ev.reasoning.trim() || undefined
+			);
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
 				conversationId: params.conversationId,

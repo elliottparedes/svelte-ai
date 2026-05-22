@@ -9,15 +9,25 @@ async function* yieldFinalTurnWithoutTools(
 	history: ChatMessage[],
 	imageAttachments: readonly ChatAttachment[] | undefined,
 	options: Record<string, unknown> | undefined
-): AsyncGenerator<{ type: 'chunk'; content: string }, void, unknown> {
+): AsyncGenerator<
+	{ type: 'chunk'; content: string } | { type: 'reasoning'; content: string },
+	void,
+	unknown
+> {
 	for await (const chunk of provider.streamResponse(history, imageAttachments, undefined, options)) {
 		if (chunk.toolCall) break;
 		if (chunk.done) break;
+		if (chunk.reasoningContent) {
+			yield { type: 'reasoning' as const, content: chunk.reasoningContent };
+		}
 		yield { type: 'chunk' as const, content: chunk.content ?? '' };
 	}
 }
 
-export type BudgetSynthEvent = { kind: 'chunk'; content: string } | { kind: 'done'; reply: string };
+export type BudgetSynthEvent =
+	| { kind: 'chunk'; content: string }
+	| { kind: 'reasoning'; content: string }
+	| { kind: 'done'; reply: string; reasoning: string };
 
 /** Streams assistant chunks after tool budget is exhausted, then emits final `reply` for persistence. */
 export async function* eachBudgetExhaustionChunk(
@@ -27,12 +37,22 @@ export async function* eachBudgetExhaustionChunk(
 	options: Record<string, unknown> | undefined
 ): AsyncGenerator<BudgetSynthEvent, void, unknown> {
 	let synthesized = '';
+	let reasoning = '';
 	for await (const part of yieldFinalTurnWithoutTools(provider, history, imageAttachments, options)) {
+		if (part.type === 'reasoning') {
+			reasoning += part.content;
+			yield { kind: 'reasoning', content: part.content };
+			continue;
+		}
 		synthesized += part.content;
 		yield { kind: 'chunk', content: part.content };
 	}
 	if (!synthesized.trim()) {
 		yield { kind: 'chunk', content: MAX_TOOL_BUDGET_FALLBACK_REPLY };
 	}
-	yield { kind: 'done', reply: synthesized.trim() ? synthesized : MAX_TOOL_BUDGET_FALLBACK_REPLY };
+	yield {
+		kind: 'done',
+		reply: synthesized.trim() ? synthesized : MAX_TOOL_BUDGET_FALLBACK_REPLY,
+		reasoning
+	};
 }

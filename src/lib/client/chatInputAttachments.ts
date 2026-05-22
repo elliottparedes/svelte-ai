@@ -52,26 +52,28 @@ export async function uploadChatAttachment(file: File): Promise<ChatAttachmentIn
 	return res.json() as Promise<ChatAttachmentInput>;
 }
 
+/** Long plain-text paste → .txt attachment (works on any model; inlined server-side). */
+function tryConsumeLongTextPaste(e: ClipboardEvent, onFile: (file: File) => void): boolean {
+	const text = e.clipboardData?.getData('text/plain') ?? '';
+	if (text.length <= CHAT_PASTE_CHARS_THRESHOLD) return false;
+	e.preventDefault();
+	onFile(
+		new File([new Blob([text], { type: 'text/plain' })], 'pasted-text.txt', { type: 'text/plain' })
+	);
+	return true;
+}
+
 export function consumeClipboardForAttachments(
 	e: ClipboardEvent,
-	opts: { enabled: boolean; onFile: (file: File) => void }
+	opts: { filePasteEnabled: boolean; onFile: (file: File) => void }
 ): void {
-	if (!opts.enabled) return;
+	if (tryConsumeLongTextPaste(e, opts.onFile)) return;
+	if (!opts.filePasteEnabled) return;
 	const items = e.clipboardData?.items;
 	if (!items) return;
-	let hasFiles = false;
 	for (const item of items) {
-		if (item.kind === 'file') {
-			hasFiles = true;
-			const file = item.getAsFile();
-			if (file) opts.onFile(file);
-		}
-	}
-	if (!hasFiles) {
-		const text = e.clipboardData?.getData('text/plain') ?? '';
-		if (text.length > CHAT_PASTE_CHARS_THRESHOLD) {
-			e.preventDefault();
-			opts.onFile(new File([new Blob([text], { type: 'text/plain' })], 'pasted-text.txt', { type: 'text/plain' }));
-		}
+		if (item.kind !== 'file') continue;
+		const file = item.getAsFile();
+		if (file) opts.onFile(file);
 	}
 }

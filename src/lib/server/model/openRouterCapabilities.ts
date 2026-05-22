@@ -1,6 +1,10 @@
 import type { ChatModel } from '../domain/ChatProvider.interface';
+import { modelIdImpliesReasoning } from '../infrastructure/openRouterReasoningDelta';
 
-let byId = new Map<string, { vision: boolean; files: boolean; tools: boolean; modalities?: string[] }>();
+let byId = new Map<
+	string,
+	{ vision: boolean; files: boolean; tools: boolean; reasoning: boolean; modalities?: string[] }
+>();
 
 export function hydrateOpenRouterCapabilities(models: readonly ChatModel[]) {
 	byId = new Map(
@@ -10,6 +14,7 @@ export function hydrateOpenRouterCapabilities(models: readonly ChatModel[]) {
 				vision: m.supportsVision === true,
 				files: m.supportsFiles === true,
 				tools: m.supportsTools !== false,
+				reasoning: m.supportsReasoning === true,
 				modalities:
 					m.openRouterModalities && m.openRouterModalities.length > 0
 						? [...m.openRouterModalities]
@@ -45,4 +50,12 @@ export function modelSupportsTools(modelId: string | undefined): boolean {
 	const row = byId.get(modelId);
 	if (!row) return true;
 	return row.tools;
+}
+
+/** Enable OpenRouter `reasoning` request + parse reasoning deltas. */
+export function modelSupportsReasoning(modelId: string | undefined): boolean {
+	if (!modelId) return false;
+	const row = byId.get(modelId);
+	if (row) return row.reasoning || modelIdImpliesReasoning(modelId);
+	return modelIdImpliesReasoning(modelId);
 }

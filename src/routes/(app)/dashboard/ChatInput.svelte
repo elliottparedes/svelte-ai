@@ -88,7 +88,7 @@
 	}
 
 	function handlePaste(e: ClipboardEvent) {
-		consumeClipboardForAttachments(e, { enabled: showAttachButton, onFile: handleFile });
+		consumeClipboardForAttachments(e, { filePasteEnabled: showAttachButton, onFile: handleFile });
 	}
 
 	function handleDrop(e: DragEvent) {

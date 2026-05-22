@@ -1,12 +1,34 @@
 import type { ChatMessage } from '$lib/types/dashboard';
+import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
 import type { ChatSseEvent } from './readChatSse';
 
 export type ChatSseAccum = {
 	messages: ChatMessage[];
 	assistantContent: string;
+	assistantReasoning: string;
 	doneConversationId: string | null;
 	errorMessage: string;
 };
+
+function upsertStreamingAssistant(
+	prev: ChatMessage[],
+	assistantId: string,
+	patch: Partial<ChatMessage>
+): ChatMessage[] {
+	const existing = prev.find((m) => m.id === assistantId);
+	if (existing) {
+		return prev.map((m) => (m.id === assistantId ? { ...m, ...patch } : m));
+	}
+	return [
+		...prev,
+		{
+			id: assistantId,
+			role: 'assistant' as const,
+			content: '',
+			...patch
+		}
+	];
+}
 
 export function accumulateChatSse(
 	acc: ChatSseAccum,
@@ -16,12 +38,19 @@ export function accumulateChatSse(
 	switch (ev.type) {
 		case 'chunk': {
 			const assistantContent = acc.assistantContent + ev.content;
-			const prev = acc.messages;
-			const existing = prev.find((m) => m.id === assistantId);
-			const messages = existing
-				? prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
-				: [...prev, { id: assistantId, role: 'assistant' as const, content: assistantContent }];
+			const messages = upsertStreamingAssistant(acc.messages, assistantId, {
+				content: assistantContent,
+				reasoningContent: acc.assistantReasoning || undefined
+			});
 			return { ...acc, assistantContent, messages };
+		}
+		case 'reasoning': {
+			const assistantReasoning = appendReasoningStream(acc.assistantReasoning, ev.content);
+			const messages = upsertStreamingAssistant(acc.messages, assistantId, {
+				content: acc.assistantContent,
+				reasoningContent: assistantReasoning
+			});
+			return { ...acc, assistantReasoning, messages };
 		}
 		case 'tool_call': {
 			const toolEntry: ChatMessage = {

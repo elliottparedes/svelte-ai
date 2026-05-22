@@ -1,10 +1,14 @@
+import { reasoningFromOpenRouterDelta } from './openRouterReasoningDelta';
+
 /** Turn OpenRouter/Gemini stream deltas into text (markdown) the UI can render. */
 export function textFromOpenRouterDelta(delta: {
 	content?: unknown;
 	reasoning_content?: string;
+	reasoning?: string;
+	reasoning_details?: unknown;
 	images?: ReadonlyArray<{ type?: string; image_url?: { url?: string } }>;
 } | undefined): { text: string; reasoning: string } {
-	const reasoning = delta?.reasoning_content ?? '';
+	const reasoning = reasoningFromOpenRouterDelta(delta as Record<string, unknown> | undefined);
 	let text = '';
 	const c = delta?.content;
 	if (typeof c === 'string') {

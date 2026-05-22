@@ -8,6 +8,8 @@ export interface ChatMessage {
 	id: string;
 	role: 'user' | 'assistant' | 'tool';
 	content: string;
+	/** Reasoning-model chain-of-thought (streamed + persisted when present). */
+	reasoningContent?: string;
 	createdAt?: Date | string;
 	toolCall?: ChatMessageToolCall;
 }

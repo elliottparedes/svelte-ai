@@ -100,6 +100,7 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	let acc = {
 		messages: nextMessages,
 		assistantContent: '',
+		assistantReasoning: '',
 		doneConversationId: null as string | null,
 		errorMessage: ''
 	};

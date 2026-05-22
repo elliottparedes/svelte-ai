@@ -23,9 +23,17 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 	const json = await res.json();
 	const conv = json.conversation as { modelId?: string | null };
 	const messages = json.messages.map(
-		(m: { id: string; role: string; content: string; createdAt: string; toolCallId?: string }) => ({
+		(m: {
+			id: string;
+			role: string;
+			content: string;
+			reasoningContent?: string | null;
+			createdAt: string;
+			toolCallId?: string;
+		}) => ({
 			...m,
 			role: m.role as ChatMessage['role'],
+			reasoningContent: m.reasoningContent ?? undefined,
 			createdAt: new Date(m.createdAt),
 			...(m.role === 'tool' && m.content
 				? { toolCall: { name: inferToolNameFromContent(m.content), result: m.content } }

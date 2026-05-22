@@ -40,6 +40,7 @@ function rawToChatModel(m: RawModel): ChatModel {
 	const out = m.architecture?.output_modalities ?? [];
 	const params = m.supported_parameters;
 	const supportsTools = !Array.isArray(params) || params.includes('tools');
+	const supportsReasoning = Array.isArray(params) && params.includes('reasoning');
 	const openRouterModalities = out.includes('image')
 		? out.includes('text')
 			? (['image', 'text'] as const)
@@ -53,6 +54,7 @@ function rawToChatModel(m: RawModel): ChatModel {
 		supportsVision: mods.includes('image'),
 		supportsFiles: mods.includes('file'),
 		supportsTools,
+		supportsReasoning,
 		...(openRouterModalities ? { openRouterModalities } : {}),
 		...(ctx !== undefined ? { contextLength: ctx } : {}),
 		...(maxComp !== undefined ? { maxCompletionTokens: maxComp } : {})

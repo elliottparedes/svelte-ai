@@ -1,14 +1,26 @@
 <script lang="ts">
 	import Markdown from './Markdown.svelte';
 	import CopyButton from './CopyButton.svelte';
+	import ChatReasoningBlock from './ChatReasoningBlock.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
 	import { formatMessageTime } from '$lib/client/chatMessageList.utils';
 
-	let { msg, showCopy } = $props<{ msg: ChatMessage; showCopy: boolean }>();
+	let { msg, showCopy, streaming = false } = $props<{
+		msg: ChatMessage;
+		showCopy: boolean;
+		streaming?: boolean;
+	}>();
+
+	const reasoning = $derived(msg.reasoningContent?.trim() ?? '');
 </script>
 
 <div class="assistant-row">
-	<Markdown content={msg.content} />
+	{#if reasoning}
+		<ChatReasoningBlock content={reasoning} {streaming} />
+	{/if}
+	{#if msg.content.trim()}
+		<Markdown content={msg.content} />
+	{/if}
 	<div class="msg-meta">
 		<span class="msg-time">{formatMessageTime(msg.createdAt)}</span>
 		{#if showCopy}

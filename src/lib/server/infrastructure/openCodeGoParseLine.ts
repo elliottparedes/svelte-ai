@@ -24,6 +24,8 @@ export function parseGoSseDataLine(line: string): GoStreamParsed | null {
 				delta?: {
 					content?: unknown;
 					reasoning_content?: string;
+					reasoning?: string;
+					reasoning_details?: unknown;
 					tool_calls?: GoStreamParsed['toolDeltas'];
 					images?: ReadonlyArray<{ type?: string; image_url?: { url?: string } }>;
 				};
