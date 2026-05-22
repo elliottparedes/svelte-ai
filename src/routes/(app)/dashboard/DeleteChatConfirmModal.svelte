@@ -20,11 +20,9 @@
 <svelte:window onkeydown={onBackdropKey} />
 
 {#if open}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-	<div class="backdrop" onclick={onCancel} role="presentation" aria-hidden="true"></div>
+	<button type="button" class="backdrop" onclick={onCancel} aria-label="Cancel"></button>
 	<div class="wrap" role="dialog" aria-modal="true" aria-labelledby="del-modal-title">
-		<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-		<div class="box" onclick={(e) => e.stopPropagation()}>
+		<div class="box">
 			<h2 id="del-modal-title" class="title">Delete chat?</h2>
 			<p class="msg">
 				<span class="muted">This removes </span>
@@ -44,6 +42,12 @@
 		position: fixed;
 		inset: 0;
 		z-index: 20000;
+		margin: 0;
+		padding: 0;
+		border: none;
+		width: 100%;
+		height: 100%;
+		cursor: default;
 		background: rgba(24, 24, 37, 0.72);
 		backdrop-filter: blur(3px);
 	}
