@@ -1,4 +1,5 @@
 import type { ChatModel } from '../domain/ChatProvider.interface';
+import { logger } from '../logger';
 import { OPTIONAL_DASHBOARD_MODELS } from '$lib/shared/optionalDashboardModels';
 import type { CuratedModelGroup } from './curatedDashboardModels';
 
@@ -14,7 +15,11 @@ export function mergeOptionalDashboardModels(
 	for (const def of OPTIONAL_DASHBOARD_MODELS) {
 		if (!enabledAltIds.includes(def.id)) continue;
 		const m = byId.get(def.id);
-		if (!m || seen.has(m.id)) continue;
+		if (!m) {
+			logger.warn('Optional dashboard model missing from OpenRouter catalog', { modelId: def.id });
+			continue;
+		}
+		if (seen.has(m.id)) continue;
 		seen.add(m.id);
 		const list = byGroup.get(def.group) ?? [];
 		list.push(m);

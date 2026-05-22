@@ -1,4 +1,4 @@
-import type { DashboardPageLoadData } from '$lib/types/dashboard';
+import type { DashboardPageLoadData, Model, ModelProviderGroup } from '$lib/types/dashboard';
 import { DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type {
 	ChatAttachmentInput,
@@ -28,6 +28,10 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let streamingConversationIds = $state<Set<string>>(new Set());
 	let inputValue = $state('');
 	let errorMessage = $state('');
+	let models = $state<Model[]>([...data.models]);
+	let modelGroups = $state<ModelProviderGroup[]>([...data.modelGroups]);
+	let defaultModelId = $state(data.defaultModelId);
+	let ttsEnabled = $state(data.ttsEnabled);
 	let selectedModel = $state(
 		data.models.some((m) => m.id === data.defaultModelId)
 			? data.defaultModelId
@@ -44,9 +48,29 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	);
 
 	$effect(() => {
-		if (!data.ttsEnabled) return;
+		if (!ttsEnabled) return;
 		localStorage.setItem(VOICE_MODE_KEY, voiceModeEnabled ? '1' : '0');
 	});
+
+	function pageLoadSyncKey(d: DashboardPageLoadData): string {
+		return `${d.defaultModelId}|${d.ttsEnabled}|${d.models.map((m) => m.id).join('\n')}`;
+	}
+
+	let syncedPageLoadKey = pageLoadSyncKey(data);
+
+	/** Refresh picker models after navigation/invalidation — no-op if load data unchanged. */
+	function syncPageLoadData(next: DashboardPageLoadData) {
+		const key = pageLoadSyncKey(next);
+		if (key === syncedPageLoadKey) return;
+		syncedPageLoadKey = key;
+		models = [...next.models];
+		modelGroups = [...next.modelGroups];
+		defaultModelId = next.defaultModelId;
+		ttsEnabled = next.ttsEnabled;
+		if (!models.some((m) => m.id === selectedModel)) {
+			selectedModel = pickDashboardModelId(models, null, defaultModelId);
+		}
+	}
 
 	let immersiveVoiceOpen = $state(false);
 	let immersiveGestureToken = $state(0);
@@ -66,12 +90,15 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 
 	const field = <T>(get: () => T, set: (v: T) => void) => ({ get, set });
 
-	return createDashboardPageModelStateShell({
+	const shell = createDashboardPageModelStateShell({
 		data,
 		getModelLocked: () => messages.length > 0,
 		getIsActiveStreaming: () =>
 			activeConversationId !== null && streamingConversationIds.has(activeConversationId),
-		pickModel: (modelId) => pickDashboardModelId(data.models, modelId, data.defaultModelId),
+		pickModel: (modelId) => pickDashboardModelId(models, modelId, defaultModelId),
+		getModels: () => models,
+		getModelGroups: () => modelGroups,
+		getTtsEnabled: () => ttsEnabled,
 		flushActiveToCache: () => {
 			messageCache = flushActiveMessageCache(messageCache, activeConversationId, messages);
 		},
@@ -125,4 +152,5 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			projectPromptValue: field(() => projectPromptValue, (v) => (projectPromptValue = v))
 		}
 	});
+	return Object.assign(shell, { syncPageLoadData });
 }

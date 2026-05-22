@@ -46,9 +46,9 @@ export const OPTIONAL_DASHBOARD_MODELS: readonly OptionalDashboardModelDef[] = [
 		group: 'Z.AI'
 	},
 	{
-		id: 'x-ai/grok-4-fast',
+		id: 'x-ai/grok-4.20',
 		title: 'Grok 4 Fast',
-		description: '2M context · fast xAI route',
+		description: 'xAI Grok 4.20 on OpenRouter · tools + vision',
 		tier: 'must',
 		group: 'xAI'
 	},
@@ -84,13 +84,23 @@ export const OPTIONAL_DASHBOARD_MODELS: readonly OptionalDashboardModelDef[] = [
 
 const ALLOWED = new Set(OPTIONAL_DASHBOARD_MODELS.map((m) => m.id));
 
+/** Retired OpenRouter ids still stored on user rows → current catalog id. */
+const ALT_MODEL_ID_ALIASES: Record<string, string> = {
+	'x-ai/grok-4-fast': 'x-ai/grok-4.20'
+};
+
+export function resolveAltModelCatalogId(id: string): string {
+	return ALT_MODEL_ID_ALIASES[id] ?? id;
+}
+
 export function defaultEnabledAltModelIds(): string[] {
 	return OPTIONAL_DASHBOARD_MODELS.filter((m) => m.tier === 'must').map((m) => m.id);
 }
 
 export function normalizeAltModelIds(ids: readonly string[]): string[] {
 	const out: string[] = [];
-	for (const id of ids) {
+	for (const raw of ids) {
+		const id = resolveAltModelCatalogId(raw);
 		if (!ALLOWED.has(id) || out.includes(id)) continue;
 		out.push(id);
 	}

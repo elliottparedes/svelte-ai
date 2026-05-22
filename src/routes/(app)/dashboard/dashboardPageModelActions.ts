@@ -50,7 +50,7 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 		const store = state.streamStore();
 		await runDashboardSendMessage({
 			state,
-			models: state.data.models,
+			models: state.getModels(),
 			text,
 			attachments: [...state.attachments],
 			selectedModel: state.selectedModel,
@@ -79,7 +79,7 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 	}
 
 	function openImmersiveVoice() {
-		if (!state.data.ttsEnabled) return;
+		if (!state.getTtsEnabled()) return;
 		state.voiceModeEnabled = true;
 		state.immersiveVoiceOpen = true;
 		state.immersivePhase = 'idle';

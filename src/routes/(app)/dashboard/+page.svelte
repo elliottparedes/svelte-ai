@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ConversationSidebar from './ConversationSidebar.svelte';
 	import ChatMessageList from './ChatMessageList.svelte';
@@ -22,6 +23,12 @@
 	const user = $derived(($page.data.user as DashboardUser | null) ?? null);
 	// svelte-ignore state_referenced_locally
 	const model = createDashboardPageModel(data);
+
+	// Sync optional models after Profile save + invalidateAll (not in a reactive $effect — that looped).
+	afterNavigate(() => {
+		model.syncPageLoadData(data);
+	});
+
 	const viewport = useDashboardViewport();
 	const mobileNav = createDashboardMobileNav(viewport, model);
 	useDashboardBodyScrollLock(() => viewport.isMobile && !model.sidebarCollapsed);

@@ -14,8 +14,9 @@ export type {
 export function createDashboardPageModelView(
 	s: DashboardPageModelStateAccess,
 	actions: DashboardPageModelHandlers,
-	models: Model[],
-	modelGroups: ModelProviderGroup[]
+	getModels: () => Model[],
+	getModelGroups: () => ModelProviderGroup[],
+	syncPageLoadData: (next: import('$lib/types/dashboard').DashboardPageLoadData) => void
 ) {
 	return {
 		get conversations() {
@@ -132,7 +133,12 @@ export function createDashboardPageModelView(
 		sendMessage: actions.sendMessage,
 		openImmersiveVoice: actions.openImmersiveVoice,
 		closeImmersiveVoice: actions.closeImmersiveVoice,
-		models,
-		modelGroups
+		get models() {
+			return getModels();
+		},
+		get modelGroups() {
+			return getModelGroups();
+		},
+		syncPageLoadData
 	};
 }

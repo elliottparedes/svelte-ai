@@ -3,6 +3,8 @@ import type {
 	ChatMessage,
 	Conversation,
 	DashboardPageLoadData,
+	Model,
+	ModelProviderGroup,
 	Project
 } from '$lib/types/dashboard';
 import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
@@ -39,6 +41,9 @@ export type DashboardPageModelStateShell = {
 	get modelLocked(): boolean;
 	get isActiveStreaming(): boolean;
 	pickModel: (modelId: string | null | undefined) => string;
+	getModels: () => Model[];
+	getModelGroups: () => ModelProviderGroup[];
+	getTtsEnabled: () => boolean;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
 };
@@ -57,6 +62,9 @@ export function createDashboardPageModelStateShell(p: {
 	getModelLocked: () => boolean;
 	getIsActiveStreaming: () => boolean;
 	pickModel: (modelId: string | null | undefined) => string;
+	getModels: () => Model[];
+	getModelGroups: () => ModelProviderGroup[];
+	getTtsEnabled: () => boolean;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
 	fields: {
@@ -94,6 +102,9 @@ export function createDashboardPageModelStateShell(p: {
 			return p.getIsActiveStreaming();
 		},
 		pickModel: p.pickModel,
+		getModels: p.getModels,
+		getModelGroups: p.getModelGroups,
+		getTtsEnabled: p.getTtsEnabled,
 		flushActiveToCache: p.flushActiveToCache,
 		streamStore: p.streamStore
 	} as DashboardPageModelStateShell;

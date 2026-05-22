@@ -41,11 +41,12 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			getImmersivePhase: () => state.immersivePhase,
 			setImmersivePhase: (p) => (state.immersivePhase = p),
 			getImmersiveAudioLevel: () => state.immersiveAudioLevel,
-			getTtsEnabled: () => data.ttsEnabled,
+			getTtsEnabled: () => state.getTtsEnabled(),
 			getModelLocked: () => state.modelLocked,
 		},
 		actions,
-		data.models,
-		data.modelGroups
+		state.getModels,
+		state.getModelGroups,
+		state.syncPageLoadData
 	);
 }
