@@ -55,6 +55,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		gap: 0.25rem;
 		border-radius: 8px;
 		transition: background 0.15s;
 	}

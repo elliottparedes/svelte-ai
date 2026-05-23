@@ -1,6 +1,8 @@
 <script lang="ts">
 	import ChatInputBody from './ChatInputBody.svelte';
 	import ChatInputToolbar from './ChatInputToolbar.svelte';
+	import ChatInputModelSend from './ChatInputModelSend.svelte';
+	import ChatMicButton from './ChatMicButton.svelte';
 	import ChatInputShell from './ChatInputShell.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
 	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
@@ -125,18 +127,33 @@
 			{showAttachButton}
 			onKeyDown={handleKeyDown}
 			onPaste={handlePaste}
-		/>
+		>
+			{#snippet trailing()}
+				<div class="input-actions">
+					<div class="mic-inline">
+						<ChatMicButton
+							placement="inline"
+							disabled={isStreaming}
+							onAppend={(t) => (value += (value ? ' ' : '') + t)}
+						/>
+					</div>
+					<ChatInputModelSend
+						{value}
+						attachmentsLen={attachments.length}
+						{isStreaming}
+						{onSend}
+					/>
+				</div>
+			{/snippet}
+		</ChatInputBody>
 		<ChatInputToolbar
 			{models}
 			{routedModelId}
 			bind:deepReasoningEnabled
-			{value}
-			attachmentsLen={attachments.length}
 			{isStreaming}
 			{showAttachButton}
 			{isUploading}
 			onAttachClick={handleAttachClick}
-			{onSend}
 			{messages}
 			{summaryThroughMessageId}
 			{modelSupportsTools}

@@ -91,8 +91,12 @@
 	}
 	.menu-wrap {
 		position: relative;
+		flex-shrink: 0;
 	}
 	.more-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		background: none;
 		border: none;
 		color: #6c7086;
@@ -101,10 +105,12 @@
 		border-radius: 4px;
 		transition:
 			color 0.15s,
-			background 0.15s;
+			background 0.15s,
+			opacity 0.15s;
 		opacity: 0;
 	}
-	.conv-item:hover .more-btn {
+	.conv-item:hover .more-btn,
+	.menu-wrap:has(.dropdown) .more-btn {
 		opacity: 1;
 	}
 	.more-btn:hover {
@@ -140,5 +146,16 @@
 	}
 	.dropdown-item.danger {
 		color: #f38ba8;
+	}
+
+	@media (max-width: 768px) {
+		.more-btn {
+			opacity: 1;
+			min-width: 2.25rem;
+			min-height: 2.25rem;
+			padding: 0.4rem;
+			color: #a6adc8;
+			-webkit-tap-highlight-color: transparent;
+		}
 	}
 </style>

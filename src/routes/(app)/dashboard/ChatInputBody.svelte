@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import AttachmentPill from './AttachmentPill.svelte';
 	import type { ChatAttachmentInput } from '$lib/types/dashboard';
 
@@ -9,7 +10,8 @@
 		isStreaming,
 		showAttachButton,
 		onKeyDown,
-		onPaste
+		onPaste,
+		trailing
 	} = $props<{
 		value?: string;
 		attachments: ChatAttachmentInput[];
@@ -18,6 +20,7 @@
 		showAttachButton: boolean;
 		onKeyDown: (e: KeyboardEvent) => void;
 		onPaste: (e: ClipboardEvent) => void;
+		trailing?: Snippet;
 	}>();
 
 	function removeAttachment(index: number) {
@@ -35,17 +38,39 @@
 {#if attachError}
 	<p class="attach-err">{attachError}</p>
 {/if}
-<textarea
-	class="chat-textarea"
-	placeholder={showAttachButton ? 'Ask the model or paste a file' : 'Ask the model'}
-	bind:value
-	onkeydown={onKeyDown}
-	onpaste={onPaste}
-	rows={1}
-	disabled={isStreaming}
-></textarea>
+<div class="input-primary-row">
+	<textarea
+		class="chat-textarea"
+		placeholder={showAttachButton ? 'Ask the model or paste a file' : 'Ask the model'}
+		bind:value
+		onkeydown={onKeyDown}
+		onpaste={onPaste}
+		rows={1}
+		disabled={isStreaming}
+	></textarea>
+	{#if trailing}
+		{@render trailing()}
+	{/if}
+</div>
 
 <style>
+	.input-primary-row {
+		display: flex;
+		align-items: flex-end;
+		gap: 0.5rem;
+	}
+	.input-primary-row :global(.input-actions) {
+		display: flex;
+		align-items: flex-end;
+		flex-shrink: 0;
+		gap: 0.5rem;
+	}
+
+	@media (min-width: 769px) {
+		.input-primary-row :global(.mic-inline) {
+			display: none;
+		}
+	}
 	.attachment-row {
 		display: flex;
 		flex-wrap: wrap;
@@ -58,6 +83,8 @@
 		color: #f38ba8;
 	}
 	.chat-textarea {
+		flex: 1;
+		min-width: 0;
 		width: 100%;
 		background: transparent;
 		border: none;

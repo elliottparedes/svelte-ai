@@ -142,4 +142,31 @@
 		margin: 0.2rem 0;
 		background: #313244;
 	}
+
+	@media (max-width: 768px) {
+		.card {
+			min-width: 0;
+			width: 10.5rem;
+			max-width: 10.5rem;
+		}
+
+		.row,
+		.nest-row {
+			padding-left: 0.55rem;
+			padding-right: 0.55rem;
+			font-size: 0.74rem;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+
+		.sec {
+			padding-left: 0.55rem;
+			padding-right: 0.55rem;
+		}
+
+		.nest-row {
+			padding-left: 0.7rem;
+		}
+	}
 </style>

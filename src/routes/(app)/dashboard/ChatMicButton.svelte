@@ -1,7 +1,12 @@
 <script lang="ts">
-	let { onAppend, disabled = false } = $props<{
+	let {
+		onAppend,
+		disabled = false,
+		placement = 'toolbar'
+	} = $props<{
 		onAppend: (text: string) => void;
 		disabled?: boolean;
+		placement?: 'toolbar' | 'inline';
 	}>();
 
 	let active = $state(false);
@@ -59,7 +64,7 @@
 </script>
 
 {#if supported}
-	<div class="mic-wrap" title={interim || (active ? 'Listening…' : 'Dictate into chat')}>
+	<div class="mic-wrap" class:inline={placement === 'inline'} title={interim || (active ? 'Listening…' : 'Dictate into chat')}>
 		<button
 			type="button"
 			class="mic-btn"
@@ -108,6 +113,15 @@
 		animation: pulse 1.1s ease-in-out infinite;
 	}
 	.mic-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+	.mic-wrap.inline .mic-btn {
+		padding: 0.35rem;
+		min-width: 2.25rem;
+		min-height: 2.25rem;
+		justify-content: center;
+	}
+	.mic-wrap.inline .interim {
+		display: none;
+	}
 	.interim {
 		font-size: 0.78rem;
 		color: #a6adc8;

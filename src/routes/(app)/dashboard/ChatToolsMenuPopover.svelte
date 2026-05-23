@@ -94,4 +94,21 @@
 		font-size: 0.75rem;
 		user-select: none;
 	}
+
+	@media (max-width: 768px) {
+		.popover {
+			position: fixed;
+			left: max(0.75rem, env(safe-area-inset-left, 0px));
+			right: max(0.75rem, env(safe-area-inset-right, 0px));
+			bottom: max(8rem, calc(7rem + env(safe-area-inset-bottom, 0px)));
+			width: auto;
+			min-width: 0;
+			max-width: none;
+			z-index: 50;
+		}
+
+		.body {
+			max-height: min(45vh, 16rem);
+		}
+	}
 </style>

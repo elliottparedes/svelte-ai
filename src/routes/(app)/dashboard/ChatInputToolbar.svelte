@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ChatInputModelSend from './ChatInputModelSend.svelte';
 	import ChatContextMeter from './ChatContextMeter.svelte';
 	import ChatToolSelector from './ChatToolSelector.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
@@ -14,13 +13,10 @@
 		models,
 		routedModelId = '',
 		deepReasoningEnabled = $bindable(false),
-		value,
-		attachmentsLen,
 		isStreaming,
 		showAttachButton,
 		isUploading,
 		onAttachClick,
-		onSend,
 		messages = [],
 		attachments = [],
 		summaryThroughMessageId = null,
@@ -31,13 +27,10 @@
 		models: Model[];
 		routedModelId?: string;
 		deepReasoningEnabled?: boolean;
-		value: string;
-		attachmentsLen: number;
 		isStreaming: boolean;
 		showAttachButton: boolean;
 		isUploading: boolean;
 		onAttachClick: () => void;
-		onSend: () => void;
 		messages?: ChatMessage[];
 		attachments?: ChatAttachmentInput[];
 		summaryThroughMessageId?: string | null;
@@ -65,15 +58,15 @@
 			<ChatToolSelector bind:enabledIds={enabledToolIds} disabled={isStreaming} />
 		{/if}
 		<ChatDeepThinkButton bind:enabled={deepReasoningEnabled} disabled={isStreaming} />
-		<ChatMicButton disabled={isStreaming} onAppend={(t) => onAppendDictation?.(t)} />
+		<div class="mic-toolbar">
+			<ChatMicButton disabled={isStreaming} onAppend={(t) => onAppendDictation?.(t)} />
+		</div>
 	</div>
-	<ChatInputModelSend {value} {attachmentsLen} {isStreaming} {onSend} />
 </div>
 
 <style>
 	.input-footer {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
 		margin-top: 0.5rem;
 	}

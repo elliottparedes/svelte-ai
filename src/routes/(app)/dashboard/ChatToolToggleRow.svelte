@@ -118,4 +118,15 @@
 	.sw.on .knob {
 		transform: translateX(1.22rem);
 	}
+
+	@media (max-width: 768px) {
+		.row {
+			padding: 0.5rem 0.55rem;
+			gap: 0.55rem;
+		}
+
+		.sub {
+			font-size: 0.65rem;
+		}
+	}
 </style>
