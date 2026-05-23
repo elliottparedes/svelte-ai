@@ -19,6 +19,8 @@ export interface Conversation {
 	title: string;
 	projectId?: string | null;
 	modelId?: string | null;
+	summaryThroughMessageId?: string | null;
+	summaryChars?: number;
 	createdAt: Date | string;
 }
 
@@ -62,9 +64,8 @@ export type { PublicUser as DashboardUser } from './app';
 export interface DashboardPageLoadData {
 	conversations: Conversation[];
 	projects: Project[];
+	/** Routing pool for context meter and attachment capabilities. */
 	models: Model[];
-	modelGroups: ModelProviderGroup[];
-	defaultModelId: string;
 	/** True when ELEVENLABS_API_KEY is configured. */
 	ttsEnabled: boolean;
 }

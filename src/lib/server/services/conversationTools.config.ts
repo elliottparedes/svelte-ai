@@ -6,22 +6,10 @@ import {
 	MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT
 } from '$lib/shared/chatToolSystemPrompt';
 import { EXECUTE_PYTHON_TOOL } from './conversationToolsExecutePython';
-
 export const MAX_TOOL_TURNS = 12;
 
 export const TOOLS: ToolDefinition[] = [
 	EXECUTE_PYTHON_TOOL,
-	{
-		name: 'calculator',
-		description: 'Evaluate a mathematical expression and return the result.',
-		parameters: {
-			type: 'object',
-			properties: {
-				expression: { type: 'string', description: 'Math expression like "25 * 47"' }
-			},
-			required: ['expression']
-		}
-	},
 	{
 		name: 'datetime',
 		description: 'Get the current date and time in ISO 8601 format.',
@@ -62,24 +50,7 @@ export const TOOLS: ToolDefinition[] = [
 			required: ['query']
 		}
 	},
-	{
-		name: 'map_route',
-		description:
-			'Geocode two places and compute a route (driving, walking, or cycling). Returns distance, duration, and route geometry for map display.',
-		parameters: {
-			type: 'object',
-			properties: {
-				origin: { type: 'string', description: 'Start place name, address, or "lat,lon"' },
-				destination: { type: 'string', description: 'End place name, address, or "lat,lon"' },
-				mode: {
-					type: 'string',
-					enum: ['driving', 'walking', 'cycling'],
-					description: 'Travel mode (default driving)'
-				}
-			},
-			required: ['origin', 'destination']
-		}
-	},
+	// MAP_ROUTE_DISABLED: import MAP_ROUTE_TOOL from './conversationTools.mapRoute.ts'
 	{
 		name: 'generate_image',
 		description: 'Generate an image from a text description using the configured image model.',

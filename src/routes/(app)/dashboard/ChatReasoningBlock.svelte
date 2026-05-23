@@ -3,11 +3,8 @@
 
 	let { content, streaming = false } = $props<{ content: string; streaming?: boolean }>();
 
+	/** Collapsed by default; user expands manually. */
 	let expanded = $state(false);
-
-	$effect(() => {
-		if (streaming) expanded = true;
-	});
 </script>
 
 <div class="reasoning-wrap">

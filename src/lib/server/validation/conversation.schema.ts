@@ -20,7 +20,9 @@ export const chatPromptSchema = z.object({
 	/** Omit for legacy “all tools” (minus vision-relay web strip). Empty = no tools. */
 	enabledToolNames: z.array(chatToolNameSchema).max(CHAT_TOOL_ORDER.length).optional(),
 	/** Stream assistant reply audio via ElevenLabs on the same SSE connection. */
-	voiceMode: z.boolean().optional()
+	voiceMode: z.boolean().optional(),
+	/** Dashboard: route this turn to the deep reasoning model (e.g. DeepSeek R1). */
+	deepReasoning: z.boolean().optional()
 });
 
 export const conversationIdSchema = z.object({

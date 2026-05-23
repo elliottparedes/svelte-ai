@@ -1,36 +1,42 @@
-import type { Conversation } from '$lib/types/dashboard';
 import { fetchProjectConversations, saveProjectPromptApi } from '$lib/client/dashboardRemote';
 import { flushMessageCache } from '$lib/client/dashboardMessageCache';
+import { patchConversationSummaryMeta } from '$lib/client/dashboardConversationSummary';
 import { loadConversationThread } from './dashboardPageModelThread.js';
+import type { Conversation } from '$lib/types/dashboard';
 import type { DashboardPageModelStateShell } from './dashboardPageModelStateShell';
 
 export function createDashboardNavActions(state: DashboardPageModelStateShell) {
-	const { data } = state;
-
 	async function loadMessages(conversationId: string) {
 		state.flushActiveToCache();
 		state.activeConversationId = conversationId;
 		state.activeProjectId = null;
 		state.projectComposeMode = false;
 		state.errorMessage = '';
+		state.isCompacting = false;
 		state.messages = state.messageCache[conversationId] ?? [];
 		const cached =
 			state.conversations.find((c) => c.id === conversationId) ??
 			state.projectConversations.find((c) => c.id === conversationId);
-		if (cached?.modelId) state.selectedModel = state.pickModel(cached.modelId);
+		if (cached?.modelId) state.lastRoutedModelId = cached.modelId;
 		if (state.streamingConversationIds.has(conversationId)) return;
 		await loadConversationThread({
 			conversationId,
-			models: data.models,
-			defaultModelId: data.defaultModelId,
 			conversations: state.conversations,
 			projectConversations: state.projectConversations,
 			onMessages: (m) => {
 				state.messageCache = flushMessageCache(state.messageCache, conversationId, m);
 				if (state.activeConversationId === conversationId) state.messages = m;
 			},
-			onSelectedModel: (id) => {
-				if (state.activeConversationId === conversationId) state.selectedModel = id;
+			onLastRoutedModel: (id) => {
+				if (state.activeConversationId === conversationId) state.lastRoutedModelId = id;
+			},
+			onSummaryMeta: (watermark, summaryChars) => {
+				const patch = (list: Conversation[]) =>
+					watermark
+						? patchConversationSummaryMeta(list, conversationId, watermark, summaryChars)
+						: list;
+				state.conversations = patch(state.conversations);
+				state.projectConversations = patch(state.projectConversations);
 			},
 			onListsPatched: (lists) => {
 				state.conversations = lists.conversations;
@@ -73,16 +79,14 @@ export function createDashboardNavActions(state: DashboardPageModelStateShell) {
 		state.projectComposeMode = false;
 		state.messages = [];
 		state.errorMessage = '';
-		state.selectedModel = state.pickModel(data.defaultModelId);
 	}
 
 	function startProjectCompose() {
 		state.flushActiveToCache();
-		state.activeConversationId = null;
 		state.projectComposeMode = true;
+		state.activeConversationId = null;
 		state.messages = [];
 		state.errorMessage = '';
-		state.selectedModel = state.pickModel(data.defaultModelId);
 	}
 
 	return {

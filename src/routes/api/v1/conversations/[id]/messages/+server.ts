@@ -16,5 +16,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
 	const messageRepo = new MessageRepository();
 	const messages = await messageRepo.findByConversationId(conversationId);
-	return json({ conversation: conv, messages });
+	return json({
+		conversation: {
+			...conv,
+			summaryChars: conv.rollingSummary?.length ?? 0
+		},
+		messages
+	});
 };

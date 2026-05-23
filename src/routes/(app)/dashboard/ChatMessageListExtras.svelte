@@ -2,14 +2,15 @@
 	import SidebarChatLoadingDots from './SidebarChatLoadingDots.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
 
-	let { messages, isStreaming, errorMessage } = $props<{
+	let { messages, isStreaming, isCompacting = false, errorMessage } = $props<{
 		messages: ChatMessage[];
 		isStreaming: boolean;
+		isCompacting?: boolean;
 		errorMessage: string;
 	}>();
 
 	const showTypingIndicator = $derived.by(() => {
-		if (!isStreaming) return false;
+		if (!isStreaming || isCompacting) return false;
 		const last = messages.at(-1);
 		if (!last) return true;
 		if (last.role === 'tool') return true;
@@ -20,6 +21,13 @@
 		return true;
 	});
 </script>
+
+{#if isCompacting}
+	<div class="assistant-row compacting-wrap">
+		<SidebarChatLoadingDots size="chat" />
+		<span class="compacting-label">Compacting history…</span>
+	</div>
+{/if}
 
 {#if showTypingIndicator}
 	<div class="assistant-row typing-wrap">
@@ -39,10 +47,20 @@
 		color: #cdd6f4;
 		animation: messageIn 0.25s ease-out;
 	}
+	.compacting-wrap,
 	.typing-wrap,
 	.error-wrap {
 		font-size: 0.95rem;
 		line-height: 1.6;
+	}
+	.compacting-wrap {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		color: #a6adc8;
+	}
+	.compacting-label {
+		font-size: 0.82rem;
 	}
 	@keyframes messageIn {
 		from {

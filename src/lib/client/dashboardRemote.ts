@@ -15,13 +15,19 @@ function inferToolNameFromContent(content: string): string {
 export type ConversationThread = {
 	messages: ChatMessage[];
 	modelId: string | null;
+	summaryThroughMessageId: string | null;
+	summaryChars: number;
 };
 
 export async function fetchConversationThread(conversationId: string): Promise<ConversationThread | null> {
 	const res = await fetch(`/api/v1/conversations/${conversationId}/messages`);
 	if (!res.ok) return null;
 	const json = await res.json();
-	const conv = json.conversation as { modelId?: string | null };
+	const conv = json.conversation as {
+		modelId?: string | null;
+		summaryThroughMessageId?: string | null;
+		summaryChars?: number;
+	};
 	const messages = json.messages.map(
 		(m: {
 			id: string;
@@ -40,7 +46,12 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 				: {})
 		})
 	);
-	return { messages, modelId: conv.modelId ?? null };
+	return {
+		messages,
+		modelId: conv.modelId ?? null,
+		summaryThroughMessageId: conv.summaryThroughMessageId ?? null,
+		summaryChars: conv.summaryChars ?? 0
+	};
 }
 
 /** @deprecated Use fetchConversationThread */

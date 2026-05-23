@@ -1,4 +1,4 @@
-import type { ChatAttachmentInput, Model, ModelProviderGroup } from '$lib/types/dashboard';
+import type { ChatAttachmentInput } from '$lib/types/dashboard';
 import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type {
 	DashboardPageModelHandlers,
@@ -14,8 +14,7 @@ export type {
 export function createDashboardPageModelView(
 	s: DashboardPageModelStateAccess,
 	actions: DashboardPageModelHandlers,
-	getModels: () => Model[],
-	getModelGroups: () => ModelProviderGroup[],
+	getModels: () => import('$lib/types/dashboard').Model[],
 	syncPageLoadData: (next: import('$lib/types/dashboard').DashboardPageLoadData) => void
 ) {
 	return {
@@ -58,11 +57,20 @@ export function createDashboardPageModelView(
 		get errorMessage() {
 			return s.getErrorMessage();
 		},
-		get selectedModel() {
-			return s.getSelectedModel();
+		get isCompacting() {
+			return s.getIsCompacting();
 		},
-		set selectedModel(v: string) {
-			s.setSelectedModel(v);
+		get lastRoutedModelId() {
+			return s.getLastRoutedModelId();
+		},
+		set lastRoutedModelId(v: string) {
+			s.setLastRoutedModelId(v);
+		},
+		get deepReasoningEnabled() {
+			return s.getDeepReasoningEnabled();
+		},
+		set deepReasoningEnabled(v: boolean) {
+			s.setDeepReasoningEnabled(v);
 		},
 		get sidebarCollapsed() {
 			return s.getSidebarCollapsed();
@@ -118,9 +126,6 @@ export function createDashboardPageModelView(
 		get immersiveAudioLevel() {
 			return s.getImmersiveAudioLevel();
 		},
-		get modelLocked() {
-			return s.getModelLocked();
-		},
 		loadMessages: actions.loadMessages,
 		loadProject: actions.loadProject,
 		saveProjectPrompt: actions.saveProjectPrompt,
@@ -135,9 +140,6 @@ export function createDashboardPageModelView(
 		closeImmersiveVoice: actions.closeImmersiveVoice,
 		get models() {
 			return getModels();
-		},
-		get modelGroups() {
-			return getModelGroups();
 		},
 		syncPageLoadData
 	};

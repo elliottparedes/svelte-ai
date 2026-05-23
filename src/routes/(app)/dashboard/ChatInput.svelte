@@ -2,7 +2,7 @@
 	import ChatInputBody from './ChatInputBody.svelte';
 	import ChatInputToolbar from './ChatInputToolbar.svelte';
 	import ChatInputShell from './ChatInputShell.svelte';
-	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
+	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
 	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 	import { DEFAULT_CHAT_TOOL_IDS } from '$lib/shared/chatToolSystemPrompt';
 	import {
@@ -16,38 +16,36 @@
 	let {
 		value = $bindable(''),
 		isStreaming,
-		modelLocked = false,
 		onSend,
 		models,
-		modelGroups,
-		selectedModel = $bindable(''),
+		routedModelId = '',
+		deepReasoningEnabled = $bindable(false),
 		attachments = $bindable<ChatAttachmentInput[]>([]),
 		messages = [],
-		extraSystemTokens = 0,
+		summaryThroughMessageId = null,
 		modelSupportsTools = true,
-		enabledToolIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]),
-} = $props<{
+		enabledToolIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS])
+	} = $props<{
 		value?: string;
 		isStreaming: boolean;
-		modelLocked?: boolean;
 		onSend: () => void;
 		models: Model[];
-		modelGroups: ModelProviderGroup[];
-		selectedModel?: string;
+		routedModelId?: string;
+		deepReasoningEnabled?: boolean;
 		attachments: ChatAttachmentInput[];
 		messages?: ChatMessage[];
-		extraSystemTokens?: number;
+		summaryThroughMessageId?: string | null;
 		modelSupportsTools?: boolean;
 		enabledToolIds?: ChatToolId[];
-}>(); 
+	}>();
+
 	let fileInput: HTMLInputElement | null = $state(null);
 	let dragOver = $state(false);
 	let isUploading = $state(false);
 	let attachError = $state('');
 
-	const currentModel = $derived(models.find((m: Model) => m.id === selectedModel));
-	const supportsVision = $derived(currentModel?.supportsVision === true);
-	const supportsFiles = $derived(currentModel?.supportsFiles === true);
+	const supportsVision = $derived(models.some((m: Model) => m.supportsVision === true));
+	const supportsFiles = $derived(models.some((m: Model) => m.supportsFiles === true));
 	const showAttachButton = $derived(supportsVision || supportsFiles);
 	const fileAcceptAttr = $derived(chatInputFileAcceptAttr(supportsVision, supportsFiles));
 
@@ -130,9 +128,8 @@
 		/>
 		<ChatInputToolbar
 			{models}
-			{modelGroups}
-			bind:selectedModel
-			{modelLocked}
+			{routedModelId}
+			bind:deepReasoningEnabled
 			{value}
 			attachmentsLen={attachments.length}
 			{isStreaming}
@@ -141,8 +138,7 @@
 			onAttachClick={handleAttachClick}
 			{onSend}
 			{messages}
-			{attachments}
-			{extraSystemTokens}
+			{summaryThroughMessageId}
 			{modelSupportsTools}
 			bind:enabledToolIds
 			onAppendDictation={(t) => (value += (value ? ' ' : '') + t)}

@@ -14,6 +14,11 @@ import { eachBudgetExhaustionChunk } from './conversationMaxToolsFinish';
 import type { ConversationProcessEvent } from './conversationProcess.types';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import type { ConversationTitleService } from './ConversationTitleService';
+import type { ConversationSummaryService } from './ConversationSummaryService';
+import {
+	extendRollingSummaryAfterReply,
+	type SummaryTurnConfig
+} from './conversationSummaryTurn.util';
 import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
 import { MAX_TOOL_TURNS } from './conversationTools.config';
 import { parseImageGenerationToolResult, toolResultForLlmHistory } from '$lib/shared/imageGenerationToolResult';
@@ -28,6 +33,8 @@ export async function* runConversationToolTurns(params: {
 	userPrompt: string;
 	chatRepo: ChatRepository;
 	titleService: ConversationTitleService | undefined;
+	summaryService: ConversationSummaryService | undefined;
+	summaryConfig: SummaryTurnConfig | undefined;
 	provider: ChatProvider;
 	messageRepo: MessageRepository;
 	toolExecutor: ToolExecutor;
@@ -93,6 +100,14 @@ export async function* runConversationToolTurns(params: {
 				chatRepo: params.chatRepo,
 				titleService: params.titleService
 			});
+			yield* extendRollingSummaryAfterReply({
+				conversationId: params.conversationId,
+				userId: params.userId,
+				chatRepo: params.chatRepo,
+				messageRepo: params.messageRepo,
+				summaryService: params.summaryService,
+				config: params.summaryConfig
+			});
 			yield { type: 'done' as const, conversationId: params.conversationId };
 			return;
 		}
@@ -123,7 +138,9 @@ export async function* runConversationToolTurns(params: {
 				pendingToolCall,
 				messageRepo: params.messageRepo,
 				chatRepo: params.chatRepo,
-				titleService: params.titleService
+				titleService: params.titleService,
+				summaryService: params.summaryService,
+				summaryConfig: params.summaryConfig
 			});
 			return;
 		}
@@ -177,6 +194,14 @@ export async function* runConversationToolTurns(params: {
 				userId: params.userId,
 				chatRepo: params.chatRepo,
 				titleService: params.titleService
+			});
+			yield* extendRollingSummaryAfterReply({
+				conversationId: params.conversationId,
+				userId: params.userId,
+				chatRepo: params.chatRepo,
+				messageRepo: params.messageRepo,
+				summaryService: params.summaryService,
+				config: params.summaryConfig
 			});
 			yield { type: 'done' as const, conversationId: params.conversationId };
 		}

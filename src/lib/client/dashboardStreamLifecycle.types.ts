@@ -28,6 +28,7 @@ export type DashboardStreamStore = {
 	setMessageCache: (c: MessageCache) => void;
 	setStreamingIds: (s: Set<string>) => void;
 	setError: (v: string) => void;
+	setIsCompacting: (v: boolean) => void;
 	setActiveConversationId: (id: string | null) => void;
 	setProjectComposeMode: (v: boolean) => void;
 	setActiveProjectId: (id: string | null) => void;

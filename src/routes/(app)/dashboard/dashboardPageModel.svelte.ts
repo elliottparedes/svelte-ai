@@ -21,8 +21,11 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			getIsStreaming: () => state.isActiveStreaming,
 			getStreamingConversationIds: () => state.streamingConversationIds,
 			getErrorMessage: () => state.errorMessage,
-			getSelectedModel: () => state.selectedModel,
-			setSelectedModel: (v) => (state.selectedModel = v),
+			getIsCompacting: () => state.isCompacting,
+			getLastRoutedModelId: () => state.lastRoutedModelId,
+			setLastRoutedModelId: (v) => (state.lastRoutedModelId = v),
+			getDeepReasoningEnabled: () => state.deepReasoningEnabled,
+			setDeepReasoningEnabled: (v) => (state.deepReasoningEnabled = v),
 			getSidebarCollapsed: () => state.sidebarCollapsed,
 			setSidebarCollapsed: (v) => (state.sidebarCollapsed = v),
 			getAttachments: () => state.attachments,
@@ -41,12 +44,10 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			getImmersivePhase: () => state.immersivePhase,
 			setImmersivePhase: (p) => (state.immersivePhase = p),
 			getImmersiveAudioLevel: () => state.immersiveAudioLevel,
-			getTtsEnabled: () => state.getTtsEnabled(),
-			getModelLocked: () => state.modelLocked,
+			getTtsEnabled: () => state.getTtsEnabled()
 		},
 		actions,
 		state.getModels,
-		state.getModelGroups,
 		state.syncPageLoadData
 	);
 }

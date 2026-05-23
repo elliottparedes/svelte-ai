@@ -59,6 +59,36 @@ export const VISION_RELAY_MAX_TOKENS = Number(getEnv('VISION_RELAY_MAX_TOKENS', 
 /** Cheap OpenRouter model for auto-generated chat titles after the first reply. */
 export const CHAT_TITLE_MODEL = getEnv('CHAT_TITLE_MODEL', 'google/gemini-2.0-flash-lite-001');
 export const CHAT_TITLE_ENABLED = getEnv('CHAT_TITLE_ENABLED', 'true').toLowerCase() !== 'false';
+/** Cheap model for incremental rolling conversation summaries (LLM context only). */
+export const CHAT_SUMMARY_MODEL = getEnv('CHAT_SUMMARY_MODEL', 'google/gemini-2.0-flash-lite-001');
+export const CHAT_SUMMARY_ENABLED = getEnv('CHAT_SUMMARY_ENABLED', 'true').toLowerCase() !== 'false';
+export const CHAT_SUMMARY_INTERVAL = Math.min(
+	100,
+	Math.max(5, Number(getEnv('CHAT_SUMMARY_INTERVAL', '15')) || 15)
+);
+export const CHAT_SUMMARY_HOT_TAIL = Math.min(
+	200,
+	Math.max(4, Number(getEnv('CHAT_SUMMARY_HOT_TAIL', '20')) || 20)
+);
+export const CHAT_SUMMARY_MAX_TOKENS = Math.min(
+	2048,
+	Math.max(128, Number(getEnv('CHAT_SUMMARY_MAX_TOKENS', '512')) || 512)
+);
+/** Lazy backfill when thread has at least this many normalized messages and no summary yet. */
+export const CHAT_SUMMARY_BACKFILL_MIN = Math.min(
+	500,
+	Math.max(30, Number(getEnv('CHAT_SUMMARY_BACKFILL_MIN', '100')) || 100)
+);
+/** Tiny model that classifies each chat turn into a routing tier (JSON). */
+export const OPENROUTER_ROUTER_MODEL = getEnv(
+	'OPENROUTER_ROUTER_MODEL',
+	'google/gemini-2.0-flash-lite-001'
+);
+/** Model used when the user enables deep reasoning on the dashboard. */
+export const OPENROUTER_REASONING_MODEL = getEnv(
+	'OPENROUTER_REASONING_MODEL',
+	'deepseek/deepseek-r1-0528'
+);
 
 /** ElevenLabs streaming TTS; empty disables voice mode. */
 export const ELEVENLABS_API_KEY = getEnv('ELEVENLABS_API_KEY', '');

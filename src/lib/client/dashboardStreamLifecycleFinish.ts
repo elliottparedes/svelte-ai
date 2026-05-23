@@ -26,7 +26,7 @@ export async function finishDashboardStream(
 	if (viewing) store.setActiveConversationId(conversationId);
 	if (viewing && cache[conversationId]) store.setMessages(cache[conversationId]);
 
-	store.onConversationModelSaved(conversationId, modelId);
+	if (modelId) store.onConversationModelSaved(conversationId, modelId);
 
 	const replaceId = (list: Conversation[]) =>
 		list.map((c) => (c.id === streamKey ? { ...c, id: conversationId } : c));

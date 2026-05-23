@@ -23,10 +23,9 @@ export async function resolveConversationForPrompt(
 	}
 	const existing = await chatRepo.findById(conversationId);
 	if (!existing || existing.userId !== userId) throw new DomainError('Conversation not found', 404);
-	const effectiveModel = existing.modelId ?? requestedModel;
-	if (!existing.modelId && requestedModel) {
+	const effectiveModel = requestedModel;
+	if (requestedModel && existing.modelId !== requestedModel) {
 		await chatRepo.update(conversationId, { modelId: requestedModel });
 	}
-	await chatRepo.update(conversationId, {});
 	return { convId: conversationId, effectiveModel };
 }

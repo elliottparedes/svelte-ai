@@ -21,6 +21,7 @@ export type DashboardPageModelStreamRefs = {
 	getStreamingIds: () => Set<string>;
 	setStreamingIds: (s: Set<string>) => void;
 	setError: (v: string) => void;
+	setIsCompacting: (v: boolean) => void;
 	onConversationModelSaved: (id: string, modelId: string) => void;
 };
 
@@ -38,6 +39,7 @@ export function buildDashboardStreamStore(refs: DashboardPageModelStreamRefs): D
 		setMessageCache: refs.setMessageCache,
 		setStreamingIds: refs.setStreamingIds,
 		setError: refs.setError,
+		setIsCompacting: refs.setIsCompacting,
 		setActiveConversationId: refs.setActiveConversationId,
 		setProjectComposeMode: refs.setProjectComposeMode,
 		setActiveProjectId: refs.setActiveProjectId,

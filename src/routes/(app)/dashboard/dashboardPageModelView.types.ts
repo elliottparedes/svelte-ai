@@ -20,8 +20,11 @@ export type DashboardPageModelStateAccess = {
 	getIsStreaming: () => boolean;
 	getStreamingConversationIds: () => ReadonlySet<string>;
 	getErrorMessage: () => string;
-	getSelectedModel: () => string;
-	setSelectedModel: (v: string) => void;
+	getIsCompacting: () => boolean;
+	getLastRoutedModelId: () => string;
+	setLastRoutedModelId: (v: string) => void;
+	getDeepReasoningEnabled: () => boolean;
+	setDeepReasoningEnabled: (v: boolean) => void;
 	getSidebarCollapsed: () => boolean;
 	setSidebarCollapsed: (v: boolean) => void;
 	getAttachments: () => ChatAttachmentInput[];
@@ -41,7 +44,6 @@ export type DashboardPageModelStateAccess = {
 	setImmersivePhase: (p: import('$lib/shared/immersiveVoice').ImmersiveVoicePhase) => void;
 	getImmersiveAudioLevel: () => number;
 	getTtsEnabled: () => boolean;
-	getModelLocked: () => boolean;
 };
 
 export type DashboardPageModelHandlers = {

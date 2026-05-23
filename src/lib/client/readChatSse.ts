@@ -1,10 +1,15 @@
+export type ChatRoutingSource = 'explicit' | 'deep_reasoning' | 'router_llm' | 'heuristic';
+
 export type ChatSseEvent =
 	| { type: 'chunk'; content: string }
 	| { type: 'reasoning'; content: string }
 	| { type: 'audio'; data: string }
+	| { type: 'routing'; modelId: string; source: ChatRoutingSource; tier?: string }
 	| { type: 'tool_call'; name: string; arguments?: Record<string, unknown> }
 	| { type: 'tool_result'; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
+	| { type: 'summary_start' }
+	| { type: 'summary_done'; conversationId: string; summaryThroughMessageId: string; summaryChars: number }
 	| { type: 'error'; message: string }
 	| { type: 'done'; conversationId: string };
 
@@ -22,6 +27,13 @@ function* parseSseDataLines(lines: string[]): Generator<ChatSseEvent> {
 				yield { type: 'reasoning', content: String(parsed.content ?? '') };
 			} else if (t === 'audio') {
 				yield { type: 'audio', data: String(parsed.data ?? '') };
+			} else if (t === 'routing') {
+				yield {
+					type: 'routing',
+					modelId: String(parsed.modelId ?? ''),
+					source: String(parsed.source ?? 'heuristic') as ChatRoutingSource,
+					tier: parsed.tier != null ? String(parsed.tier) : undefined
+				};
 			} else if (t === 'tool_call') {
 				yield {
 					type: 'tool_call',
@@ -39,6 +51,15 @@ function* parseSseDataLines(lines: string[]): Generator<ChatSseEvent> {
 					type: 'title',
 					conversationId: String(parsed.conversationId ?? ''),
 					title: String(parsed.title ?? '')
+				};
+			} else if (t === 'summary_start') {
+				yield { type: 'summary_start' };
+			} else if (t === 'summary_done') {
+				yield {
+					type: 'summary_done',
+					conversationId: String(parsed.conversationId ?? ''),
+					summaryThroughMessageId: String(parsed.summaryThroughMessageId ?? ''),
+					summaryChars: Number(parsed.summaryChars ?? 0)
 				};
 			} else if (t === 'error') {
 				yield { type: 'error', message: String(parsed.message ?? 'An error occurred') };

@@ -10,8 +10,9 @@ import { isPistonConfigured } from '../env';
 import { TOOL_SYSTEM_PROMPT_NO_TOOLS } from './conversationTools.config';
 
 function stripUnconfiguredTools(ids: ChatToolId[]): ChatToolId[] {
-	if (isPistonConfigured()) return ids;
-	return ids.filter((id) => id !== 'execute_python');
+	let out = ids;
+	if (!isPistonConfigured()) out = out.filter((id) => id !== 'execute_python');
+	return out;
 }
 
 export function resolveToolingForTurn(params: {

@@ -5,6 +5,7 @@ export type { ImageGenerationToolPayload };
 export const IMAGE_GENERATION_REPLY = "Here's the image you asked for.";
 
 /** Tool result for LLM history — omits huge data URLs so the next turn does not hang. */
+
 export function toolResultForLlmHistory(toolName: string, result: string): string {
 	if (toolName !== 'generate_image') return result;
 	const p = parseImageGenerationToolResult(result);

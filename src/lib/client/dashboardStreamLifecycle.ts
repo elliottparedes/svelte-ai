@@ -2,6 +2,7 @@ import {
 	flushMessageCache,
 	patchStreamingSet
 } from '$lib/client/dashboardMessageCache';
+import { patchConversationSummaryMeta } from '$lib/client/dashboardConversationSummary';
 import type { ChatMessage, Conversation } from '$lib/types/dashboard';
 import {
 	isPendingConversationId,
@@ -45,12 +46,34 @@ export function updateDashboardStreamMessages(
 	store: DashboardStreamStore,
 	streamKey: string,
 	messages: ChatMessage[],
-	errorMessage: string
+	errorMessage: string,
+	isCompacting = false
 ): void {
 	store.setMessageCache(flushMessageCache(store.getMessageCache(), streamKey, messages));
 	if (store.getActiveConversationId() === streamKey) {
 		store.setMessages(messages);
 		store.setError(errorMessage);
+		store.setIsCompacting(isCompacting);
+	}
+}
+
+export function applyDashboardStreamSummaryDone(
+	store: DashboardStreamStore,
+	streamKey: string,
+	conversationId: string,
+	summaryThroughMessageId: string,
+	summaryChars: number
+): void {
+	const patch = (list: Conversation[]) =>
+		list.map((c) =>
+			c.id === conversationId || c.id === streamKey
+				? { ...c, summaryThroughMessageId, summaryChars }
+				: c
+		);
+	store.setConversations(patch(store.getConversations()));
+	store.setProjectConversations(patch(store.getProjectConversations()));
+	if (store.getActiveConversationId() === streamKey || store.getActiveConversationId() === conversationId) {
+		store.setIsCompacting(false);
 	}
 }
 
@@ -72,6 +95,7 @@ export function failDashboardStream(
 	errorMessage: string
 ): void {
 	store.setStreamingIds(patchStreamingSet(store.getStreamingIds(), streamKey, false));
+	store.setIsCompacting(false);
 	if (store.getActiveConversationId() === streamKey) store.setError(errorMessage);
 	if (isPendingConversationId(streamKey)) {
 		store.setConversations(store.getConversations().filter((c) => c.id !== streamKey));

@@ -43,6 +43,10 @@ export const conversations = mysqlTable('conversations', {
 	title: varchar('title', { length: 255 }).notNull(),
 	/** OpenRouter model id used for this thread (set on first message). */
 	modelId: varchar('model_id', { length: 128 }),
+	/** Incremental LLM context summary of older turns (not shown in UI). */
+	rollingSummary: text('rolling_summary'),
+	/** Last message id included in rollingSummary. */
+	summaryThroughMessageId: varchar('summary_through_message_id', { length: 36 }),
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()
 }, (table) => [

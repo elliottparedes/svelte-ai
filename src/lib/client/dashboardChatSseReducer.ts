@@ -8,6 +8,10 @@ export type ChatSseAccum = {
 	assistantReasoning: string;
 	doneConversationId: string | null;
 	errorMessage: string;
+	routedModelId: string | null;
+	isCompacting: boolean;
+	summaryThroughMessageId: string | null;
+	summaryChars: number;
 };
 
 function upsertStreamingAssistant(
@@ -93,10 +97,22 @@ export function accumulateChatSse(
 			}
 			return { ...acc, messages };
 		}
+		case 'routing':
+			return { ...acc, routedModelId: ev.modelId || acc.routedModelId };
 		case 'error':
-			return { ...acc, errorMessage: ev.message || 'An error occurred' };
+			return { ...acc, errorMessage: ev.message || 'An error occurred', isCompacting: false };
+		case 'summary_start':
+			return { ...acc, isCompacting: true };
+		case 'summary_done':
+			return {
+				...acc,
+				isCompacting: false,
+				summaryThroughMessageId: ev.summaryThroughMessageId,
+				summaryChars: ev.summaryChars,
+				doneConversationId: acc.doneConversationId ?? ev.conversationId
+			};
 		case 'done':
-			return { ...acc, doneConversationId: ev.conversationId };
+			return { ...acc, doneConversationId: ev.conversationId, isCompacting: false };
 		default:
 			return acc;
 	}

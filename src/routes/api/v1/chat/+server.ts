@@ -10,7 +10,6 @@ import { ToolExecutor } from '$lib/server/infrastructure/ToolExecutor';
 import {
 	OPENROUTER_API_KEY,
 	OPENROUTER_HTTP_REFERER,
-	OPENROUTER_DEFAULT_MODEL,
 	VISION_RELAY_ENABLED,
 	VISION_RELAY_MODEL,
 	VISION_RELAY_MAX_TOKENS,
@@ -27,7 +26,10 @@ import { TtsVoiceService } from '$lib/server/services/TtsVoiceService';
 import { logger } from '$lib/server/logger';
 import { VisionRelayService } from '$lib/server/services/VisionRelayService';
 import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
-import { ModelRoutingService } from '$lib/server/services/ModelRoutingService';
+import { buildConversationSummaryDeps } from '$lib/server/services/conversationSummaryDeps';
+import { SEARXNG_URL } from '$lib/server/env';
+import { IntelligentModelRouter } from '$lib/server/services/IntelligentModelRouter';
+import { buildRoutingHistorySnippet } from '$lib/server/services/conversationRoutingSnippet';
 import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
@@ -49,23 +51,45 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(400, parseResult.error.issues.map((i) => i.message).join(', '));
 	}
 
-	const { conversationId, message, model, attachments, projectId, enabledToolNames, voiceMode } =
-		parseResult.data;
+	const {
+		conversationId,
+		message,
+		model,
+		attachments,
+		projectId,
+		enabledToolNames,
+		voiceMode,
+		deepReasoning
+	} = parseResult.data;
 	const useVoice = Boolean(voiceMode && isElevenLabsConfigured());
-	const effectiveModel = new ModelRoutingService().resolve({
+
+	const messageRepo = new MessageRepository();
+	let recentSnippet: string | undefined;
+	if (conversationId) {
+		const recent = await messageRepo.findByConversationId(conversationId, 4);
+		recentSnippet = buildRoutingHistorySnippet(recent);
+	}
+	const routeResult = await new IntelligentModelRouter().route({
+		userId: user.id,
+		conversationId,
 		prompt: message,
 		requestedModel: model,
+		deepReasoning,
 		attachments,
 		enabledToolNames,
-		defaultModel: OPENROUTER_DEFAULT_MODEL
+		recentSnippet
 	});
+	const effectiveModel = routeResult.modelId;
 	logger.info('Chat request', {
 		userId: user.id,
 		conversationId,
 		model: effectiveModel,
+		routeSource: routeResult.source,
+		routeTier: routeResult.tier,
 		attachmentCount: attachments?.length ?? 0,
 		projectId,
-		voiceMode: useVoice
+		voiceMode: useVoice,
+		deepReasoning: Boolean(deepReasoning)
 	});
 
 	const provider = new OpenRouterProvider(
@@ -95,14 +119,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				OPENROUTER_HTTP_REFERER || undefined
 			)
 		: undefined;
+	const { summaryService, summaryConfig } = buildConversationSummaryDeps();
 	const service = new ConversationService(
 		provider,
 		new ChatRepository(),
-		new MessageRepository(),
+		messageRepo,
 		new ToolExecutor(),
 		new ProjectRepository(),
 		visionRelay,
-		titleService
+		titleService,
+		summaryService,
+		summaryConfig
 	);
 
 	const encoder = new TextEncoder();
@@ -112,6 +139,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			let resolvedConversationId: string | undefined;
 			try {
 				const writeLine = (line: string) => controller.enqueue(encoder.encode(line));
+				writeLine(
+					`data: ${JSON.stringify({
+						type: 'routing',
+						modelId: routeResult.modelId,
+						source: routeResult.source,
+						tier: routeResult.tier
+					})}\n\n`
+				);
 				let voice: ChatStreamVoiceRelay | null = null;
 				if (useVoice) {
 					const ttsVoice = new TtsVoiceService(ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID);

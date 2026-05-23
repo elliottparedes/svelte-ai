@@ -6,7 +6,6 @@ import { OpenRouterProvider } from '$lib/server/infrastructure/OpenRouterProvide
 import {
 	OPENROUTER_API_KEY,
 	OPENROUTER_HTTP_REFERER,
-	OPENROUTER_DEFAULT_MODEL,
 	isElevenLabsConfigured
 } from '$lib/server/db/config';
 import { logger } from '$lib/server/logger';
@@ -14,9 +13,7 @@ import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
-import { pickCuratedDashboardModels } from '$lib/server/model/curatedDashboardModels';
-import { mergeOptionalDashboardModels } from '$lib/server/model/mergeOptionalDashboardModels';
-import { resolveUserAltModelIds } from '$lib/shared/optionalDashboardModels';
+import { pickRoutingPoolModels } from '$lib/server/model/routingPoolModels';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;
@@ -42,24 +39,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (!isOpenRouterCapabilitiesHydrated() && catalog.length > 0) {
 		hydrateOpenRouterCapabilities(catalog);
 	}
-	const core = pickCuratedDashboardModels(catalog);
-	const altIds = resolveUserAltModelIds(user.altModelIds);
-	const { models, groups: modelGroups } = mergeOptionalDashboardModels(core, altIds, catalog);
+	const models = pickRoutingPoolModels(catalog);
 
 	logger.info('Dashboard load', {
 		userId: user.id,
 		conversations: conversations.length,
 		projects: projects.length,
 		catalogModels: catalog.length,
-		curatedModels: models.length
+		routingPoolModels: models.length
 	});
 
 	return {
 		conversations,
 		projects,
 		models,
-		modelGroups,
-		defaultModelId: OPENROUTER_DEFAULT_MODEL,
 		ttsEnabled: isElevenLabsConfigured()
 	};
 };

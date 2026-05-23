@@ -16,12 +16,14 @@ export async function completeOpenRouterText(
 	modelId: string,
 	messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
 	maxTokens: number,
-	httpReferer?: string
+	httpReferer?: string,
+	signal?: AbortSignal
 ): Promise<string | null> {
 	const res = await fetch(`${BASE}/chat/completions`, {
 		method: 'POST',
 		headers: headers(apiKey, httpReferer),
-		body: JSON.stringify({ model: modelId, stream: false, max_tokens: maxTokens, messages })
+		body: JSON.stringify({ model: modelId, stream: false, max_tokens: maxTokens, messages }),
+		signal
 	});
 	const raw = await res.text();
 	if (!res.ok) return null;

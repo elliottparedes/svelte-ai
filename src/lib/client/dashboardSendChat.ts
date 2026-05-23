@@ -11,7 +11,6 @@ import {
 	imageGenToolSucceeded,
 	refetchMessagesAfterImageGen
 } from '$lib/client/refetchConversationAfterImageGen';
-
 export type DashboardSendDeps = {
 	streamKey: string;
 	getMessages: () => ChatMessage[];
@@ -19,12 +18,24 @@ export type DashboardSendDeps = {
 	attachments: ChatAttachmentInput[];
 	getProjectComposeMode: () => boolean;
 	getActiveProjectId: () => string | null;
-	getSelectedModel: () => string;
+	getDeepReasoning: () => boolean;
 	getModelSupportsTools: () => boolean;
+	onRouting?: (modelId: string) => void;
 	getEnabledToolNames: () => readonly string[];
 	setInputValue: (v: string) => void;
 	setAttachments: (a: ChatAttachmentInput[]) => void;
-	onStreamMessages: (streamKey: string, messages: ChatMessage[], errorMessage: string) => void;
+	onStreamMessages: (
+		streamKey: string,
+		messages: ChatMessage[],
+		errorMessage: string,
+		isCompacting: boolean
+	) => void;
+	onStreamSummaryDone?: (
+		streamKey: string,
+		conversationId: string,
+		summaryThroughMessageId: string,
+		summaryChars: number
+	) => void;
 	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
 	onStreamFinish: (result: StreamFinishResult) => Promise<void>;
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
@@ -53,7 +64,7 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		...d.getMessages(),
 		{ id: crypto.randomUUID(), role: 'user', content: displayContent, createdAt: new Date() }
 	];
-	d.onStreamMessages(d.streamKey, nextMessages, '');
+	d.onStreamMessages(d.streamKey, nextMessages, '', false);
 
 	const payloadAttachments = d.attachments.map((a) => ({
 		type: a.type,
@@ -68,9 +79,9 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	try {
 		const payload: Record<string, unknown> = {
 			message: text || ' ',
-			model: d.getSelectedModel() || undefined,
 			attachments: payloadAttachments
 		};
+		if (d.getDeepReasoning()) payload.deepReasoning = true;
 		if (!isPendingConversationId(d.streamKey)) {
 			payload.conversationId = d.streamKey;
 		}
@@ -102,7 +113,11 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		assistantContent: '',
 		assistantReasoning: '',
 		doneConversationId: null as string | null,
-		errorMessage: ''
+		errorMessage: '',
+		routedModelId: null as string | null,
+		isCompacting: false,
+		summaryThroughMessageId: null as string | null,
+		summaryChars: 0
 	};
 
 	const useVoice = Boolean(d.voiceModeEnabled || d.immersive);
@@ -142,7 +157,16 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 					imageGenNeedsRefetch = true;
 				}
 				acc = accumulateChatSse(acc, ev, assistantId);
-				d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
+				if (ev.type === 'summary_done') {
+					d.onStreamSummaryDone?.(
+						d.streamKey,
+						ev.conversationId,
+						ev.summaryThroughMessageId,
+						ev.summaryChars
+					);
+				}
+				if (ev.type === 'routing' && ev.modelId) d.onRouting?.(ev.modelId);
+				d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage, acc.isCompacting);
 			}
 		})();
 
@@ -153,7 +177,7 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 				const persisted = await refetchMessagesAfterImageGen(acc.doneConversationId);
 				if (persisted) {
 					acc.messages = persisted;
-					d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage);
+					d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage, acc.isCompacting);
 				}
 			} catch {
 				// Image is saved server-side; user can reload the chat if refetch fails.
@@ -166,7 +190,7 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 				streamKey: d.streamKey,
 				conversationId:
 					acc.doneConversationId ?? (isPendingConversationId(d.streamKey) ? null : d.streamKey),
-				modelId: d.getSelectedModel(),
+				modelId: acc.routedModelId ?? '',
 				wasProjectCompose: d.getProjectComposeMode(),
 				projectId: d.getActiveProjectId()
 			});

@@ -5,13 +5,13 @@ import {
 	applyDashboardStreamTitle,
 	failDashboardStream,
 	finishDashboardStream,
-	updateDashboardStreamMessages
+	updateDashboardStreamMessages,
+	applyDashboardStreamSummaryDone
 } from '$lib/client/dashboardStreamLifecycle';
 import { runDashboardSendMessage } from './dashboardPageModelSend.js';
 import { createImmersiveSendBundle } from './dashboardImmersiveVoice.js';
 import { createDashboardNavActions } from './dashboardPageModelNavActions';
 import type { DashboardPageModelStateShell } from './dashboardPageModelStateShell';
-
 export function createDashboardPageModelActions(state: DashboardPageModelStateShell) {
 	const nav = createDashboardNavActions(state);
 
@@ -50,10 +50,8 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 		const store = state.streamStore();
 		await runDashboardSendMessage({
 			state,
-			models: state.getModels(),
 			text,
 			attachments: [...state.attachments],
-			selectedModel: state.selectedModel,
 			enabledToolIds: state.enabledToolIds,
 			streamStore: store,
 			isConversationStreaming: (id) => state.streamingConversationIds.has(id),
@@ -62,7 +60,13 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 				state.messageCache[key] ?? (state.activeConversationId === key ? state.messages : []),
 			setInputValue: (v) => (state.inputValue = v),
 			setAttachments: (a) => (state.attachments = a),
-			onStreamMessages: (key, m, err) => updateDashboardStreamMessages(store, key, m, err),
+			onRoutedModel: (modelId) => {
+				if (modelId) state.lastRoutedModelId = modelId;
+			},
+			onStreamMessages: (key, m, err, compacting) =>
+				updateDashboardStreamMessages(store, key, m, err, compacting),
+			onStreamSummaryDone: (key, conversationId, watermark, summaryChars) =>
+				applyDashboardStreamSummaryDone(store, key, conversationId, watermark, summaryChars),
 			onStreamTitle: (key, conversationId, title) =>
 				applyDashboardStreamTitle(store, key, conversationId, title),
 			onStreamFinish: async (result) => {

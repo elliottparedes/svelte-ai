@@ -4,7 +4,6 @@ import type {
 	Conversation,
 	DashboardPageLoadData,
 	Model,
-	ModelProviderGroup,
 	Project
 } from '$lib/types/dashboard';
 import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
@@ -26,7 +25,9 @@ export type DashboardPageModelStateShell = {
 	streamingConversationIds: Set<string>;
 	inputValue: string;
 	errorMessage: string;
-	selectedModel: string;
+	isCompacting: boolean;
+	lastRoutedModelId: string;
+	deepReasoningEnabled: boolean;
 	sidebarCollapsed: boolean;
 	attachments: ChatAttachmentInput[];
 	enabledToolIds: ChatToolId[];
@@ -38,11 +39,8 @@ export type DashboardPageModelStateShell = {
 	immersivePcm: import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null;
 	editingProjectPrompt: boolean;
 	projectPromptValue: string;
-	get modelLocked(): boolean;
 	get isActiveStreaming(): boolean;
-	pickModel: (modelId: string | null | undefined) => string;
 	getModels: () => Model[];
-	getModelGroups: () => ModelProviderGroup[];
 	getTtsEnabled: () => boolean;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
@@ -59,11 +57,8 @@ function bindField<T>(target: object, key: string, field: Field<T>): void {
 
 export function createDashboardPageModelStateShell(p: {
 	data: DashboardPageLoadData;
-	getModelLocked: () => boolean;
 	getIsActiveStreaming: () => boolean;
-	pickModel: (modelId: string | null | undefined) => string;
 	getModels: () => Model[];
-	getModelGroups: () => ModelProviderGroup[];
 	getTtsEnabled: () => boolean;
 	flushActiveToCache: () => void;
 	streamStore: () => DashboardStreamStore;
@@ -79,14 +74,16 @@ export function createDashboardPageModelStateShell(p: {
 		streamingConversationIds: Field<Set<string>>;
 		inputValue: Field<string>;
 		errorMessage: Field<string>;
-		selectedModel: Field<string>;
+		isCompacting: Field<boolean>;
+		lastRoutedModelId: Field<string>;
+		deepReasoningEnabled: Field<boolean>;
 		sidebarCollapsed: Field<boolean>;
 		attachments: Field<ChatAttachmentInput[]>;
 		enabledToolIds: Field<ChatToolId[]>;
 		voiceModeEnabled: Field<boolean>;
 		immersiveVoiceOpen: Field<boolean>;
 		immersiveGestureToken: Field<number>;
-			immersivePhase: Field<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>;
+		immersivePhase: Field<import('$lib/shared/immersiveVoice').ImmersiveVoicePhase>;
 		immersiveAudioLevel: Field<number>;
 		immersivePcm: Field<import('$lib/client/elevenLabsPcmPlayer').ElevenLabsPcmPlayer | null>;
 		editingProjectPrompt: Field<boolean>;
@@ -95,15 +92,10 @@ export function createDashboardPageModelStateShell(p: {
 }): DashboardPageModelStateShell {
 	const shell = {
 		data: p.data,
-		get modelLocked() {
-			return p.getModelLocked();
-		},
 		get isActiveStreaming() {
 			return p.getIsActiveStreaming();
 		},
-		pickModel: p.pickModel,
 		getModels: p.getModels,
-		getModelGroups: p.getModelGroups,
 		getTtsEnabled: p.getTtsEnabled,
 		flushActiveToCache: p.flushActiveToCache,
 		streamStore: p.streamStore

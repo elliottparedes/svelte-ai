@@ -1,25 +1,20 @@
 <script lang="ts">
-	import { tick } from 'svelte';
 	import ChatMessageRow from './ChatMessageRow.svelte';
 	import ChatMessageListExtras from './ChatMessageListExtras.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
 	import { hydrateGenerateImageMessages } from '$lib/client/hydrateGenerateImageMessages';
+	import { useChatMessageScroll } from './useChatMessageScroll.svelte';
 
-	let { messages, isStreaming, errorMessage } = $props<{
+	let { messages, isStreaming, isCompacting = false, errorMessage } = $props<{
 		messages: ChatMessage[];
 		isStreaming: boolean;
+		isCompacting?: boolean;
 		errorMessage: string;
 	}>();
 
 	const displayMessages = $derived(hydrateGenerateImageMessages(messages));
 
-	let scrollContainer: HTMLDivElement | null = $state(null);
-	let messagesWrapper: HTMLDivElement | null = $state(null);
-	let userScrolledUp = $state(false);
-
-	const threadAnchorId = $derived(displayMessages[0]?.id ?? '');
-
-	const scrollTrackKey = $derived.by(() => {
+	const scrollKey = $derived.by(() => {
 		const last = displayMessages.at(-1);
 		return [
 			displayMessages.length,
@@ -29,67 +24,44 @@
 		].join(':');
 	});
 
-	function handleScroll() {
-		if (!scrollContainer) return;
-		const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
-		userScrolledUp = scrollHeight - scrollTop - clientHeight > 100;
-	}
+	const conversationKey = $derived(displayMessages[0]?.id);
 
-	function scrollToBottom() {
-		if (scrollContainer) {
-			scrollContainer.scrollTop = scrollContainer.scrollHeight;
-			userScrolledUp = false;
-		}
-	}
-
-	async function scrollToBottomIfPinned() {
-		await tick();
-		if (!scrollContainer || userScrolledUp) return;
-		scrollContainer.scrollTop = scrollContainer.scrollHeight;
-	}
-
-	$effect(() => {
-		threadAnchorId;
-		userScrolledUp = false;
-	});
-
-	$effect(() => {
-		scrollTrackKey;
-		if (displayMessages.length && scrollContainer) {
-			void scrollToBottomIfPinned();
-		}
-	});
-
-	$effect(() => {
-		const el = messagesWrapper;
-		if (!el) return;
-		const ro = new ResizeObserver(() => {
-			if (!userScrolledUp && scrollContainer) {
-				scrollContainer.scrollTop = scrollContainer.scrollHeight;
-			}
-		});
-		ro.observe(el);
-		return () => ro.disconnect();
-	});
+	const scroll = useChatMessageScroll(
+		() => scrollKey,
+		() => conversationKey
+	);
 </script>
 
 <div class="chat-messages-pane">
-	<div class="chat-scroll" bind:this={scrollContainer} onscroll={handleScroll}>
-		<div class="messages-wrapper" bind:this={messagesWrapper}>
+	{#if !scroll.stickToBottom}
+		<button
+			type="button"
+			class="jump-bottom"
+			onclick={scroll.jumpToBottom}
+			aria-label="Scroll to latest messages"
+		>
+			↓ Latest
+		</button>
+	{/if}
+	<div
+		class="chat-scroll"
+		role="region"
+		aria-label="Messages"
+		bind:this={scroll.scrollEl}
+		onscroll={scroll.onScroll}
+		onwheel={scroll.onWheel}
+		ontouchstart={scroll.onTouchStart}
+		ontouchmove={scroll.onTouchMove}
+		onkeydown={scroll.onKeyDown}
+		tabindex="-1"
+	>
+		<div class="messages-wrapper" bind:this={scroll.listEl}>
 			{#each displayMessages as msg (msg.id)}
 				<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
 			{/each}
-			<ChatMessageListExtras messages={displayMessages} {isStreaming} {errorMessage} />
+			<ChatMessageListExtras messages={displayMessages} {isStreaming} {isCompacting} {errorMessage} />
 		</div>
 	</div>
-
-	{#if userScrolledUp}
-		<button class="scroll-to-bottom" onclick={scrollToBottom} title="Scroll to bottom" aria-label="Scroll to bottom">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<polyline points="6 9 12 15 18 9"></polyline>
-			</svg>
-		</button>
-	{/if}
 </div>
 
 <style>
@@ -99,6 +71,24 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
+	}
+	.jump-bottom {
+		position: absolute;
+		left: 50%;
+		bottom: 1rem;
+		transform: translateX(-50%);
+		z-index: 2;
+		padding: 0.4rem 0.85rem;
+		border-radius: 999px;
+		border: 1px solid #45475a;
+		background: #313244;
+		color: #cdd6f4;
+		font-size: 0.85rem;
+		cursor: pointer;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+	}
+	.jump-bottom:hover {
+		background: #45475a;
 	}
 	.chat-scroll {
 		flex: 1;
@@ -125,26 +115,5 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
-	}
-	.scroll-to-bottom {
-		position: absolute;
-		right: 1rem;
-		bottom: 1rem;
-		background: #313244;
-		border: 1px solid #45475a;
-		border-radius: 50%;
-		width: 2.75rem;
-		height: 2.75rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		color: #cdd6f4;
-		z-index: 10;
-		box-shadow: 0 2px 12px rgb(0 0 0 / 0.35);
-		transition: background 0.15s;
-	}
-	.scroll-to-bottom:hover {
-		background: #45475a;
 	}
 </style>

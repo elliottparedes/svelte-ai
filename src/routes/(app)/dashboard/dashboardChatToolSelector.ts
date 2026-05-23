@@ -12,12 +12,10 @@ type MetaRow = Omit<ToolRowMeta, 'id'>;
 
 const META: Record<ChatToolId, MetaRow> = {
 	execute_python: { title: 'Python', description: 'Math, APIs, light weather/HTTP' },
-	calculator: { title: 'Calculator', description: 'Quick one-line math' },
 	datetime: { title: 'Date & time', description: 'Use the current date and time' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
 	web_search: { title: 'Web search', description: 'Search the web for live information' },
 	image_search: { title: 'Image search', description: 'Find images on the web' },
-	map_route: { title: 'Route map', description: 'Directions between two places' },
 	generate_image: { title: 'Generate image', description: 'Create images from a text prompt' }
 };
 

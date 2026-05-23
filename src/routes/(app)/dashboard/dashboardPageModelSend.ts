@@ -1,5 +1,5 @@
 import { sendDashboardChatMessage } from '$lib/client/dashboardSendChat';
-import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
+import type { ChatAttachmentInput, ChatMessage } from '$lib/types/dashboard';
 import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type { DashboardStreamStore } from '$lib/client/dashboardStreamLifecycle';
 import { beginDashboardStream } from '$lib/client/dashboardStreamLifecycle';
@@ -18,10 +18,8 @@ function immersiveDeps(state: DashboardPageModelStateShell) {
 
 export async function runDashboardSendMessage(p: {
 	state: DashboardPageModelStateShell;
-	models: Model[];
 	text: string;
 	attachments: ChatAttachmentInput[];
-	selectedModel: string;
 	enabledToolIds: ChatToolId[];
 	streamStore: DashboardStreamStore;
 	isConversationStreaming: (id: string) => boolean;
@@ -29,13 +27,25 @@ export async function runDashboardSendMessage(p: {
 	getMessagesForKey: (streamKey: string) => ChatMessage[];
 	setInputValue: (v: string) => void;
 	setAttachments: (a: ChatAttachmentInput[]) => void;
-	onStreamMessages: (streamKey: string, messages: ChatMessage[], errorMessage: string) => void;
+	onStreamMessages: (
+		streamKey: string,
+		messages: ChatMessage[],
+		errorMessage: string,
+		isCompacting: boolean
+	) => void;
+	onStreamSummaryDone?: (
+		streamKey: string,
+		conversationId: string,
+		summaryThroughMessageId: string,
+		summaryChars: number
+	) => void;
 	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
 	onStreamFinish: Parameters<typeof sendDashboardChatMessage>[0]['onStreamFinish'];
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
+	onRoutedModel: (modelId: string) => void;
 }): Promise<void> {
 	if (p.activeConversationId && p.isConversationStreaming(p.activeConversationId)) return;
-	const streamKey = beginDashboardStream(p.streamStore, p.selectedModel);
+	const streamKey = beginDashboardStream(p.streamStore, p.state.lastRoutedModelId || 'auto');
 	const immersiveOpen = p.state.immersiveVoiceOpen;
 
 	await sendDashboardChatMessage({
@@ -45,11 +55,8 @@ export async function runDashboardSendMessage(p: {
 		attachments: p.attachments,
 		getProjectComposeMode: () => p.state.projectComposeMode,
 		getActiveProjectId: () => p.state.activeProjectId,
-		getSelectedModel: () => p.selectedModel,
-		getModelSupportsTools: () => {
-			const m = p.models.find((x) => x.id === p.selectedModel);
-			return m?.supportsTools !== false;
-		},
+		getDeepReasoning: () => p.state.deepReasoningEnabled,
+		getModelSupportsTools: () => true,
 		getEnabledToolNames: () => p.enabledToolIds,
 		setInputValue: p.setInputValue,
 		setAttachments: p.setAttachments,
@@ -57,6 +64,7 @@ export async function runDashboardSendMessage(p: {
 		onStreamTitle: p.onStreamTitle,
 		onStreamFinish: p.onStreamFinish,
 		onStreamFailed: p.onStreamFailed,
+		onRouting: p.onRoutedModel,
 		voiceModeEnabled: p.state.voiceModeEnabled || immersiveOpen,
 		immersive: immersiveDeps(p.state)
 	});

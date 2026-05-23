@@ -48,6 +48,10 @@ export class ChatRepository {
 		if (input.title !== undefined) updateData.title = input.title;
 		if (input.projectId !== undefined) updateData.projectId = input.projectId;
 		if (input.modelId !== undefined) updateData.modelId = input.modelId;
+		if (input.rollingSummary !== undefined) updateData.rollingSummary = input.rollingSummary;
+		if (input.summaryThroughMessageId !== undefined) {
+			updateData.summaryThroughMessageId = input.summaryThroughMessageId;
+		}
 
 		await db.update(conversations).set(updateData).where(eq(conversations.id, id));
 		const conv = await this.findById(id);

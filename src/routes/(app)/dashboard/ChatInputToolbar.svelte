@@ -3,21 +3,17 @@
 	import ChatContextMeter from './ChatContextMeter.svelte';
 	import ChatToolSelector from './ChatToolSelector.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
-	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
+	import ChatDeepThinkButton from './ChatDeepThinkButton.svelte';
+	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
 	import {
 		DEFAULT_CHAT_TOOL_IDS,
-		estimateChatToolsTurnTokens,
-		MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT,
-		normalizeChatToolIds,
 		type ChatToolId
 	} from '$lib/shared/chatToolSystemPrompt';
-	import { estimateTokensFromText } from '$lib/shared/estimateContextTokens';
 
 	let {
 		models,
-		modelGroups,
-		selectedModel = $bindable(''),
-		modelLocked = false,
+		routedModelId = '',
+		deepReasoningEnabled = $bindable(false),
 		value,
 		attachmentsLen,
 		isStreaming,
@@ -27,15 +23,14 @@
 		onSend,
 		messages = [],
 		attachments = [],
-		extraSystemTokens = 0,
+		summaryThroughMessageId = null,
 		modelSupportsTools = true,
 		enabledToolIds = $bindable<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]),
-	onAppendDictation
-} = $props<{
+		onAppendDictation
+	} = $props<{
 		models: Model[];
-		modelGroups: ModelProviderGroup[];
-		selectedModel?: string;
-		modelLocked?: boolean;
+		routedModelId?: string;
+		deepReasoningEnabled?: boolean;
 		value: string;
 		attachmentsLen: number;
 		isStreaming: boolean;
@@ -45,30 +40,16 @@
 		onSend: () => void;
 		messages?: ChatMessage[];
 		attachments?: ChatAttachmentInput[];
-		extraSystemTokens?: number;
+		summaryThroughMessageId?: string | null;
 		modelSupportsTools?: boolean;
 		enabledToolIds?: ChatToolId[];
-	onAppendDictation?: (text: string) => void;
-}>(); 
-
-	const toolStackEstimate = $derived(
-		modelSupportsTools
-			? estimateChatToolsTurnTokens(normalizeChatToolIds(enabledToolIds))
-			: estimateTokensFromText(MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT) + 40
-	);
+		onAppendDictation?: (text: string) => void;
+	}>();
 </script>
 
 <div class="input-footer">
 	<div class="footer-left">
-		<ChatContextMeter
-			{messages}
-			draftText={value}
-			{attachments}
-			{models}
-			selectedModel={selectedModel ?? ''}
-			{extraSystemTokens}
-			{toolStackEstimate}
-		/>
+		<ChatContextMeter {messages} {summaryThroughMessageId} />
 		{#if showAttachButton}
 			<button
 				type="button"
@@ -83,12 +64,10 @@
 		{#if modelSupportsTools}
 			<ChatToolSelector bind:enabledIds={enabledToolIds} disabled={isStreaming} />
 		{/if}
-	<ChatMicButton
-		disabled={isStreaming}
-		onAppend={(t) => onAppendDictation?.(t)}
-	/>
+		<ChatDeepThinkButton bind:enabled={deepReasoningEnabled} disabled={isStreaming} />
+		<ChatMicButton disabled={isStreaming} onAppend={(t) => onAppendDictation?.(t)} />
 	</div>
-	<ChatInputModelSend {models} {modelGroups} bind:selectedModel {modelLocked} {value} {attachmentsLen} {isStreaming} {onSend} />
+	<ChatInputModelSend {value} {attachmentsLen} {isStreaming} {onSend} />
 </div>
 
 <style>

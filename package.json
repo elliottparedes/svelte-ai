@@ -17,7 +17,10 @@
 		"map:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/map-route-ping.ts",
 		"image:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/image-gen-ping.ts",
 		"piston:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/piston-ping.ts",
-		"telegram:sync-webhook": "node ./node_modules/tsx/dist/cli.mjs scripts/telegram-sync-webhook.ts"
+		"telegram:sync-webhook": "node ./node_modules/tsx/dist/cli.mjs scripts/telegram-sync-webhook.ts",
+		"router:benchmark": "node ./node_modules/tsx/dist/cli.mjs scripts/router-model-benchmark.ts",
+		"router:test": "node ./node_modules/tsx/dist/cli.mjs scripts/intelligent-model-router-test.ts",
+		"summary:test": "node ./node_modules/tsx/dist/cli.mjs scripts/conversation-summary-test.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.4",

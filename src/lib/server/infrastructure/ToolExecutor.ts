@@ -1,24 +1,13 @@
-import { SEARXNG_URL, MAP_HTTP_USER_AGENT, NOMINATIM_BASE_URL, OSRM_BASE_URL } from '../env';
-import { MapRouteService } from './mapRouteService';
-import { NominatimGeocoder } from './nominatimGeocoder';
-import { OsrmRouter } from './osrmRouter';
+import { SEARXNG_URL } from '../env';
 import { searxngWebSearch, searxngImageSearch } from './searxngClient';
-import type { RouteMode } from '../domain/mapRoute.types';
 import { ImageGenerationService } from './imageGenerationService';
 import { executePythonOnPiston } from './pistonClient';
-
 export type ToolRunContext = { conversationId: string };
 
 export class ToolExecutor {
-	private readonly mapRouteService: MapRouteService;
 	private readonly imageGenerationService = new ImageGenerationService();
 
-	constructor(private readonly searxngUrl: string = SEARXNG_URL) {
-		this.mapRouteService = new MapRouteService(
-			new NominatimGeocoder(NOMINATIM_BASE_URL, MAP_HTTP_USER_AGENT),
-			new OsrmRouter(OSRM_BASE_URL)
-		);
-	}
+	constructor(private readonly searxngUrl: string = SEARXNG_URL) {}
 
 	async run(
 		name: string,
@@ -28,8 +17,6 @@ export class ToolExecutor {
 		switch (name) {
 			case 'execute_python':
 				return await executePythonOnPiston(String(args.code ?? ''));
-			case 'calculator':
-				return this.runCalculator(String(args.expression ?? ''));
 			case 'datetime':
 				return this.runDatetime();
 			case 'fetch_url':
@@ -39,28 +26,11 @@ export class ToolExecutor {
 			case 'image_search':
 				return await searxngImageSearch(this.searxngUrl, String(args.query ?? ''));
 			case 'map_route':
-				return await this.runMapRoute(args);
+				return 'Error: map_route is disabled';
 			case 'generate_image':
 				return await this.imageGenerationService.run(args);
 			default:
 				return `Error: unknown tool ${name}`;
-		}
-	}
-
-	private async runMapRoute(args: Record<string, unknown>): Promise<string> {
-		const mode = String(args.mode ?? 'driving') as RouteMode;
-		const valid: RouteMode[] = ['driving', 'walking', 'cycling'];
-		const m = valid.includes(mode) ? mode : 'driving';
-		return this.mapRouteService.run(String(args.origin ?? ''), String(args.destination ?? ''), m);
-	}
-
-	private runCalculator(expression: string): string {
-		const safe = expression.replace(/[^0-9+\-*/().\s]/g, '');
-		if (!safe) return 'Error: invalid expression';
-		try {
-			return String(new Function(`return (${safe})`)());
-		} catch {
-			return 'Error: evaluation failed';
 		}
 	}
 

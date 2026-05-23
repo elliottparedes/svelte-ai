@@ -16,7 +16,7 @@
 	import { createDashboardMobileNav } from './dashboardMobileNav';
 	import './dashboardPageLayout.css';
 	import './dashboardMobile.css';
-	import { computeChatContextExtraTokens } from './dashboardChatContextExtra';
+	import { activeConversationSummaryMeta } from '$lib/client/dashboardConversationSummary';
 
 	let { data } = $props<{ data: DashboardPageLoadData }>();
 
@@ -46,19 +46,14 @@
 		chatBackProjectId !== null && !(model.activeProjectId !== null && !model.projectComposeMode)
 	);
 
-	const modelSupportsTools = $derived(
-		model.models.find((m) => m.id === model.selectedModel)?.supportsTools !== false
-	);
+	const modelSupportsTools = $derived(model.models.some((m) => m.supportsTools !== false));
 
-	const chatContextExtraTokens = $derived.by(() =>
-		computeChatContextExtraTokens({
-			projectComposeMode: model.projectComposeMode,
-			activeProjectId: model.activeProjectId,
-			activeConversationId: model.activeConversationId,
-			projects: model.projects,
-			projectConversations: model.projectConversations,
-			conversations: model.conversations
-		})
+	const chatSummaryMeta = $derived.by(() =>
+		activeConversationSummaryMeta(
+			model.conversations,
+			model.projectConversations,
+			model.activeConversationId
+		)
 	);
 </script>
 
@@ -115,7 +110,12 @@
 			{#if model.messages.length === 0 && !model.projectComposeMode}
 				<WelcomeScreen />
 			{:else}
-				<ChatMessageList messages={model.messages} isStreaming={model.isStreaming} errorMessage={model.errorMessage} />
+				<ChatMessageList
+					messages={model.messages}
+					isStreaming={model.isStreaming}
+					isCompacting={model.isCompacting}
+					errorMessage={model.errorMessage}
+				/>
 			{/if}
 		{/if}
 		{#if !model.activeProjectId || model.projectComposeMode}
@@ -124,14 +124,13 @@
 					<ChatInput
 					bind:value={model.inputValue}
 					isStreaming={model.isStreaming}
-					modelLocked={model.modelLocked}
 					onSend={model.sendMessage}
 					models={model.models}
-					modelGroups={model.modelGroups}
-					bind:selectedModel={model.selectedModel}
+					routedModelId={model.lastRoutedModelId}
+					bind:deepReasoningEnabled={model.deepReasoningEnabled}
 					bind:attachments={model.attachments}
 					messages={model.messages}
-					extraSystemTokens={chatContextExtraTokens}
+					summaryThroughMessageId={chatSummaryMeta.summaryThroughMessageId}
 					{modelSupportsTools}
 					bind:enabledToolIds={model.enabledToolIds}
 				/>

@@ -18,6 +18,7 @@ import { TelegramChatBindingRepository } from '$lib/server/repositories/Telegram
 import { UsageDailyRepository } from '$lib/server/repositories/UsageDailyRepository';
 import { ConversationService } from '$lib/server/services/ConversationService';
 import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
+import { buildConversationSummaryDeps } from '$lib/server/services/conversationSummaryDeps';
 import { ModelRoutingService } from '$lib/server/services/ModelRoutingService';
 import { TelegramIngressService } from '$lib/server/services/TelegramIngressService';
 import { UsageMeteringService } from '$lib/server/services/UsageMeteringService';
@@ -38,6 +39,7 @@ function buildIngress(): TelegramIngressService {
 				OPENROUTER_HTTP_REFERER || undefined
 			)
 		: undefined;
+	const { summaryService, summaryConfig } = buildConversationSummaryDeps();
 	const conversationService = new ConversationService(
 		provider,
 		chatRepo,
@@ -45,7 +47,9 @@ function buildIngress(): TelegramIngressService {
 		new ToolExecutor(),
 		new ProjectRepository(),
 		undefined,
-		titleService
+		titleService,
+		summaryService,
+		summaryConfig
 	);
 	return new TelegramIngressService(
 		new TelegramBotRepository(),

@@ -1,4 +1,4 @@
-import type { DashboardPageLoadData, Model, ModelProviderGroup } from '$lib/types/dashboard';
+import type { DashboardPageLoadData, Model } from '$lib/types/dashboard';
 import { DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type {
 	ChatAttachmentInput,
@@ -6,7 +6,6 @@ import type {
 	Conversation,
 	Project
 } from '$lib/types/dashboard';
-import { pickDashboardModelId } from '$lib/client/dashboardPickModel';
 import { getDashboardIsMobile } from '$lib/client/dashboardViewport';
 import type { MessageCache } from '$lib/client/dashboardMessageCache';
 import {
@@ -15,6 +14,8 @@ import {
 	stampConversationModelLists
 } from './dashboardPageModelStreamStore';
 import { createDashboardPageModelStateShell } from './dashboardPageModelStateShell';
+
+const DEEP_REASONING_KEY = 'dashboardDeepReasoning';
 
 export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let conversations = $state<Conversation[]>([...data.conversations]);
@@ -28,14 +29,12 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let streamingConversationIds = $state<Set<string>>(new Set());
 	let inputValue = $state('');
 	let errorMessage = $state('');
+	let isCompacting = $state(false);
 	let models = $state<Model[]>([...data.models]);
-	let modelGroups = $state<ModelProviderGroup[]>([...data.modelGroups]);
-	let defaultModelId = $state(data.defaultModelId);
 	let ttsEnabled = $state(data.ttsEnabled);
-	let selectedModel = $state(
-		data.models.some((m) => m.id === data.defaultModelId)
-			? data.defaultModelId
-			: (data.models[0]?.id ?? '')
+	let lastRoutedModelId = $state(data.models[0]?.id ?? '');
+	let deepReasoningEnabled = $state(
+		typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DEEP_REASONING_KEY) === '1'
 	);
 	let sidebarCollapsed = $state(getDashboardIsMobile());
 	let attachments = $state<ChatAttachmentInput[]>([]);
@@ -52,23 +51,24 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 		localStorage.setItem(VOICE_MODE_KEY, voiceModeEnabled ? '1' : '0');
 	});
 
+	$effect(() => {
+		sessionStorage.setItem(DEEP_REASONING_KEY, deepReasoningEnabled ? '1' : '0');
+	});
+
 	function pageLoadSyncKey(d: DashboardPageLoadData): string {
-		return `${d.defaultModelId}|${d.ttsEnabled}|${d.models.map((m) => m.id).join('\n')}`;
+		return `${d.ttsEnabled}|${d.models.map((m) => m.id).join('\n')}`;
 	}
 
 	let syncedPageLoadKey = pageLoadSyncKey(data);
 
-	/** Refresh picker models after navigation/invalidation — no-op if load data unchanged. */
 	function syncPageLoadData(next: DashboardPageLoadData) {
 		const key = pageLoadSyncKey(next);
 		if (key === syncedPageLoadKey) return;
 		syncedPageLoadKey = key;
 		models = [...next.models];
-		modelGroups = [...next.modelGroups];
-		defaultModelId = next.defaultModelId;
 		ttsEnabled = next.ttsEnabled;
-		if (!models.some((m) => m.id === selectedModel)) {
-			selectedModel = pickDashboardModelId(models, null, defaultModelId);
+		if (lastRoutedModelId && !models.some((m) => m.id === lastRoutedModelId)) {
+			lastRoutedModelId = models[0]?.id ?? '';
 		}
 	}
 
@@ -92,12 +92,9 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 
 	const shell = createDashboardPageModelStateShell({
 		data,
-		getModelLocked: () => messages.length > 0,
 		getIsActiveStreaming: () =>
 			activeConversationId !== null && streamingConversationIds.has(activeConversationId),
-		pickModel: (modelId) => pickDashboardModelId(models, modelId, defaultModelId),
 		getModels: () => models,
-		getModelGroups: () => modelGroups,
 		getTtsEnabled: () => ttsEnabled,
 		flushActiveToCache: () => {
 			messageCache = flushActiveMessageCache(messageCache, activeConversationId, messages);
@@ -121,6 +118,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 				getStreamingIds: () => streamingConversationIds,
 				setStreamingIds: (s) => (streamingConversationIds = s),
 				setError: (v) => (errorMessage = v),
+				setIsCompacting: (v) => (isCompacting = v),
 				onConversationModelSaved: stampConversationModel
 			}),
 		fields: {
@@ -138,7 +136,9 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			),
 			inputValue: field(() => inputValue, (v) => (inputValue = v)),
 			errorMessage: field(() => errorMessage, (v) => (errorMessage = v)),
-			selectedModel: field(() => selectedModel, (v) => (selectedModel = v)),
+			isCompacting: field(() => isCompacting, (v) => (isCompacting = v)),
+			lastRoutedModelId: field(() => lastRoutedModelId, (v) => (lastRoutedModelId = v)),
+			deepReasoningEnabled: field(() => deepReasoningEnabled, (v) => (deepReasoningEnabled = v)),
 			sidebarCollapsed: field(() => sidebarCollapsed, (v) => (sidebarCollapsed = v)),
 			attachments: field(() => attachments, (v) => (attachments = v)),
 			enabledToolIds: field(() => enabledToolIds, (v) => (enabledToolIds = v)),
@@ -152,5 +152,6 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 			projectPromptValue: field(() => projectPromptValue, (v) => (projectPromptValue = v))
 		}
 	});
+
 	return Object.assign(shell, { syncPageLoadData });
 }

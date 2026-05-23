@@ -1,80 +1,37 @@
 <script lang="ts">
-	import {
-		estimateMessagesTokens,
-		estimateTokensFromText,
-		estimateAttachmentInputTokens
-	} from '$lib/shared/estimateContextTokens';
-	import { promptInputTokenBudget } from '$lib/shared/contextWindowBudget';
-	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
+	import { estimateCompactionProgress } from '$lib/shared/estimateCompactionProgress';
+	import type { ChatMessage } from '$lib/types/dashboard';
 	import ChatContextMeterRing from './ChatContextMeterRing.svelte';
 
 	let {
 		messages,
-		draftText,
-		attachments,
-		models,
-		selectedModel,
-		extraSystemTokens = 0,
-		toolStackEstimate
+		summaryThroughMessageId = null
 	} = $props<{
 		messages: ChatMessage[];
-		draftText: string;
-		attachments: ChatAttachmentInput[];
-		models: Model[];
-		selectedModel: string;
-		extraSystemTokens?: number;
-		toolStackEstimate: number;
+		summaryThroughMessageId?: string | null;
 	}>();
 
-	const model = $derived(models.find((m: Model) => m.id === selectedModel));
-	const contextLen = $derived(model?.contextLength);
-	const maxComp = $derived(model?.maxCompletionTokens);
-
-	const usedEstimate = $derived(
-		estimateMessagesTokens(messages) +
-			estimateTokensFromText(draftText) +
-			estimateAttachmentInputTokens(attachments) +
-			toolStackEstimate +
-			extraSystemTokens
+	const progress = $derived(
+		estimateCompactionProgress(messages, summaryThroughMessageId ?? null)
 	);
-
-	const promptBudget = $derived(
-		typeof contextLen === 'number' && contextLen >= 2048
-			? promptInputTokenBudget(contextLen, maxComp)
-			: null
-	);
-
-	const pct = $derived(
-		promptBudget != null && promptBudget > 0 ? Math.min(100, (usedEstimate / promptBudget) * 100) : null
-	);
-
-	function fmt(n: number) {
-		if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-		if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-		return String(Math.round(n));
-	}
 
 	const hoverTip = $derived(
-		promptBudget != null && pct != null
-			? `Context (est.): ${fmt(usedEstimate)} / ${fmt(promptBudget)} tokens (~${Math.round(pct)}% of prompt budget). Rough chars÷4; server drops oldest messages when over budget.`
-			: ''
+		`Compaction progress: ~${progress.unsummarizedCount} of ${progress.threshold} user/assistant turns before older messages are summarized for the model. Full history stays in the chat.${
+			progress.pct >= 88 ? ' Compaction likely on next reply.' : ''
+		}`
 	);
 
 	const ariaLabel = $derived(
-		promptBudget != null && pct != null
-			? `Estimated context use ${Math.round(pct)} percent, about ${fmt(usedEstimate)} of ${fmt(promptBudget)} tokens`
-			: ''
+		`Compaction progress ${progress.pct} percent, about ${progress.unsummarizedCount} of ${progress.threshold} turns`
 	);
 </script>
 
-{#if promptBudget != null && pct != null}
-	<div class="meter-wrap">
-		<button type="button" class="meter" aria-label={ariaLabel}>
-			<ChatContextMeterRing {pct} warn={pct > 88} />
-		</button>
-		<div class="hover-tip" role="tooltip">{hoverTip}</div>
-	</div>
-{/if}
+<div class="meter-wrap">
+	<button type="button" class="meter" aria-label={ariaLabel}>
+		<ChatContextMeterRing pct={progress.pct} warn={progress.pct >= 88} />
+	</button>
+	<div class="hover-tip" role="tooltip">{hoverTip}</div>
+</div>
 
 <style>
 	.meter-wrap {
