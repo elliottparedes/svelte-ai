@@ -2,13 +2,16 @@ import { completeOpenRouterText } from '../infrastructure/openRouterCompleteText
 import { isModelRoutingTier, type ModelRoutingTier } from '$lib/shared/modelRoutingTier';
 
 const ROUTER_SYSTEM = `You route user chat requests to a model tier. Reply with JSON only, no markdown:
-{"tier":"ultra_cheap"|"standard"|"complex"|"tools"|"vision"}
+{"tier":"ultra_cheap"|"standard"|"coding"|"complex"|"creative"|"long_context"|"tools"|"vision"}
 
 Rules:
 - ultra_cheap: greetings, thanks, tiny factual one-liners, no tools/images needed
-- standard: normal Q&A, writing, summaries
-- complex: multi-step reasoning, proofs, architecture, hard debugging, long analysis
-- tools: user needs live web search, maps, code execution, image generation, or similar tools
+- standard: normal Q&A, writing, summaries, simple explanations
+- coding: ANY developer or technical question — writing code, debugging, error messages, stack traces, terminal commands, shell scripts, CLI help, DevOps, config files, regex, SQL, package/library questions, framework docs, even if web search would help find the answer
+- complex: multi-step reasoning, proofs, architecture design, hard algorithmic problems, long technical analysis
+- creative: fiction, storytelling, poetry, screenwriting, song lyrics, jokes, world-building, character creation, narrative writing, any creative or imaginative writing task
+- long_context: user explicitly asks to analyze/summarize/process a very large document, entire codebase, many files, or a very long piece of text all at once
+- tools: non-coding live lookups only — news, weather, maps, prices, events, sports scores, current affairs, image search, image generation, Python execution for math/data tasks
 - vision: user attached or clearly needs image/PDF understanding`;
 
 export type RouterClassifyInput = {

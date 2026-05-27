@@ -1,10 +1,21 @@
 /** Tier chosen by the router LLM or heuristic fallback. */
-export type ModelRoutingTier = 'ultra_cheap' | 'standard' | 'complex' | 'tools' | 'vision';
+export type ModelRoutingTier =
+	| 'ultra_cheap'
+	| 'standard'
+	| 'coding'
+	| 'complex'
+	| 'creative'
+	| 'long_context'
+	| 'tools'
+	| 'vision';
 
 export const MODEL_ROUTING_TIERS: readonly ModelRoutingTier[] = [
 	'ultra_cheap',
 	'standard',
+	'coding',
 	'complex',
+	'creative',
+	'long_context',
 	'tools',
 	'vision'
 ];

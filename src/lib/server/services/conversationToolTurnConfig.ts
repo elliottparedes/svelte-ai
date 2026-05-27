@@ -6,12 +6,15 @@ import {
 	TOOL_PROMPT_NONE_ENABLED,
 	type ChatToolId
 } from '$lib/shared/chatToolSystemPrompt';
-import { isPistonConfigured } from '../env';
+import { isBraveSearchConfigured, isPistonConfigured } from '../env';
 import { TOOL_SYSTEM_PROMPT_NO_TOOLS } from './conversationTools.config';
 
 function stripUnconfiguredTools(ids: ChatToolId[]): ChatToolId[] {
 	let out = ids;
 	if (!isPistonConfigured()) out = out.filter((id) => id !== 'execute_python');
+	if (!isBraveSearchConfigured()) {
+		out = out.filter((id) => id !== 'web_search' && id !== 'image_search');
+	}
 	return out;
 }
 

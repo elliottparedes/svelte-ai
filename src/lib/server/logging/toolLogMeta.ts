@@ -4,11 +4,16 @@ export function toolArgsForLog(name: string, args: Record<string, unknown>): Rec
 	switch (name) {
 		case 'fetch_url': {
 			const raw = String(args.url ?? '');
+			const offset = Number(args.offset ?? 0);
 			try {
 				const u = new URL(raw);
-				return { host: u.hostname, protocol: u.protocol.replace(':', '') };
+				return {
+					host: u.hostname,
+					protocol: u.protocol.replace(':', ''),
+					offset: Number.isFinite(offset) ? offset : 0
+				};
 			} catch {
-				return { host: '(invalid-url)' };
+				return { host: '(invalid-url)', offset: Number.isFinite(offset) ? offset : 0 };
 			}
 		}
 		case 'web_search': {

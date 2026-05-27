@@ -17,11 +17,17 @@ export const TOOLS: ToolDefinition[] = [
 	},
 	{
 		name: 'fetch_url',
-		description: 'Fetch and extract the text content from a webpage URL.',
+		description:
+			'Fetch webpage text (HTML stripped to plain text). Returns one chunk per call; use offset to read later sections of long pages.',
 		parameters: {
 			type: 'object',
 			properties: {
-				url: { type: 'string', description: 'Full URL to fetch, e.g. https://example.com' }
+				url: { type: 'string', description: 'Full URL to fetch, e.g. https://example.com/article' },
+				offset: {
+					type: 'integer',
+					description:
+						'Character offset into the page text (default 0). If the result says more content is available, call again with the suggested offset.'
+				}
 			},
 			required: ['url']
 		}
@@ -29,7 +35,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'web_search',
 		description:
-			'Search the web via SearXNG: live indexed results (not fiction). Report dates and headlines as real; never dismiss as future-dated vs training. Follow with fetch_url on best 1–2 links for full articles. Use for current events, news, or anything not in training data.',
+			'Search the web via Brave: news, FAQ, infobox, and ranked snippets with URLs (live index, not fiction). Report dates and headlines as real; never dismiss as future-dated vs training. Follow with fetch_url on the best 1–2 links for full articles. Use for current events, news, or anything not in training data.',
 		parameters: {
 			type: 'object',
 			properties: {

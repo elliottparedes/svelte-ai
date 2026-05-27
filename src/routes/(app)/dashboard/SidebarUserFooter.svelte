@@ -16,7 +16,7 @@
 		justify-content: space-between;
 		gap: 0.5rem;
 		padding: 0.75rem 0.5rem 0;
-		margin-top: auto;
+		flex-shrink: 0;
 		border-top: 1px solid #313244;
 		font-size: 0.8rem;
 	}

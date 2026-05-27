@@ -63,17 +63,19 @@
 				<span>✚</span>
 				<span>New chat</span>
 			</button>
-			<SidebarProjectsSection {projects} {activeProjectId} onSelectProject={onSelectProject} />
-			<SidebarChatsSection
-				{conversations}
-				{projects}
-				{activeId}
-				{activeProjectId}
-				{streamingConversationIds}
-				{onSelect}
-				{onDelete}
-				{onRename}
-			/>
+			<div class="sidebar-scroll">
+				<SidebarProjectsSection {projects} {activeProjectId} onSelectProject={onSelectProject} />
+				<SidebarChatsSection
+					{conversations}
+					{projects}
+					{activeId}
+					{activeProjectId}
+					{streamingConversationIds}
+					{onSelect}
+					{onDelete}
+					{onRename}
+				/>
+			</div>
 			{#if user}
 				<SidebarUserFooter {user} onLogout={onLogout} />
 			{/if}
@@ -103,7 +105,35 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+		min-height: 0;
+		overflow: hidden;
 		padding: 0.75rem;
+	}
+	.sidebar-scroll {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		overflow-x: hidden;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: thin;
+		scrollbar-color: #45475a transparent;
+	}
+	.sidebar-scroll::-webkit-scrollbar {
+		width: 4px;
+	}
+	.sidebar-scroll::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	.sidebar-scroll::-webkit-scrollbar-thumb {
+		background: #313244;
+		border-radius: 999px;
+	}
+	.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+		background: #45475a;
+	}
+	.header,
+	.new-chat {
+		flex-shrink: 0;
 	}
 	.header {
 		display: flex;

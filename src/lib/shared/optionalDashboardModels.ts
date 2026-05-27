@@ -60,6 +60,13 @@ export const OPTIONAL_DASHBOARD_MODELS: readonly OptionalDashboardModelDef[] = [
 		group: 'DeepSeek'
 	},
 	{
+		id: 'mistralai/devstral-small',
+		title: 'Devstral Small',
+		description: 'Coding & terminal · purpose-built · very cheap',
+		tier: 'must',
+		group: 'Mistral'
+	},
+	{
 		id: 'mistralai/codestral-2508',
 		title: 'Codestral 2508',
 		description: 'Code & config focused',

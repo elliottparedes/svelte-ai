@@ -27,7 +27,6 @@ import { logger } from '$lib/server/logger';
 import { VisionRelayService } from '$lib/server/services/VisionRelayService';
 import { ConversationTitleService } from '$lib/server/services/ConversationTitleService';
 import { buildConversationSummaryDeps } from '$lib/server/services/conversationSummaryDeps';
-import { SEARXNG_URL } from '$lib/server/env';
 import { IntelligentModelRouter } from '$lib/server/services/IntelligentModelRouter';
 import { buildRoutingHistorySnippet } from '$lib/server/services/conversationRoutingSnippet';
 import {

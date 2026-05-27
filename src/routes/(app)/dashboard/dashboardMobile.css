@@ -12,9 +12,7 @@
 		flex-direction: column;
 		height: 100%;
 		min-height: 0;
-		overflow-x: hidden;
-		overflow-y: auto;
-		-webkit-overflow-scrolling: touch;
+		overflow: hidden;
 	}
 
 	.app-layout .sidebar.mobile:not(.collapsed) {

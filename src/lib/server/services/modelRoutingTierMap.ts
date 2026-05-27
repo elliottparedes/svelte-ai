@@ -4,9 +4,12 @@ import { OPENROUTER_DEFAULT_MODEL } from '../db/config';
 export const ROUTING_TIER_MODELS: Record<ModelRoutingTier, string> = {
 	ultra_cheap: 'z-ai/glm-4.7-flash',
 	standard: OPENROUTER_DEFAULT_MODEL,
-	complex: 'qwen/qwen3-max',
+	coding: 'mistralai/devstral-small',
+	complex: 'google/gemini-2.5-flash',
+	creative: 'x-ai/grok-4.3',
+	long_context: 'meta-llama/llama-4-scout',
 	tools: 'qwen/qwen3.5-flash-02-23',
-	vision: 'google/gemini-2.5-flash-lite'
+	vision: 'google/gemini-2.5-flash'
 };
 
 export function modelIdForRoutingTier(tier: ModelRoutingTier): string {

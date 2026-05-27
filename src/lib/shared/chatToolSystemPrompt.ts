@@ -30,9 +30,9 @@ const BULLETS: Record<ChatToolId, string> = {
 	datetime:
 		'Get the current date and time (ISO). The system message already states today; call this if you need to re-check mid-conversation.',
 	fetch_url:
-		'Fetch and strip text from a specific webpage URL (HTML → plain text). Use when the user gives a link or you need the body of one known page. For weather or simple APIs, execute_python with urllib is often faster than fetch_url.',
+		'Fetch plain text from a webpage URL (prefers main/article content). Returns one chunk per call; long pages include total length and an offset hint — call again with offset to read the next section. For weather/API JSON, execute_python with urllib is often faster.',
 	web_search:
-		'Search the web via SearXNG (answers, infoboxes, many snippets + URLs). Results are live indexed pages — report them as real news/facts, never as fictional or "future" because of training cutoff. Call fetch_url on key URLs for full page text. Not required for simple weather if execute_python can call wttr.in or open-meteo. Do not loop web_search for [Vision summary] unless the user asks for web lookup.',
+		'Search the web via Brave (news, FAQ, infobox, ranked snippets + URLs). Results are live indexed pages — report them as real news/facts, never as fictional or "future" because of training cutoff. Call fetch_url on key URLs for full page text. Not required for simple weather if execute_python can call wttr.in or open-meteo. Do not loop web_search for [Vision summary] unless the user asks for web lookup.',
 	image_search:
 		'Search the web for images. Use when the user wants to see images of something. IMPORTANT: after the tool returns, copy the markdown image links from the result verbatim into your response exactly as-is — do not describe or summarize them. The markdown will render as real images in the UI.',
 	generate_image:

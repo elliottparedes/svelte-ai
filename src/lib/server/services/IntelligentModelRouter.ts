@@ -34,6 +34,8 @@ export type IntelligentModelRouteInput = {
 };
 
 const ROUTER_TIMEOUT_MS = 2000;
+/** Prompt longer than this goes straight to long-context model without LLM classification. */
+const LONG_CONTEXT_PROMPT_CHARS = 10_000;
 const heuristic = new ModelRoutingService();
 
 export class IntelligentModelRouter {
@@ -63,6 +65,15 @@ export class IntelligentModelRouter {
 
 		const hasImage = input.attachments?.some((a) => a.type === 'image') ?? false;
 		const hasFile = input.attachments?.some((a) => a.type === 'file') ?? false;
+
+		if (!hasImage && !hasFile && input.prompt.length >= LONG_CONTEXT_PROMPT_CHARS) {
+			const candidate = modelIdForRoutingTier('long_context');
+			const modelId = heuristic.resolve(this.toHeuristicInput(input, candidate));
+			const result: ModelRouteResult = { modelId, source: 'router_llm', tier: 'long_context' };
+			logger.info('Model route', { ...baseLog, routerModel: 'heuristic:long_prompt', ...result });
+			return result;
+		}
+
 		const classified = await classifyPromptTier(
 			OPENROUTER_API_KEY,
 			OPENROUTER_ROUTER_MODEL,

@@ -23,27 +23,36 @@ export const OPENROUTER_HTTP_REFERER = getEnv('OPENROUTER_HTTP_REFERER', '');
 /** Preferred model id when the client omits `model` (must exist on OpenRouter). */
 export const OPENROUTER_DEFAULT_MODEL = getEnv(
 	'OPENROUTER_DEFAULT_MODEL',
-	'qwen/qwen3.5-flash-02-23'
+	'google/gemini-2.0-flash-lite-001'
 );
-/** SearXNG base URL (e.g. http://searxng:8080). Empty string disables web search. */
-export const SEARXNG_URL = getEnv('SEARXNG_URL', '');
-/** Max unique web results passed to the model (1–30). */
-export const SEARXNG_MAX_RESULTS = Math.min(
+/** Brave Search API key. Empty disables web_search and image_search tools. */
+export const BRAVE_SEARCH_API_KEY = getEnv('BRAVE_SEARCH_API_KEY', '');
+/** Max unique web results passed to the model (1–30; Brave returns up to 20 per page). */
+export const BRAVE_SEARCH_MAX_RESULTS = Math.min(
 	30,
-	Math.max(1, Number(getEnv('SEARXNG_MAX_RESULTS', '15')) || 15)
+	Math.max(1, Number(getEnv('BRAVE_SEARCH_MAX_RESULTS', '20')) || 20)
 );
 /** Max characters in web_search tool output (2k–64k). */
-export const SEARXNG_MAX_OUTPUT_CHARS = Math.min(
+export const BRAVE_SEARCH_MAX_OUTPUT_CHARS = Math.min(
 	65_536,
-	Math.max(2000, Number(getEnv('SEARXNG_MAX_OUTPUT_CHARS', '24000')) || 24_000)
+	Math.max(2000, Number(getEnv('BRAVE_SEARCH_MAX_OUTPUT_CHARS', '28000')) || 28_000)
 );
-/** Optional comma-separated SearXNG engines; empty = instance default (more engines). */
-export const SEARXNG_ENGINES = getEnv('SEARXNG_ENGINES', '');
-/** Max images returned by image_search (1–24). SearXNG may return fewer per page. */
-export const SEARXNG_IMAGE_MAX_RESULTS = Math.min(
-	24,
-	Math.max(1, Number(getEnv('SEARXNG_IMAGE_MAX_RESULTS', '12')) || 12)
+/** Request extra_snippets on web results (richer context for smaller models). */
+export const BRAVE_SEARCH_EXTRA_SNIPPETS =
+	getEnv('BRAVE_SEARCH_EXTRA_SNIPPETS', 'true').toLowerCase() !== 'false';
+/** Max images returned by image_search (1–50). */
+export const BRAVE_SEARCH_IMAGE_MAX_RESULTS = Math.min(
+	50,
+	Math.max(1, Number(getEnv('BRAVE_SEARCH_IMAGE_MAX_RESULTS', '16')) || 16)
 );
+/** Brave search country code (2-letter, default US). */
+export const BRAVE_SEARCH_COUNTRY = getEnv('BRAVE_SEARCH_COUNTRY', 'US');
+/** Brave search language code (default en). */
+export const BRAVE_SEARCH_LANG = getEnv('BRAVE_SEARCH_LANG', 'en');
+
+export function isBraveSearchConfigured(): boolean {
+	return BRAVE_SEARCH_API_KEY.trim().length > 0;
+}
 /** Nominatim geocoder base URL (no trailing slash required). */
 export const NOMINATIM_BASE_URL = getEnv('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org');
 /** OSRM router base URL (no trailing slash required). */
@@ -110,6 +119,17 @@ export const OPENROUTER_IMAGE_GEN_ENABLED =
 export function isImageGenerationConfigured(): boolean {
 	return OPENROUTER_IMAGE_GEN_ENABLED && OPENROUTER_IMAGE_MODEL.trim().length > 0;
 }
+
+/** Max characters returned per fetch_url call (2k–32k). */
+export const FETCH_URL_MAX_CHARS = Math.min(
+	32_768,
+	Math.max(2000, Number(getEnv('FETCH_URL_MAX_CHARS', '12000')) || 12_000)
+);
+/** Max extracted page text before pagination stops (32k–500k). */
+export const FETCH_URL_MAX_PAGE_CHARS = Math.min(
+	500_000,
+	Math.max(32_768, Number(getEnv('FETCH_URL_MAX_PAGE_CHARS', '200000')) || 200_000)
+);
 
 /** Piston API base URL (e.g. https://piston.paredes.cloud). Empty disables execute_python. */
 export const PISTON_URL = getEnv('PISTON_URL', '');

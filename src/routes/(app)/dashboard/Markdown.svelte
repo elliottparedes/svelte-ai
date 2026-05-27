@@ -4,6 +4,7 @@
 	import 'highlight.js/styles/github-dark.css';
 	import './markdownBody.css';
 	import { markdownBlobifyDataImages } from '$lib/client/markdownBlobifyDataImages';
+	import { markdownHideBrokenImages } from '$lib/client/markdownHideBrokenImages';
 	import ImageLightbox from './ImageLightbox.svelte';
 	import { portalToBody } from '$lib/client/portalToBody';
 
@@ -88,7 +89,7 @@
 	}
 </style>
 
-<div class="inkstream-markdown" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:interceptImageClicks>{@html html}</div>
+<div class="inkstream-markdown" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:markdownHideBrokenImages use:interceptImageClicks>{@html html}</div>
 
 {#if lightbox}
 	<div class="lightbox-portal" use:portalToBody>
