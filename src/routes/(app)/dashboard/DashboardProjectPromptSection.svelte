@@ -34,7 +34,9 @@
 	{:else}
 		<div class="prompt-display">
 			{#if activeProject?.systemPrompt}
-				<div class="prompt-text">{activeProject.systemPrompt}</div>
+				<div class="prompt-text-scroll thin-scroll">
+					<div class="prompt-text">{activeProject.systemPrompt}</div>
+				</div>
 			{:else}
 				<div class="prompt-empty">No system prompt set.</div>
 			{/if}
@@ -44,6 +46,8 @@
 </div>
 
 <style>
+	@import './thinScroll.css';
+
 	.project-prompt {
 		margin-inline: auto;
 		max-width: 900px;
@@ -60,12 +64,16 @@
 		align-items: flex-start;
 		gap: 1rem;
 	}
+	.prompt-text-scroll {
+		flex: 1;
+		min-width: 0;
+		max-height: 6.5rem;
+	}
 	.prompt-text {
 		color: #a6adc8;
 		font-size: 0.85rem;
 		line-height: 1.5;
 		white-space: pre-wrap;
-		flex: 1;
 	}
 	.prompt-empty {
 		color: #6c7086;

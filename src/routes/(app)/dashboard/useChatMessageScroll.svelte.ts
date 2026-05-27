@@ -83,6 +83,23 @@ export function useChatMessageScroll(scrollKey: () => string, conversationKey: (
 		return () => ro.disconnect();
 	});
 
+	$effect(() => {
+		const el = scrollEl;
+		if (!el) return;
+		el.addEventListener('scroll', onScroll, { passive: true });
+		el.addEventListener('wheel', onWheel, { passive: true });
+		el.addEventListener('touchstart', onTouchStart, { passive: true });
+		el.addEventListener('touchmove', onTouchMove, { passive: true });
+		el.addEventListener('keydown', onKeyDown);
+		return () => {
+			el.removeEventListener('scroll', onScroll);
+			el.removeEventListener('wheel', onWheel);
+			el.removeEventListener('touchstart', onTouchStart);
+			el.removeEventListener('touchmove', onTouchMove);
+			el.removeEventListener('keydown', onKeyDown);
+		};
+	});
+
 	return {
 		get scrollEl() {
 			return scrollEl;
@@ -99,11 +116,6 @@ export function useChatMessageScroll(scrollKey: () => string, conversationKey: (
 		get stickToBottom() {
 			return stickToBottom;
 		},
-		onScroll,
-		onWheel,
-		onTouchStart,
-		onTouchMove,
-		onKeyDown,
 		jumpToBottom
 	};
 }

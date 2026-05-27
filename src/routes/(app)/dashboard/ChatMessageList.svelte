@@ -62,14 +62,9 @@
 	{/if}
 	<div
 		class="chat-scroll"
-		role="region"
+		role="log"
 		aria-label="Messages"
 		bind:this={scroll.scrollEl}
-		onscroll={scroll.onScroll}
-		onwheel={scroll.onWheel}
-		ontouchstart={scroll.onTouchStart}
-		ontouchmove={scroll.onTouchMove}
-		onkeydown={scroll.onKeyDown}
 		tabindex="-1"
 	>
 		<div class="messages-wrapper" bind:this={scroll.listEl}>
