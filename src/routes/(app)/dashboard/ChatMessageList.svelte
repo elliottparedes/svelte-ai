@@ -1,16 +1,33 @@
 <script lang="ts">
 	import ChatMessageRow from './ChatMessageRow.svelte';
 	import ChatMessageListExtras from './ChatMessageListExtras.svelte';
-	import type { ChatMessage } from '$lib/types/dashboard';
+	import type { ChatMessage, Model } from '$lib/types/dashboard';
 	import { hydrateGenerateImageMessages } from '$lib/client/hydrateGenerateImageMessages';
 	import { useChatMessageScroll } from './useChatMessageScroll.svelte';
 
-	let { messages, isStreaming, isCompacting = false, errorMessage } = $props<{
+	let { messages, isStreaming, isCompacting = false, errorMessage, routedModelId = '', models = [] } = $props<{
 		messages: ChatMessage[];
 		isStreaming: boolean;
 		isCompacting?: boolean;
 		errorMessage: string;
+		routedModelId?: string;
+		models?: Model[];
 	}>();
+
+	function resolveModelLabel(modelId: string): string {
+		if (!modelId) return '';
+		const found = models.find((m: Model) => m.id === modelId);
+		if (found) return found.name;
+		const slash = modelId.lastIndexOf('/');
+		return slash >= 0 ? modelId.slice(slash + 1) : modelId;
+	}
+
+	const lastAssistantId = $derived.by(() => {
+		for (let i = displayMessages.length - 1; i >= 0; i--) {
+			if (displayMessages[i].role === 'assistant') return displayMessages[i].id;
+		}
+		return null;
+	});
 
 	const displayMessages = $derived(hydrateGenerateImageMessages(messages));
 
@@ -57,7 +74,12 @@
 	>
 		<div class="messages-wrapper" bind:this={scroll.listEl}>
 			{#each displayMessages as msg (msg.id)}
-				<ChatMessageRow {msg} messages={displayMessages} {isStreaming} />
+				<ChatMessageRow
+					{msg}
+					messages={displayMessages}
+					{isStreaming}
+					modelLabel={msg.id === lastAssistantId ? resolveModelLabel(routedModelId) : ''}
+				/>
 			{/each}
 			<ChatMessageListExtras messages={displayMessages} {isStreaming} {isCompacting} {errorMessage} />
 		</div>

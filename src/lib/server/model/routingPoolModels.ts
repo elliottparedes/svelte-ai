@@ -6,7 +6,7 @@ export const ROUTING_POOL_MODEL_IDS: readonly string[] = [
 	'z-ai/glm-4.7-flash',
 	'google/gemini-2.0-flash-lite-001',
 	'qwen/qwen3.5-flash-02-23',
-	'mistralai/devstral-small',
+	'minimax/minimax-m2.5',
 	'google/gemini-2.5-flash',
 	'x-ai/grok-4.3',
 	'meta-llama/llama-4-scout',

@@ -5,10 +5,11 @@
 	import type { ChatMessage } from '$lib/types/dashboard';
 	import { formatMessageTime } from '$lib/client/chatMessageList.utils';
 
-	let { msg, showCopy, streaming = false } = $props<{
+	let { msg, showCopy, streaming = false, modelLabel = '' } = $props<{
 		msg: ChatMessage;
 		showCopy: boolean;
 		streaming?: boolean;
+		modelLabel?: string;
 	}>();
 
 	const reasoning = $derived(msg.reasoningContent?.trim() ?? '');
@@ -23,6 +24,12 @@
 	{/if}
 	<div class="msg-meta">
 		<span class="msg-time">{formatMessageTime(msg.createdAt)}</span>
+		{#if modelLabel}
+			<span class="msg-model" title={modelLabel}>
+				<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0;opacity:.65"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+				{modelLabel}
+			</span>
+		{/if}
 		{#if showCopy}
 			<div class="msg-actions">
 				<CopyButton text={msg.content} />
@@ -109,6 +116,23 @@
 	.msg-time {
 		font-size: 0.7rem;
 		color: #6c7086;
+	}
+	.msg-model {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.68rem;
+		color: #585b70;
+		background: #1e1e2e;
+		border: 1px solid #313244;
+		border-radius: 999px;
+		padding: 0.1rem 0.45rem;
+		white-space: nowrap;
+		transition: color 0.15s, border-color 0.15s;
+	}
+	.msg-model:hover {
+		color: #89b4fa;
+		border-color: #45475a;
 	}
 	@keyframes messageIn {
 		from {

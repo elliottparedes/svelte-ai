@@ -8,11 +8,13 @@
 	let {
 		msg,
 		messages,
-		isStreaming
+		isStreaming,
+		modelLabel = ''
 	} = $props<{
 		msg: ChatMessage;
 		messages: ChatMessage[];
 		isStreaming: boolean;
+		modelLabel?: string;
 	}>();
 
 	const streamingThis = $derived(
@@ -27,5 +29,5 @@
 {:else if msg.role === 'tool'}
 	<ChatToolBlock {msg} />
 {:else}
-	<ChatAssistantBlock {msg} showCopy={!streamingThis} streaming={streamingThis} />
+	<ChatAssistantBlock {msg} showCopy={!streamingThis} streaming={streamingThis} {modelLabel} />
 {/if}

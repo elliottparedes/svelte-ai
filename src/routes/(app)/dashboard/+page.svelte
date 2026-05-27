@@ -115,6 +115,8 @@
 					isStreaming={model.isStreaming}
 					isCompacting={model.isCompacting}
 					errorMessage={model.errorMessage}
+					routedModelId={model.lastRoutedModelId}
+					models={model.models}
 				/>
 			{/if}
 		{/if}
