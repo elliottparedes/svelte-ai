@@ -13,7 +13,7 @@ import type { DashboardStreamStore } from '$lib/client/dashboardStreamLifecycle'
 type Field<T> = { get: () => T; set: (v: T) => void };
 
 export type DashboardPageModelStateShell = {
-	data: DashboardPageLoadData;
+	readonly data: DashboardPageLoadData;
 	conversations: Conversation[];
 	projects: Project[];
 	activeConversationId: string | null;
@@ -56,7 +56,7 @@ function bindField<T>(target: object, key: string, field: Field<T>): void {
 }
 
 export function createDashboardPageModelStateShell(p: {
-	data: DashboardPageLoadData;
+	getData: () => DashboardPageLoadData;
 	getIsActiveStreaming: () => boolean;
 	getModels: () => Model[];
 	getTtsEnabled: () => boolean;
@@ -91,7 +91,9 @@ export function createDashboardPageModelStateShell(p: {
 	};
 }): DashboardPageModelStateShell {
 	const shell = {
-		data: p.data,
+		get data() {
+			return p.getData();
+		},
 		get isActiveStreaming() {
 			return p.getIsActiveStreaming();
 		},

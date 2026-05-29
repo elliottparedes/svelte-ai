@@ -43,6 +43,7 @@ export async function runDashboardSendMessage(p: {
 	onStreamFinish: Parameters<typeof sendDashboardChatMessage>[0]['onStreamFinish'];
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
 	onRoutedModel: (modelId: string) => void;
+	getExplicitModelId?: () => string | undefined;
 }): Promise<void> {
 	if (p.activeConversationId && p.isConversationStreaming(p.activeConversationId)) return;
 	const streamKey = beginDashboardStream(p.streamStore, p.state.lastRoutedModelId || 'auto');
@@ -65,6 +66,7 @@ export async function runDashboardSendMessage(p: {
 		onStreamFinish: p.onStreamFinish,
 		onStreamFailed: p.onStreamFailed,
 		onRouting: p.onRoutedModel,
+		getExplicitModelId: p.getExplicitModelId,
 		voiceModeEnabled: p.state.voiceModeEnabled || immersiveOpen,
 		immersive: immersiveDeps(p.state)
 	});

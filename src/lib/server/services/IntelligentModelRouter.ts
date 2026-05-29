@@ -11,6 +11,7 @@ import type { ModelRoutingTier } from '$lib/shared/modelRoutingTier';
 import { classifyPromptTier } from './modelRouterLlmClassify';
 import { modelIdForRoutingTier } from './modelRoutingTierMap';
 import { ModelRoutingService, type ModelRoutingInput } from './ModelRoutingService';
+import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
 
 export type ModelRouteSource = 'explicit' | 'deep_reasoning' | 'router_llm' | 'heuristic';
 
@@ -27,6 +28,7 @@ export type IntelligentModelRouteInput = {
 	conversationId?: string;
 	prompt: string;
 	requestedModel?: string;
+	subscriptionTier?: string;
 	deepReasoning?: boolean;
 	attachments?: readonly ChatAttachment[];
 	enabledToolNames?: readonly string[];
@@ -46,7 +48,18 @@ export class IntelligentModelRouter {
 			promptChars: input.prompt.length
 		};
 
+		const tier = parseSubscriptionTier(input.subscriptionTier);
 		const explicit = input.requestedModel?.trim();
+
+		if (tier === 'pro') {
+			const modelId = heuristic.resolve(
+				this.toHeuristicInput(input, explicit || OPENROUTER_DEFAULT_MODEL)
+			);
+			const result: ModelRouteResult = { modelId, source: 'explicit' };
+			logger.info('Model route', { ...baseLog, subscriptionTier: tier, ...result });
+			return result;
+		}
+
 		if (explicit) {
 			const modelId = heuristic.resolve(this.toHeuristicInput(input, explicit));
 			const result: ModelRouteResult = { modelId, source: 'explicit' };

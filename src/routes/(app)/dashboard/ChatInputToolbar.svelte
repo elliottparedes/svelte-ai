@@ -3,7 +3,10 @@
 	import ChatToolSelector from './ChatToolSelector.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
 	import ChatDeepThinkButton from './ChatDeepThinkButton.svelte';
-	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
+	import ChatModelSelector from './ChatModelSelector.svelte';
+	import ChatQuotaBadge from './ChatQuotaBadge.svelte';
+	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
+	import type { ChatQuotaView } from '$lib/types/dashboard';
 	import {
 		DEFAULT_CHAT_TOOL_IDS,
 		type ChatToolId
@@ -11,6 +14,10 @@
 
 	let {
 		models,
+		modelGroups = [],
+		selectedModelId = $bindable(''),
+		usesAutoRouting = true,
+		chatQuota,
 		routedModelId = '',
 		deepReasoningEnabled = $bindable(false),
 		isStreaming,
@@ -25,6 +32,10 @@
 		onAppendDictation
 	} = $props<{
 		models: Model[];
+		modelGroups?: ModelProviderGroup[];
+		selectedModelId?: string;
+		usesAutoRouting?: boolean;
+		chatQuota?: ChatQuotaView;
 		routedModelId?: string;
 		deepReasoningEnabled?: boolean;
 		isStreaming: boolean;
@@ -42,6 +53,12 @@
 
 <div class="input-footer">
 	<div class="footer-left">
+		{#if chatQuota}
+			<ChatQuotaBadge quota={chatQuota} />
+		{/if}
+		{#if !usesAutoRouting}
+			<ChatModelSelector {models} {modelGroups} bind:selectedModelId disabled={isStreaming} />
+		{/if}
 		<ChatContextMeter {messages} {summaryThroughMessageId} />
 		{#if showAttachButton}
 			<button
@@ -57,7 +74,9 @@
 		{#if modelSupportsTools}
 			<ChatToolSelector bind:enabledIds={enabledToolIds} disabled={isStreaming} />
 		{/if}
-		<ChatDeepThinkButton bind:enabled={deepReasoningEnabled} disabled={isStreaming} />
+		{#if usesAutoRouting}
+			<ChatDeepThinkButton bind:enabled={deepReasoningEnabled} disabled={isStreaming} />
+		{/if}
 		<div class="mic-toolbar">
 			<ChatMicButton disabled={isStreaming} onAppend={(t) => onAppendDictation?.(t)} />
 		</div>

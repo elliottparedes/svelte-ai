@@ -61,8 +61,10 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 			setInputValue: (v) => (state.inputValue = v),
 			setAttachments: (a) => (state.attachments = a),
 			onRoutedModel: (modelId) => {
-				if (modelId) state.lastRoutedModelId = modelId;
+				if (state.data.usesAutoRouting && modelId) state.lastRoutedModelId = modelId;
 			},
+			getExplicitModelId: () =>
+				state.data.usesAutoRouting ? undefined : state.lastRoutedModelId || undefined,
 			onStreamMessages: (key, m, err, compacting) =>
 				updateDashboardStreamMessages(store, key, m, err, compacting),
 			onStreamSummaryDone: (key, conversationId, watermark, summaryChars) =>

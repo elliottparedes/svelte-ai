@@ -13,7 +13,9 @@ import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
-import { pickRoutingPoolModels } from '$lib/server/model/routingPoolModels';
+import { loadDashboardModelsForTier } from '$lib/server/model/dashboardModelsForTier';
+import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
+import { ChatQuotaService } from '$lib/server/services/ChatQuotaService';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const user = locals.user!;
@@ -21,9 +23,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const chatRepo = new ChatRepository();
 	const projectRepo = new ProjectRepository();
 
-	const [conversations, projects] = await Promise.all([
+	const [conversations, projects, chatQuota] = await Promise.all([
 		chatRepo.findByUserId(user.id),
-		projectRepo.findByUserId(user.id)
+		projectRepo.findByUserId(user.id),
+		new ChatQuotaService().snapshot(user)
 	]);
 
 	const provider = new OpenRouterProvider(
@@ -32,27 +35,34 @@ export const load: PageServerLoad = async ({ locals }) => {
 	);
 	let catalog: ChatModel[] = [];
 	try {
-		catalog = [...(await provider.listModels())].sort((a, b) => a.name.localeCompare(b.name));
+		catalog = [...(await provider.listModels())];
 	} catch (err) {
 		logger.error('OpenRouter models failed', { error: String(err) });
 	}
 	if (!isOpenRouterCapabilitiesHydrated() && catalog.length > 0) {
 		hydrateOpenRouterCapabilities(catalog);
 	}
-	const models = pickRoutingPoolModels(catalog);
+
+	const tier = parseSubscriptionTier(user.subscriptionTier);
+	const tierModels = loadDashboardModelsForTier(tier, catalog);
 
 	logger.info('Dashboard load', {
 		userId: user.id,
+		subscriptionTier: tier,
 		conversations: conversations.length,
 		projects: projects.length,
 		catalogModels: catalog.length,
-		routingPoolModels: models.length
+		dashboardModels: tierModels.models.length
 	});
 
 	return {
 		conversations,
 		projects,
-		models,
+		models: tierModels.models,
+		modelGroups: tierModels.modelGroups,
+		defaultModelId: tierModels.defaultModelId,
+		usesAutoRouting: tierModels.usesAutoRouting,
+		chatQuota,
 		ttsEnabled: isElevenLabsConfigured()
 	};
 };

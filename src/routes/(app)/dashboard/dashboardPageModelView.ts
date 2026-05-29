@@ -15,7 +15,8 @@ export function createDashboardPageModelView(
 	s: DashboardPageModelStateAccess,
 	actions: DashboardPageModelHandlers,
 	getModels: () => import('$lib/types/dashboard').Model[],
-	syncPageLoadData: (next: import('$lib/types/dashboard').DashboardPageLoadData) => void
+	syncPageLoadData: (next: import('$lib/types/dashboard').DashboardPageLoadData) => void,
+	getPageLoadData: () => import('$lib/types/dashboard').DashboardPageLoadData
 ) {
 	return {
 		get conversations() {
@@ -140,6 +141,15 @@ export function createDashboardPageModelView(
 		closeImmersiveVoice: actions.closeImmersiveVoice,
 		get models() {
 			return getModels();
+		},
+		get modelGroups() {
+			return getPageLoadData().modelGroups;
+		},
+		get usesAutoRouting() {
+			return getPageLoadData().usesAutoRouting;
+		},
+		get chatQuota() {
+			return getPageLoadData().chatQuota;
 		},
 		syncPageLoadData
 	};

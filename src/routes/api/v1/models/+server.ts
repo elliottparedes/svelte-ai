@@ -7,6 +7,8 @@ import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
+import { loadDashboardModelsForTier } from '$lib/server/model/dashboardModelsForTier';
+import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = locals.user;
@@ -16,17 +18,28 @@ export const GET: RequestHandler = async ({ locals }) => {
 		OPENROUTER_API_KEY,
 		OPENROUTER_HTTP_REFERER || undefined
 	);
-	let models;
+	let catalog;
 	try {
-		models = await provider.listModels();
+		catalog = await provider.listModels();
 	} catch (err) {
 		logger.error('OpenRouter models API failed', { error: String(err) });
 		error(502, 'Failed to load models');
 	}
-	if (!isOpenRouterCapabilitiesHydrated() && models.length > 0) {
-		hydrateOpenRouterCapabilities(models);
+	if (!isOpenRouterCapabilitiesHydrated() && catalog.length > 0) {
+		hydrateOpenRouterCapabilities(catalog);
 	}
 
-	logger.info('Models API', { userId: user.id, count: models.length });
-	return json({ models });
+	const tier = parseSubscriptionTier(user.subscriptionTier);
+	const tierModels = loadDashboardModelsForTier(tier, catalog);
+
+	logger.info('Models API', {
+		userId: user.id,
+		subscriptionTier: tier,
+		count: tierModels.models.length
+	});
+	return json({
+		models: tierModels.models,
+		modelGroups: tierModels.modelGroups,
+		usesAutoRouting: tierModels.usesAutoRouting
+	});
 };

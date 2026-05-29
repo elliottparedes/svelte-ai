@@ -19,6 +19,8 @@ export const users = mysqlTable('users', {
 	ttsVoiceId: varchar('tts_voice_id', { length: 64 }),
 	/** JSON string[] of enabled optional OpenRouter model ids; null = tier defaults. */
 	altModelIds: text('alt_model_ids'),
+	/** free | standard | pro — change via SQL until billing UI exists. */
+	subscriptionTier: varchar('subscription_tier', { length: 16 }).notNull().default('free'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [
 	index('email_idx').on(table.email),

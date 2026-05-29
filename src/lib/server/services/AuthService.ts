@@ -39,6 +39,7 @@ export class AuthService {
 			apiKey: record.apiKey,
 			ttsVoiceId: record.ttsVoiceId,
 			altModelIds: record.altModelIds,
+			subscriptionTier: record.subscriptionTier,
 			createdAt: record.createdAt
 		};
 	}

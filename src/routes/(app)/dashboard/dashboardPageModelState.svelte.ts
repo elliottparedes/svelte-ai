@@ -17,9 +17,10 @@ import { createDashboardPageModelStateShell } from './dashboardPageModelStateShe
 
 const DEEP_REASONING_KEY = 'dashboardDeepReasoning';
 
-export function createDashboardPageModelState(data: DashboardPageLoadData) {
-	let conversations = $state<Conversation[]>([...data.conversations]);
-	let projects = $state<Project[]>([...data.projects]);
+export function createDashboardPageModelState(initial: DashboardPageLoadData) {
+	let pageLoadData = $state<DashboardPageLoadData>(initial);
+	let conversations = $state<Conversation[]>([...initial.conversations]);
+	let projects = $state<Project[]>([...initial.projects]);
 	let activeConversationId = $state<string | null>(null);
 	let activeProjectId = $state<string | null>(null);
 	let projectComposeMode = $state(false);
@@ -30,9 +31,9 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let inputValue = $state('');
 	let errorMessage = $state('');
 	let isCompacting = $state(false);
-	let models = $state<Model[]>([...data.models]);
-	let ttsEnabled = $state(data.ttsEnabled);
-	let lastRoutedModelId = $state(data.models[0]?.id ?? '');
+	let models = $state<Model[]>([...initial.models]);
+	let ttsEnabled = $state(initial.ttsEnabled);
+	let lastRoutedModelId = $state(initial.defaultModelId || (initial.models[0]?.id ?? ''));
 	let deepReasoningEnabled = $state(
 		typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DEEP_REASONING_KEY) === '1'
 	);
@@ -41,7 +42,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	let enabledToolIds = $state<ChatToolId[]>([...DEFAULT_CHAT_TOOL_IDS]);
 	const VOICE_MODE_KEY = 'dashboardVoiceMode';
 	let voiceModeEnabled = $state(
-		data.ttsEnabled &&
+		initial.ttsEnabled &&
 			typeof localStorage !== 'undefined' &&
 			localStorage.getItem(VOICE_MODE_KEY) === '1'
 	);
@@ -56,19 +57,20 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	});
 
 	function pageLoadSyncKey(d: DashboardPageLoadData): string {
-		return `${d.ttsEnabled}|${d.models.map((m) => m.id).join('\n')}`;
+		return `${d.ttsEnabled}|${d.usesAutoRouting}|${d.chatQuota.tier}|${d.chatQuota.used}|${d.models.map((m) => m.id).join('\n')}`;
 	}
 
-	let syncedPageLoadKey = pageLoadSyncKey(data);
+	let syncedPageLoadKey = pageLoadSyncKey(initial);
 
 	function syncPageLoadData(next: DashboardPageLoadData) {
 		const key = pageLoadSyncKey(next);
 		if (key === syncedPageLoadKey) return;
 		syncedPageLoadKey = key;
+		pageLoadData = next;
 		models = [...next.models];
 		ttsEnabled = next.ttsEnabled;
 		if (lastRoutedModelId && !models.some((m) => m.id === lastRoutedModelId)) {
-			lastRoutedModelId = models[0]?.id ?? '';
+			lastRoutedModelId = next.defaultModelId || models[0]?.id ?? '';
 		}
 	}
 
@@ -91,7 +93,7 @@ export function createDashboardPageModelState(data: DashboardPageLoadData) {
 	const field = <T>(get: () => T, set: (v: T) => void) => ({ get, set });
 
 	const shell = createDashboardPageModelStateShell({
-		data,
+		getData: () => pageLoadData,
 		getIsActiveStreaming: () =>
 			activeConversationId !== null && streamingConversationIds.has(activeConversationId),
 		getModels: () => models,

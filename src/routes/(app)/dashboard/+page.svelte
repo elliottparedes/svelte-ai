@@ -128,6 +128,10 @@
 					isStreaming={model.isStreaming}
 					onSend={model.sendMessage}
 					models={model.models}
+					modelGroups={model.modelGroups}
+					usesAutoRouting={model.usesAutoRouting}
+					chatQuota={model.chatQuota}
+					bind:selectedModelId={model.lastRoutedModelId}
 					routedModelId={model.lastRoutedModelId}
 					bind:deepReasoningEnabled={model.deepReasoningEnabled}
 					bind:attachments={model.attachments}

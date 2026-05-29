@@ -20,6 +20,8 @@ export type DashboardSendDeps = {
 	getActiveProjectId: () => string | null;
 	getDeepReasoning: () => boolean;
 	getModelSupportsTools: () => boolean;
+	/** Pro tier: send explicit OpenRouter model id (no auto-routing). */
+	getExplicitModelId?: () => string | undefined;
 	onRouting?: (modelId: string) => void;
 	getEnabledToolNames: () => readonly string[];
 	setInputValue: (v: string) => void;
@@ -82,6 +84,8 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 			attachments: payloadAttachments
 		};
 		if (d.getDeepReasoning()) payload.deepReasoning = true;
+		const explicitModel = d.getExplicitModelId?.()?.trim();
+		if (explicitModel) payload.model = explicitModel;
 		if (!isPendingConversationId(d.streamKey)) {
 			payload.conversationId = d.streamKey;
 		}
