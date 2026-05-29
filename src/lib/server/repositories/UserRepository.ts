@@ -14,7 +14,7 @@ function toUser(row: UserRow): User {
 		apiKey: row.apiKey,
 		ttsVoiceId: row.ttsVoiceId,
 		altModelIds: row.altModelIds,
-		subscriptionTier: row.subscriptionTier,
+		subscriptionTier: row.subscriptionTier ?? 'free',
 		createdAt: row.createdAt
 	};
 }

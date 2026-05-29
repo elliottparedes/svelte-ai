@@ -4,6 +4,7 @@
 	import ChatInputModelSend from './ChatInputModelSend.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
 	import ChatInputShell from './ChatInputShell.svelte';
+	import ChatInputProModelRow from './ChatInputProModelRow.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model } from '$lib/types/dashboard';
 	import type { ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 	import { DEFAULT_CHAT_TOOL_IDS } from '$lib/shared/chatToolSystemPrompt';
@@ -138,6 +139,9 @@
 	onFileSelect={handleFileSelect}
 >
 	{#snippet children()}
+		{#if !usesAutoRouting}
+			<ChatInputProModelRow {models} {modelGroups} bind:selectedModelId disabled={isStreaming} />
+		{/if}
 		<ChatInputBody
 			bind:value
 			bind:attachments
