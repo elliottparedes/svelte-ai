@@ -4,6 +4,7 @@
 	import SidebarChatsSection from './SidebarChatsSection.svelte';
 	import SidebarUserFooter from './SidebarUserFooter.svelte';
 	import type { Conversation, DashboardUser, Project } from '$lib/types/dashboard';
+	import type { ChatQuotaView } from '$lib/types/app';
 
 	let {
 		conversations,
@@ -17,6 +18,7 @@
 		onRename,
 		streamingConversationIds,
 		user,
+		chatQuota = null,
 		onLogout,
 		collapsed = $bindable(false),
 		isMobile = false
@@ -32,6 +34,7 @@
 		onRename: (id: string, title: string) => void;
 		streamingConversationIds: ReadonlySet<string>;
 		user: DashboardUser | null;
+		chatQuota?: ChatQuotaView | null;
 		onLogout: () => void;
 		collapsed?: boolean;
 		isMobile?: boolean;
@@ -77,7 +80,7 @@
 				/>
 			</div>
 			{#if user}
-				<SidebarUserFooter {user} onLogout={onLogout} />
+				<SidebarUserFooter {user} {chatQuota} onLogout={onLogout} />
 			{/if}
 		</div>
 	{/if}

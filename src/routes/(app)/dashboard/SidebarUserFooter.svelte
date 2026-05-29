@@ -1,11 +1,26 @@
 <script lang="ts">
 	import type { DashboardUser } from '$lib/types/dashboard';
+	import type { ChatQuotaView } from '$lib/types/app';
 
-	let { user, onLogout } = $props<{ user: DashboardUser; onLogout: () => void }>();
+	let { user, chatQuota = null, onLogout } = $props<{
+		user: DashboardUser;
+		chatQuota?: ChatQuotaView | null;
+		onLogout: () => void;
+	}>();
+
+	const tierLabel = $derived(() => {
+		const t = user.subscriptionTier ?? chatQuota?.tier ?? 'free';
+		if (t === 'pro') return 'Pro';
+		if (t === 'standard') return 'Standard';
+		return 'Free';
+	});
 </script>
 
 <div class="user-footer">
-	<a class="user-name" href="/profile" title="View profile">{user.name ?? user.email}</a>
+	<div class="user-meta">
+		<a class="user-name" href="/profile" title="View profile">{user.name ?? user.email}</a>
+		<span class="tier-pill" class:pro={tierLabel() === 'Pro'}>{tierLabel()}</span>
+	</div>
 	<button class="logout-btn" onclick={onLogout}>Logout</button>
 </div>
 
@@ -19,6 +34,28 @@
 		flex-shrink: 0;
 		border-top: 1px solid #313244;
 		font-size: 0.8rem;
+	}
+	.user-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+		flex: 1;
+	}
+	.tier-pill {
+		align-self: flex-start;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: #a6adc8;
+		background: #313244;
+		padding: 0.1rem 0.35rem;
+		border-radius: 4px;
+	}
+	.tier-pill.pro {
+		color: #1e1e2e;
+		background: #a6e3a1;
 	}
 	.user-name {
 		color: #a6adc8;

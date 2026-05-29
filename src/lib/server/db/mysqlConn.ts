@@ -23,10 +23,7 @@ export function parseMysqlDatabaseUrl(urlStr: string): MysqlConnParts {
 	};
 }
 
-/** Single URL wins; otherwise discrete `MYSQL_*` vars (same defaults as before). */
-export function resolveMysqlConn(): MysqlConnParts {
-	const url = process.env.DATABASE_URL?.trim();
-	if (url) return parseMysqlDatabaseUrl(url);
+function connFromMysqlEnvVars(): MysqlConnParts {
 	return {
 		host: process.env.MYSQL_HOST || 'localhost',
 		port: Number(process.env.MYSQL_PORT) || 3306,
@@ -34,4 +31,26 @@ export function resolveMysqlConn(): MysqlConnParts {
 		password: process.env.MYSQL_PASSWORD || '',
 		database: process.env.MYSQL_DATABASE || 'ai_platform'
 	};
+}
+
+function isLoopbackHost(host: string): boolean {
+	return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+}
+
+/**
+ * Prefer `DATABASE_URL` when set. If both URL and `MYSQL_HOST` are set and the URL
+ * points at loopback while `MYSQL_HOST` does not, use `MYSQL_*` (common Coolify mistake:
+ * dev `DATABASE_URL` left set alongside production `MYSQL_*`).
+ */
+export function resolveMysqlConn(): MysqlConnParts {
+	const url = process.env.DATABASE_URL?.trim();
+	const mysqlHost = process.env.MYSQL_HOST?.trim();
+	if (url) {
+		const fromUrl = parseMysqlDatabaseUrl(url);
+		if (mysqlHost && isLoopbackHost(fromUrl.host) && !isLoopbackHost(mysqlHost)) {
+			return connFromMysqlEnvVars();
+		}
+		return fromUrl;
+	}
+	return connFromMysqlEnvVars();
 }

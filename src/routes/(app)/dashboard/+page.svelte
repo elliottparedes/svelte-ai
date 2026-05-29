@@ -21,6 +21,7 @@
 	let { data } = $props<{ data: DashboardPageLoadData }>();
 
 	const user = $derived(($page.data.user as DashboardUser | null) ?? null);
+	const layoutQuota = $derived($page.data.chatQuota ?? null);
 	// svelte-ignore state_referenced_locally
 	const model = createDashboardPageModel(data);
 
@@ -70,6 +71,7 @@
 		onRename={model.renameConversation}
 		streamingConversationIds={model.streamingConversationIds}
 		{user}
+		chatQuota={layoutQuota}
 		onLogout={model.logout}
 		bind:collapsed={model.sidebarCollapsed}
 		isMobile={viewport.isMobile}
@@ -130,7 +132,7 @@
 					models={model.models}
 					modelGroups={model.modelGroups}
 					usesAutoRouting={model.usesAutoRouting}
-					chatQuota={model.chatQuota}
+					chatQuota={model.chatQuota ?? layoutQuota}
 					bind:selectedModelId={model.lastRoutedModelId}
 					routedModelId={model.lastRoutedModelId}
 					bind:deepReasoningEnabled={model.deepReasoningEnabled}

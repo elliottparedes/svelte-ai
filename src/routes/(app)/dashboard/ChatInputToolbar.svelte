@@ -54,6 +54,8 @@
 	<div class="footer-left">
 		{#if chatQuota}
 			<ChatQuotaBadge quota={chatQuota} />
+		{:else}
+			<span class="quota-missing" title="Reload the page">Plan: —</span>
 		{/if}
 		<ChatContextMeter {messages} {summaryThroughMessageId} />
 		{#if showAttachButton}
@@ -102,5 +104,9 @@
 	}
 	.icon-btn:hover:not(:disabled) {
 		color: #cdd6f4;
+	}
+	.quota-missing {
+		font-size: 0.75rem;
+		color: #f38ba8;
 	}
 </style>
