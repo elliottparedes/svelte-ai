@@ -33,10 +33,19 @@ import {
 	hydrateOpenRouterCapabilities,
 	isOpenRouterCapabilitiesHydrated
 } from '$lib/server/model/modelCapabilities';
+import { ChatQuotaService } from '$lib/server/services/ChatQuotaService';
+import { DomainError, handleDomainError } from '$lib/server/domain/DomainError';
+import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
 	if (!user) error(401, 'Unauthorized');
+
+	try {
+		await new ChatQuotaService().assertCanSend(user);
+	} catch (err) {
+		handleDomainError(err);
+	}
 
 	let body: unknown;
 	try {
@@ -68,12 +77,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const recent = await messageRepo.findByConversationId(conversationId, 4);
 		recentSnippet = buildRoutingHistorySnippet(recent);
 	}
+	const subscriptionTier = parseSubscriptionTier(user.subscriptionTier);
 	const routeResult = await new IntelligentModelRouter().route({
 		userId: user.id,
 		conversationId,
 		prompt: message,
 		requestedModel: model,
-		deepReasoning,
+		subscriptionTier,
+		deepReasoning: subscriptionTier === 'pro' ? false : deepReasoning,
 		attachments,
 		enabledToolNames,
 		recentSnippet
@@ -179,6 +190,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				});
 				controller.close();
 			} catch (err) {
+				if (err instanceof DomainError) {
+					controller.enqueue(
+						encoder.encode(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`)
+					);
+					controller.close();
+					return;
+				}
 				const msg = err instanceof Error ? err.message : 'Stream error';
 				logger.error('Chat stream error', {
 					error: msg,

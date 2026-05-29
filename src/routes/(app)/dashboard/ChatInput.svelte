@@ -20,7 +20,11 @@
 		isStreaming,
 		onSend,
 		models,
+		modelGroups = [],
+		usesAutoRouting = true,
+		chatQuota,
 		routedModelId = '',
+		selectedModelId = $bindable(''),
 		deepReasoningEnabled = $bindable(false),
 		attachments = $bindable<ChatAttachmentInput[]>([]),
 		messages = [],
@@ -32,7 +36,11 @@
 		isStreaming: boolean;
 		onSend: () => void;
 		models: Model[];
+		modelGroups?: import('$lib/types/dashboard').ModelProviderGroup[];
+		usesAutoRouting?: boolean;
+		chatQuota?: import('$lib/types/dashboard').ChatQuotaView;
 		routedModelId?: string;
+		selectedModelId?: string;
 		deepReasoningEnabled?: boolean;
 		attachments: ChatAttachmentInput[];
 		messages?: ChatMessage[];
@@ -46,8 +54,19 @@
 	let isUploading = $state(false);
 	let attachError = $state('');
 
-	const supportsVision = $derived(models.some((m: Model) => m.supportsVision === true));
-	const supportsFiles = $derived(models.some((m: Model) => m.supportsFiles === true));
+	const activeModel = $derived(
+		models.find((m: Model) => m.id === (selectedModelId || routedModelId)) ?? models[0]
+	);
+	const supportsVision = $derived(
+		usesAutoRouting
+			? models.some((m: Model) => m.supportsVision === true)
+			: activeModel?.supportsVision === true
+	);
+	const supportsFiles = $derived(
+		usesAutoRouting
+			? models.some((m: Model) => m.supportsFiles === true)
+			: activeModel?.supportsFiles === true
+	);
 	const showAttachButton = $derived(supportsVision || supportsFiles);
 	const fileAcceptAttr = $derived(chatInputFileAcceptAttr(supportsVision, supportsFiles));
 
@@ -148,6 +167,10 @@
 		</ChatInputBody>
 		<ChatInputToolbar
 			{models}
+			{modelGroups}
+			{usesAutoRouting}
+			{chatQuota}
+			bind:selectedModelId
 			{routedModelId}
 			bind:deepReasoningEnabled
 			{isStreaming}

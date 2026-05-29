@@ -48,6 +48,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 		},
 		actions,
 		state.getModels,
-		state.syncPageLoadData
+		state.syncPageLoadData,
+		() => state.data
 	);
 }

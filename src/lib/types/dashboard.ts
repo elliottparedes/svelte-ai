@@ -60,12 +60,25 @@ export interface ChatAttachmentInput {
 
 export type { PublicUser as DashboardUser } from './app';
 
+export interface ChatQuotaView {
+	tier: 'free' | 'standard' | 'pro';
+	used: number;
+	limit: number | null;
+	resetsMonthly: boolean;
+}
+
 /** Matches dashboard `+page.server` load shape. */
 export interface DashboardPageLoadData {
 	conversations: Conversation[];
 	projects: Project[];
-	/** Routing pool for context meter and attachment capabilities. */
+	/** Tier-filtered models (routing pool or full catalog for Pro). */
 	models: Model[];
+	/** Pro: models grouped by provider company. */
+	modelGroups: ModelProviderGroup[];
+	defaultModelId: string;
+	/** When true, server auto-routes; client must not send `model`. */
+	usesAutoRouting: boolean;
+	chatQuota: ChatQuotaView;
 	/** True when ELEVENLABS_API_KEY is configured. */
 	ttsEnabled: boolean;
 }

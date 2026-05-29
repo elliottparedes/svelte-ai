@@ -6,6 +6,8 @@ export interface User {
 	ttsVoiceId: string | null;
 	/** JSON string[]; null uses must-have optional model defaults. */
 	altModelIds: string | null;
+	/** free | standard | pro */
+	subscriptionTier: string;
 	createdAt: Date;
 }
 
@@ -18,6 +20,7 @@ export interface UserAuthRecord {
 	ttsVoiceId: string | null;
 	/** JSON string[]; null uses must-have optional model defaults. */
 	altModelIds: string | null;
+	subscriptionTier: string;
 	createdAt: Date;
 }
 
