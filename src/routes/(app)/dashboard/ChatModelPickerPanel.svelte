@@ -25,18 +25,7 @@
 	});
 </script>
 
-<div class="panel" role="listbox" aria-label="OpenRouter models">
-	<div class="search-wrap">
-		<input
-			bind:this={searchInput}
-			type="search"
-			class="search"
-			placeholder="Search models…"
-			bind:value={searchQuery}
-			autocomplete="off"
-			spellcheck="false"
-		/>
-	</div>
+<div class="panel drop-up" role="listbox" aria-label="OpenRouter models">
 	<div class="list thin-scroll">
 		{#if filtered.length === 0}
 			<p class="empty">No models match “{searchQuery}”</p>
@@ -61,12 +50,22 @@
 			{/each}
 		{/if}
 	</div>
+	<div class="search-wrap">
+		<input
+			bind:this={searchInput}
+			type="search"
+			class="search"
+			placeholder="Search models…"
+			bind:value={searchQuery}
+			autocomplete="off"
+			spellcheck="false"
+		/>
+	</div>
 </div>
 
 <style>
 	.panel {
 		position: absolute;
-		top: calc(100% + 6px);
 		left: 0;
 		right: 0;
 		min-width: min(18rem, 92vw);
@@ -74,13 +73,32 @@
 		background: #11111b;
 		border: 1px solid #313244;
 		border-radius: 12px;
-		box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
 		z-index: 50;
 		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+	}
+	.panel.drop-up {
+		bottom: calc(100% + 8px);
+		top: auto;
+		box-shadow: 0 -10px 36px rgba(0, 0, 0, 0.5);
+		transform-origin: bottom center;
+		animation: drop-up-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	@keyframes drop-up-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px) scale(0.98);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
 	}
 	.search-wrap {
+		flex-shrink: 0;
 		padding: 0.5rem 0.55rem;
-		border-bottom: 1px solid #313244;
+		border-top: 1px solid #313244;
 		background: #181825;
 	}
 	.search {
@@ -101,7 +119,9 @@
 		color: #6c7086;
 	}
 	.list {
-		max-height: min(16rem, 42vh);
+		flex: 1;
+		min-height: 0;
+		max-height: min(16rem, 38vh);
 		padding: 0.25rem 0;
 	}
 	.empty {

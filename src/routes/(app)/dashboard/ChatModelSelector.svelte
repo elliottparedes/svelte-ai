@@ -73,7 +73,7 @@
 		title={selectedModelId || 'Select model'}
 	>
 		<span class="trigger-label">{triggerLabel}</span>
-		<span class="chev" aria-hidden="true">▾</span>
+		<span class="chev" class:up={open} aria-hidden="true">▾</span>
 	</button>
 	{#if open}
 		<ChatModelPickerPanel groups={grouped} {selectedModelId} bind:searchQuery onPick={pick} />
@@ -123,5 +123,9 @@
 		flex-shrink: 0;
 		font-size: 0.65rem;
 		color: #a6adc8;
+		transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.chev.up {
+		transform: rotate(180deg);
 	}
 </style>
