@@ -26,10 +26,14 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		margin-bottom: 0.65rem;
 		padding-bottom: 0.65rem;
 		border-bottom: 1px solid #313244;
+	}
+	.pro-model-row :global(.picker) {
+		flex: 1;
+		min-width: 0;
 	}
 	.pro-badge {
 		font-size: 0.65rem;
