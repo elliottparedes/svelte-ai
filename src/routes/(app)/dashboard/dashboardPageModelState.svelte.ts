@@ -70,7 +70,7 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 		models = [...next.models];
 		ttsEnabled = next.ttsEnabled;
 		if (lastRoutedModelId && !models.some((m) => m.id === lastRoutedModelId)) {
-			lastRoutedModelId = next.defaultModelId || models[0]?.id ?? '';
+			lastRoutedModelId = next.defaultModelId || (models[0]?.id ?? '');
 		}
 	}
 
