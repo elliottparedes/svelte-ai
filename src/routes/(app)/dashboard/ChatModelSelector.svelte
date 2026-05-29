@@ -49,7 +49,9 @@
 		align-items: center;
 	}
 	.model-select {
-		max-width: 14rem;
+		min-width: 11rem;
+		max-width: min(22rem, 100%);
+		flex: 1;
 		background: #252537;
 		color: #cdd6f4;
 		border: 1px solid #313244;

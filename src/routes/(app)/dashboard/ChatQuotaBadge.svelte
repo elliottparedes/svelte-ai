@@ -4,7 +4,7 @@
 	let { quota } = $props<{ quota: ChatQuotaView }>();
 
 	const label = $derived(() => {
-		if (quota.tier === 'pro') return 'Pro · unlimited';
+		if (quota.tier === 'pro') return 'Unlimited chats';
 		if (quota.limit === null) return '';
 		const left = Math.max(0, quota.limit - quota.used);
 		const period = quota.resetsMonthly ? 'this month' : 'total';

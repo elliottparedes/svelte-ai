@@ -3,7 +3,6 @@
 	import ChatToolSelector from './ChatToolSelector.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
 	import ChatDeepThinkButton from './ChatDeepThinkButton.svelte';
-	import ChatModelSelector from './ChatModelSelector.svelte';
 	import ChatQuotaBadge from './ChatQuotaBadge.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 	import type { ChatQuotaView } from '$lib/types/dashboard';
@@ -55,9 +54,6 @@
 	<div class="footer-left">
 		{#if chatQuota}
 			<ChatQuotaBadge quota={chatQuota} />
-		{/if}
-		{#if !usesAutoRouting}
-			<ChatModelSelector {models} {modelGroups} bind:selectedModelId disabled={isStreaming} />
 		{/if}
 		<ChatContextMeter {messages} {summaryThroughMessageId} />
 		{#if showAttachButton}
