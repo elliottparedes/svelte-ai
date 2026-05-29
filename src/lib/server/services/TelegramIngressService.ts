@@ -1,4 +1,5 @@
 import { DomainError } from '../domain/DomainError';
+import type { ChatAttachment } from '../domain/ChatProvider.interface';
 import { decryptSecret } from '../infrastructure/secretCrypto';
 import { sendTelegramMessage } from '../infrastructure/telegramApiClient';
 import { markdownToTelegramHtml } from '../infrastructure/telegramMarkdownHtml';
@@ -6,13 +7,19 @@ import { logger } from '../logger';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import { TelegramChatBindingRepository } from '../repositories/TelegramChatBindingRepository';
 import { TelegramBotRepository } from '../repositories/TelegramBotRepository';
+import { buildPhotoAttachment, isResetCommand, parseToolNames } from './telegramIngressHelpers';
 import { ModelRoutingService } from './ModelRoutingService';
 import type { ConversationService } from './ConversationService';
 import { UsageMeteringService } from './UsageMeteringService';
 
 type TelegramUpdate = {
 	update_id: number;
-	message?: { text: string; chat: { id: string | number } };
+	message?: {
+		text?: string;
+		caption?: string;
+		photo?: Array<{ file_id: string; file_size?: number }>;
+		chat: { id: string | number };
+	};
 };
 
 export class TelegramIngressService {
@@ -40,8 +47,9 @@ export class TelegramIngressService {
 				: 'Telegram sent no secret header — click Register webhook in Profile';
 			throw new DomainError(hint, 401);
 		}
-		if (!update.message?.text?.trim()) return { ok: true, ignored: true };
-		const chatId = String(update.message.chat.id);
+		const message = update.message;
+		if (!message) return { ok: true, ignored: true };
+		const chatId = String(message.chat.id);
 		const binding = await this.bindingRepo.findByBotAndChatId(bot.id, chatId);
 		const linkedConv =
 			binding?.conversationId != null
@@ -52,25 +60,53 @@ export class TelegramIngressService {
 		if (activeBinding?.lastUpdateId && Number(activeBinding.lastUpdateId) >= update.update_id) {
 			return { ok: true, ignored: true };
 		}
+		const token = decryptSecret(bot.tokenCiphertext, this.encryptionKey);
+		const prompt = (message.text ?? message.caption ?? '').trim();
+		let attachment: ChatAttachment | null = null;
+		try {
+			attachment = await buildPhotoAttachment(token, message.photo);
+		} catch (err) {
+			logger.warn('Telegram image attachment failed', {
+				botId: bot.id,
+				chatId,
+				error: err instanceof Error ? err.message : String(err)
+			});
+			await sendTelegramMessage(token, chatId, 'I could not read that image. Please send another one.');
+			return { ok: true, ignored: true };
+		}
+		const attachments = attachment ? [attachment] : undefined;
+		if (!prompt && !attachments?.length) return { ok: true, ignored: true };
+		if (isResetCommand(prompt)) {
+			if (binding?.conversationId) {
+				await this.bindingRepo.deleteByConversationId(binding.conversationId);
+			}
+			await sendTelegramMessage(
+				token,
+				chatId,
+				'Conversation reset. Send a new message to start a fresh thread.'
+			);
+			logger.info('Telegram chat reset', { botId: bot.id, chatId });
+			return { ok: true };
+		}
 		await this.usage.assertBotWithinDailyLimit(bot.userId, bot);
-		const prompt = update.message.text.trim();
 		const enabledToolNames = parseToolNames(bot.enabledToolNames);
+		const effectivePrompt = prompt || 'Please help with this image.';
 		const modelId = this.modelRouter.resolve({
-			prompt,
+			prompt: effectivePrompt,
 			requestedModel: bot.defaultModelId ?? undefined,
+			attachments,
 			enabledToolNames,
 			defaultModel: this.defaultModel
 		});
-		await this.usage.recordInbound(bot.userId, bot.id, modelId, prompt);
-		const token = decryptSecret(bot.tokenCiphertext, this.encryptionKey);
+		await this.usage.recordInbound(bot.userId, bot.id, modelId, effectivePrompt);
 		let out = '';
 		let toolCalls = 0;
 		let resolvedConversationId = activeBinding?.conversationId;
 		for await (const event of this.conversationService.processPrompt(
 			bot.userId,
 			activeBinding?.conversationId,
-			prompt,
-			undefined,
+			effectivePrompt,
+			attachments,
 			modelId,
 			bot.projectId ?? undefined,
 			enabledToolNames
@@ -107,16 +143,5 @@ export class TelegramIngressService {
 			modelId
 		});
 		return { ok: true };
-	}
-}
-
-function parseToolNames(raw: string | null): string[] | undefined {
-	if (!raw?.trim()) return undefined;
-	try {
-		const parsed = JSON.parse(raw) as unknown;
-		if (!Array.isArray(parsed)) return undefined;
-		return parsed.filter((item): item is string => typeof item === 'string');
-	} catch {
-		return undefined;
 	}
 }

@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import AppPageHeader from '$lib/components/app/AppPageHeader.svelte';
 	import ProfileDetails from './ProfileDetails.svelte';
+import ProfileChatDangerZone from './ProfileChatDangerZone.svelte';
 	import ProfileTelegramBots from './ProfileTelegramBots.svelte';
 	import type { PublicUser } from '$lib/types/app';
 
@@ -13,6 +14,7 @@
 	<div class="profile-sections">
 		<ProfileDetails {user} />
 		<ProfileTelegramBots />
+		<ProfileChatDangerZone />
 	</div>
 {:else}
 	<p class="error">Unable to load profile.</p>

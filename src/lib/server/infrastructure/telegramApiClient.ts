@@ -1,5 +1,6 @@
 type TelegramResult<T> = { ok: boolean; result?: T; description?: string };
 type TelegramMe = { id: number; username?: string };
+type TelegramFile = { file_path?: string };
 export type TelegramWebhookInfo = {
 	url: string;
 	has_custom_certificate: boolean;
@@ -68,4 +69,37 @@ export async function sendTelegramMessage(
 		return;
 	}
 	if (!payload.ok) throw new Error(payload.description || 'Telegram sendMessage failed');
+}
+
+export async function getTelegramFilePath(token: string, fileId: string): Promise<string> {
+	const payload = await callTelegram<TelegramFile>(token, 'getFile', { file_id: fileId });
+	const filePath = payload.result?.file_path;
+	if (!payload.ok || !filePath) {
+		throw new Error(payload.description || 'Telegram getFile failed');
+	}
+	return filePath;
+}
+
+export async function downloadTelegramFileAsDataUrl(
+	token: string,
+	filePath: string
+): Promise<{ dataUrl: string; mimeType: string }> {
+	const response = await fetch(`https://api.telegram.org/file/bot${token}/${filePath}`);
+	if (!response.ok) {
+		throw new Error(`Telegram file download failed: ${response.status} ${response.statusText}`);
+	}
+	const contentType = response.headers.get('content-type');
+	const mimeType = inferMimeType(filePath, contentType);
+	const bytes = Buffer.from(await response.arrayBuffer());
+	return { dataUrl: `data:${mimeType};base64,${bytes.toString('base64')}`, mimeType };
+}
+
+function inferMimeType(filePath: string, contentType: string | null): string {
+	const ctype = contentType?.split(';')[0]?.trim().toLowerCase();
+	if (ctype?.startsWith('image/')) return ctype;
+	const lowerPath = filePath.toLowerCase();
+	if (lowerPath.endsWith('.png')) return 'image/png';
+	if (lowerPath.endsWith('.webp')) return 'image/webp';
+	if (lowerPath.endsWith('.gif')) return 'image/gif';
+	return 'image/jpeg';
 }

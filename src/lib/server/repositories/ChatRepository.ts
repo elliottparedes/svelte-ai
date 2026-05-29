@@ -10,6 +10,14 @@ export class ChatRepository {
 		return rows[0] ?? null;
 	}
 
+	async findAllByUserId(userId: string): Promise<Conversation[]> {
+		return db
+			.select()
+			.from(conversations)
+			.where(eq(conversations.userId, userId))
+			.orderBy(desc(conversations.updatedAt));
+	}
+
 	async findByUserId(userId: string): Promise<Conversation[]> {
 		return db
 			.select()

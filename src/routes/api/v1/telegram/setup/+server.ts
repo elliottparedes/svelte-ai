@@ -28,6 +28,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		tips: [
 			'Start with short replies, then offer deeper follow-up prompts',
 			'Provide commands like /help, /settings, and /reset',
+			'Use /reset to clear the current Telegram chat thread and start fresh',
 			'Use lower-cost models by default and reserve premium fallback for hard prompts',
 			'Enable mention-only mode for noisy group chats'
 		]

@@ -2,6 +2,8 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
 import { createConversationSchema } from '$lib/server/validation/conversation.schema';
 import { ChatRepository } from '$lib/server/repositories/ChatRepository';
+import { MessageRepository } from '$lib/server/repositories/MessageRepository';
+import { TelegramChatBindingRepository } from '$lib/server/repositories/TelegramChatBindingRepository';
 
 export const GET: RequestHandler = async ({ locals }) => {
 	const user = locals.user;
@@ -35,4 +37,22 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	});
 
 	return json({ conversation }, { status: 201 });
+};
+
+export const DELETE: RequestHandler = async ({ locals }) => {
+	const user = locals.user;
+	if (!user) error(401, 'Unauthorized');
+
+	const chatRepo = new ChatRepository();
+	const messageRepo = new MessageRepository();
+	const bindingRepo = new TelegramChatBindingRepository();
+	const conversations = await chatRepo.findAllByUserId(user.id);
+
+	for (const conversation of conversations) {
+		await messageRepo.deleteByConversationId(conversation.id);
+		await bindingRepo.deleteByConversationId(conversation.id);
+		await chatRepo.delete(conversation.id);
+	}
+
+	return json({ success: true, deletedCount: conversations.length });
 };

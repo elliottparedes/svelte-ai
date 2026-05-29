@@ -35,7 +35,18 @@ export const telegramWebhookUpdateSchema = z.object({
 	update_id: z.number().int(),
 	message: z
 		.object({
-			text: z.string().min(1),
+			text: z.string().min(1).optional(),
+			caption: z.string().min(1).optional(),
+			photo: z
+				.array(
+					z.object({
+						file_id: z.string().min(1),
+						width: z.number().int().positive().optional(),
+						height: z.number().int().positive().optional(),
+						file_size: z.number().int().positive().optional()
+					})
+				)
+				.optional(),
 			chat: z.object({
 				id: z.union([z.string(), z.number()]),
 				type: z.string().optional()
