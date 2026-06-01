@@ -138,6 +138,7 @@
 					bind:deepReasoningEnabled={model.deepReasoningEnabled}
 					bind:attachments={model.attachments}
 					messages={model.messages}
+					streamingTurnCostUsd={model.streamingTurnCostUsd}
 					summaryThroughMessageId={chatSummaryMeta.summaryThroughMessageId}
 					{modelSupportsTools}
 					bind:enabledToolIds={model.enabledToolIds}

@@ -43,7 +43,6 @@
 	.footer-right {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
 		flex-shrink: 0;
 	}
 	.send-btn {

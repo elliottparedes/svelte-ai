@@ -1,3 +1,4 @@
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import { completeOpenRouterText } from '../infrastructure/openRouterCompleteText';
 import { isModelRoutingTier, type ModelRoutingTier } from '$lib/shared/modelRoutingTier';
 
@@ -22,13 +23,19 @@ export type RouterClassifyInput = {
 	recentSnippet?: string;
 };
 
+export type RouterClassifyResult = {
+	tier: ModelRoutingTier;
+	latencyMs: number;
+	usage: OpenRouterUsage | null;
+};
+
 export async function classifyPromptTier(
 	apiKey: string,
 	routerModelId: string,
 	input: RouterClassifyInput,
 	httpReferer: string | undefined,
 	timeoutMs: number
-): Promise<{ tier: ModelRoutingTier; latencyMs: number } | null> {
+): Promise<RouterClassifyResult | null> {
 	const user = [
 		input.hasImageAttachment ? 'attachments: image' : '',
 		input.hasFileAttachment ? 'attachments: file/pdf' : '',
@@ -43,9 +50,9 @@ export async function classifyPromptTier(
 	const started = performance.now();
 	const controller = new AbortController();
 	const timer = setTimeout(() => controller.abort(), timeoutMs);
-	let raw: string | null;
+	let completion;
 	try {
-		raw = await completeOpenRouterText(
+		completion = await completeOpenRouterText(
 			apiKey,
 			routerModelId,
 			[
@@ -62,9 +69,9 @@ export async function classifyPromptTier(
 		clearTimeout(timer);
 	}
 	const latencyMs = Math.round(performance.now() - started);
-	if (!raw) return null;
-	const tier = parseTierFromRouterReply(raw);
-	return tier ? { tier, latencyMs } : null;
+	if (!completion.text) return null;
+	const tier = parseTierFromRouterReply(completion.text);
+	return tier ? { tier, latencyMs, usage: completion.usage } : null;
 }
 
 function parseTierFromRouterReply(raw: string): ModelRoutingTier | null {

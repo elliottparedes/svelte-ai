@@ -12,6 +12,10 @@ export interface ChatMessage {
 	reasoningContent?: string;
 	createdAt?: Date | string;
 	toolCall?: ChatMessageToolCall;
+	/** OpenRouter usage.cost for this assistant turn (USD). */
+	costUsd?: number;
+	promptTokens?: number;
+	completionTokens?: number;
 }
 
 export interface Conversation {

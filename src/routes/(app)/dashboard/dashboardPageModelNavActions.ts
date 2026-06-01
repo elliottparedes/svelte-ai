@@ -13,6 +13,7 @@ export function createDashboardNavActions(state: DashboardPageModelStateShell) {
 		state.projectComposeMode = false;
 		state.errorMessage = '';
 		state.isCompacting = false;
+		state.streamingTurnCostUsd = 0;
 		state.messages = state.messageCache[conversationId] ?? [];
 		const cached =
 			state.conversations.find((c) => c.id === conversationId) ??
@@ -79,6 +80,7 @@ export function createDashboardNavActions(state: DashboardPageModelStateShell) {
 		state.projectComposeMode = false;
 		state.messages = [];
 		state.errorMessage = '';
+		state.streamingTurnCostUsd = 0;
 	}
 
 	function startProjectCompose() {
@@ -87,6 +89,7 @@ export function createDashboardNavActions(state: DashboardPageModelStateShell) {
 		state.activeConversationId = null;
 		state.messages = [];
 		state.errorMessage = '';
+		state.streamingTurnCostUsd = 0;
 	}
 
 	return {

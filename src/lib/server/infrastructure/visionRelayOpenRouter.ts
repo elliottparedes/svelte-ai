@@ -1,5 +1,7 @@
 import type { ChatAttachment } from '../domain/ChatProvider.interface';
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import { DomainError } from '../domain/DomainError';
+import { parseOpenRouterUsage } from './openRouterUsage.util';
 
 const BASE = 'https://openrouter.ai/api/v1';
 
@@ -28,6 +30,8 @@ function headers(apiKey: string, httpReferer?: string): Record<string, string> {
 	return h;
 }
 
+export type VisionRelayResult = { text: string; usage: OpenRouterUsage | null };
+
 export async function completeOpenRouterVisionRelay(
 	apiKey: string,
 	relayModelId: string,
@@ -35,7 +39,7 @@ export async function completeOpenRouterVisionRelay(
 	images: readonly ChatAttachment[],
 	maxTokens: number,
 	httpReferer?: string
-): Promise<string> {
+): Promise<VisionRelayResult> {
 	const userLine = `User message (may reference the images):\n${userPrompt}`;
 
 	const res = await fetch(`${BASE}/chat/completions`, {
@@ -57,13 +61,13 @@ export async function completeOpenRouterVisionRelay(
 		throw new DomainError(`Vision relay failed: ${res.status} ${raw.slice(0, 400)}`, 502);
 	}
 
-	let json: { choices?: Array<{ message?: { content?: string } }> };
+	let json: { choices?: Array<{ message?: { content?: string } }>; usage?: unknown };
 	try {
-		json = JSON.parse(raw) as { choices?: Array<{ message?: { content?: string } }> };
+		json = JSON.parse(raw) as typeof json;
 	} catch {
 		throw new DomainError('Vision relay: invalid JSON from chat/completions', 502);
 	}
 	const text = json.choices?.[0]?.message?.content?.trim() ?? '';
 	if (!text) throw new DomainError('Vision relay returned empty description', 502);
-	return text;
+	return { text, usage: parseOpenRouterUsage(json.usage) };
 }

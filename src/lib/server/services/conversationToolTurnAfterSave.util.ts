@@ -1,60 +1,37 @@
-import type { ToolCall } from '../domain/ChatProvider.interface';
 import type { MessageRepository } from '../repositories/MessageRepository';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import type { ConversationTitleService } from './ConversationTitleService';
 import type { ConversationSummaryService } from './ConversationSummaryService';
 import type { SummaryTurnConfig } from './conversationSummaryTurn.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
 import { extendRollingSummaryAfterReply } from './conversationSummaryTurn.util';
-import {
-	assistantContentForImageGeneration,
-	IMAGE_GENERATION_REPLY,
-	toolResultForLlmHistory
-} from '$lib/shared/imageGenerationToolResult';
-import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
-import { usageProcessEvent } from './conversationTurnUsage.util';
 
-export async function* yieldGenerateImageSuccess(params: {
-	userId: string;
-	conversationId: string;
+export async function* afterAssistantSaved(params: {
 	isNewThread: boolean;
+	conversationId: string;
 	userPrompt: string;
-	assistantPreamble: string;
-	result: string;
-	pendingToolCall: ToolCall;
-	messageRepo: MessageRepository;
+	assistantContent: string;
+	userId: string;
 	chatRepo: ChatRepository;
 	titleService: ConversationTitleService | undefined;
-	summaryService?: ConversationSummaryService;
-	summaryConfig?: SummaryTurnConfig;
+	summaryService: ConversationSummaryService | undefined;
+	summaryConfig: SummaryTurnConfig | undefined;
+	messageRepo: MessageRepository;
 	usageAcc: ChatTurnUsageAccumulator;
+	assistantMessageId: string;
 }): AsyncGenerator<ConversationProcessEvent> {
-	const imageBlock = assistantContentForImageGeneration(params.result);
-	const preamble = params.assistantPreamble.trim();
-	const stored = preamble ? `${preamble}\n\n${imageBlock}` : imageBlock;
-	const saved = await params.messageRepo.create(
-		params.conversationId,
-		'assistant',
-		stored,
-		undefined,
-		undefined,
-		params.usageAcc.snapshot()
-	);
-	yield usageProcessEvent(params.usageAcc);
-	const sseToolResult = toolResultForLlmHistory('generate_image', params.result);
-	yield { type: 'tool_result' as const, name: 'generate_image', result: sseToolResult };
-	yield { type: 'chunk' as const, content: IMAGE_GENERATION_REPLY };
 	yield* yieldNewThreadTitleEvents({
 		isNewThread: params.isNewThread,
 		conversationId: params.conversationId,
 		userPrompt: params.userPrompt,
-		assistantContent: stored,
+		assistantContent: params.assistantContent,
 		userId: params.userId,
 		chatRepo: params.chatRepo,
 		titleService: params.titleService,
 		usageAcc: params.usageAcc,
-		assistantMessageId: saved.id,
+		assistantMessageId: params.assistantMessageId,
 		messageRepo: params.messageRepo
 	});
 	yield* extendRollingSummaryAfterReply({
@@ -65,7 +42,7 @@ export async function* yieldGenerateImageSuccess(params: {
 		summaryService: params.summaryService,
 		config: params.summaryConfig,
 		usageAcc: params.usageAcc,
-		assistantMessageId: saved.id
+		assistantMessageId: params.assistantMessageId
 	});
 	yield { type: 'done' as const, conversationId: params.conversationId };
 }

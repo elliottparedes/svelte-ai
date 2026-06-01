@@ -93,6 +93,9 @@ export class OpenRouterProvider implements ChatProvider {
 				for (const line of lines) {
 					const parsed = parseGoSseDataLine(line);
 					if (!parsed) continue;
+					if (parsed.usage) {
+						yield { content: '', usage: parsed.usage, done: false };
+					}
 					if (parsed.reasoningChunk) {
 						const prev = reasoningBuffer;
 						reasoningBuffer = appendReasoningStream(reasoningBuffer, parsed.reasoningChunk);
@@ -101,7 +104,7 @@ export class OpenRouterProvider implements ChatProvider {
 					}
 					if (parsed.textChunk) yield { content: parsed.textChunk, done: false };
 					if (parsed.toolDeltas) toolAccumulator.feed(parsed.toolDeltas);
-					if (parsed.done) {
+					if (parsed.toolCallsFinish) {
 						if (!toolAccumulator.isEmpty()) {
 							const calls = toolAccumulator.build();
 							if (calls.length > 0) {
@@ -109,6 +112,8 @@ export class OpenRouterProvider implements ChatProvider {
 								return;
 							}
 						}
+					}
+					if (parsed.streamDone) {
 						yield { content: '', done: true };
 						return;
 					}

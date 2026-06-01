@@ -31,6 +31,7 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 	let inputValue = $state('');
 	let errorMessage = $state('');
 	let isCompacting = $state(false);
+	let streamingTurnCostUsd = $state(0);
 	let models = $state<Model[]>([...initial.models]);
 	let ttsEnabled = $state(initial.ttsEnabled);
 	let lastRoutedModelId = $state(initial.defaultModelId || (initial.models[0]?.id ?? ''));
@@ -121,6 +122,7 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 				setStreamingIds: (s) => (streamingConversationIds = s),
 				setError: (v) => (errorMessage = v),
 				setIsCompacting: (v) => (isCompacting = v),
+				setStreamingTurnCostUsd: (v) => (streamingTurnCostUsd = v),
 				onConversationModelSaved: stampConversationModel
 			}),
 		fields: {
@@ -139,6 +141,7 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 			inputValue: field(() => inputValue, (v) => (inputValue = v)),
 			errorMessage: field(() => errorMessage, (v) => (errorMessage = v)),
 			isCompacting: field(() => isCompacting, (v) => (isCompacting = v)),
+			streamingTurnCostUsd: field(() => streamingTurnCostUsd, (v) => (streamingTurnCostUsd = v)),
 			lastRoutedModelId: field(() => lastRoutedModelId, (v) => (lastRoutedModelId = v)),
 			deepReasoningEnabled: field(() => deepReasoningEnabled, (v) => (deepReasoningEnabled = v)),
 			sidebarCollapsed: field(() => sidebarCollapsed, (v) => (sidebarCollapsed = v)),

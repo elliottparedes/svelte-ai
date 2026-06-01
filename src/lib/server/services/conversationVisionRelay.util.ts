@@ -2,6 +2,7 @@ import type { ChatAttachment } from '../domain/ChatProvider.interface';
 import { DomainError } from '../domain/DomainError';
 import { logger } from '../logger';
 import { modelSendsNativeImagePixels } from '../model/modelCapabilities';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import type { VisionRelayService } from './VisionRelayService';
 
 /** Extra system text when images were relayed to text — steers models away from spurious web_search loops. */
@@ -15,6 +16,7 @@ export async function maybeApplyVisionRelay(args: {
 	imageAttachments: readonly ChatAttachment[] | undefined;
 	model: string | undefined;
 	visionRelay: VisionRelayService | undefined;
+	usageAcc?: ChatTurnUsageAccumulator;
 }): Promise<{ augmentedPrompt: string; relayApplied: boolean }> {
 	let { augmentedPrompt } = args;
 	let relayApplied = false;
@@ -25,11 +27,12 @@ export async function maybeApplyVisionRelay(args: {
 		!modelSendsNativeImagePixels(args.model) &&
 		args.visionRelay
 	) {
-		const summary = await args.visionRelay.summarizeForNonVisionModel(
+		const relay = await args.visionRelay.summarizeForNonVisionModel(
 			augmentedPrompt,
 			args.imageAttachments
 		);
-		augmentedPrompt = `${augmentedPrompt}\n\n[Vision summary]\n${summary}`;
+		args.usageAcc?.add(relay.usage);
+		augmentedPrompt = `${augmentedPrompt}\n\n[Vision summary]\n${relay.text}`;
 		relayApplied = true;
 		logger.info('Vision relay applied', {
 			userId: args.userId,

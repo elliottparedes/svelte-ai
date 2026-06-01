@@ -20,6 +20,7 @@ import {
 	logRollingSummaryContextApplied,
 	logRollingSummaryStaleWatermark
 } from './conversationSummaryLog.util';
+import { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 
 const HISTORY_FETCH_LIMIT = 2000;
 
@@ -43,7 +44,8 @@ export class ConversationService {
 		attachments?: readonly ChatAttachment[],
 		model?: string,
 		projectId?: string,
-		enabledToolNames?: readonly string[]
+		enabledToolNames?: readonly string[],
+		usageAcc?: ChatTurnUsageAccumulator
 	): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 		const isNewThread = !conversationId;
 		const { convId, effectiveModel } = await resolveConversationForPrompt(
@@ -114,7 +116,8 @@ export class ConversationService {
 			projectRepo: this.projectRepo,
 			visionRelay: this.visionRelay,
 			userId,
-			conversationId: convId
+			conversationId: convId,
+			usageAcc
 		});
 		const toolsForTurn =
 			!toolsCapable || prepared.effectiveNames.length === 0
@@ -137,7 +140,8 @@ export class ConversationService {
 			initialHistory: prepared.augmentedHistory,
 			streamAttachments: prepared.streamAttachments,
 			toolsForTurn,
-			options: prepared.options
+			options: prepared.options,
+			usageAcc: usageAcc ?? new ChatTurnUsageAccumulator()
 		});
 	}
 }

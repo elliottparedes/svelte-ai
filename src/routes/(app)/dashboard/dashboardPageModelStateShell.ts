@@ -26,6 +26,7 @@ export type DashboardPageModelStateShell = {
 	inputValue: string;
 	errorMessage: string;
 	isCompacting: boolean;
+	streamingTurnCostUsd: number;
 	lastRoutedModelId: string;
 	deepReasoningEnabled: boolean;
 	sidebarCollapsed: boolean;
@@ -75,6 +76,7 @@ export function createDashboardPageModelStateShell(p: {
 		inputValue: Field<string>;
 		errorMessage: Field<string>;
 		isCompacting: Field<boolean>;
+		streamingTurnCostUsd: Field<number>;
 		lastRoutedModelId: Field<string>;
 		deepReasoningEnabled: Field<boolean>;
 		sidebarCollapsed: Field<boolean>;

@@ -2,7 +2,6 @@ import type {
 	ChatAttachment,
 	ChatMessage,
 	ChatProvider,
-	ToolCall,
 	ToolDefinition
 } from '../domain/ChatProvider.interface';
 import type { MessageRepository } from '../repositories/MessageRepository';
@@ -10,25 +9,24 @@ import type { ToolExecutor } from '../infrastructure/ToolExecutor';
 import { executeToolLogged } from '../logging/executeToolLogged';
 import { logger } from '../logger';
 import { appendToolExchangeToHistory } from './conversationToolHistory.util';
-import { eachBudgetExhaustionChunk } from './conversationMaxToolsFinish';
+import { yieldBudgetExhaustionFinish } from './conversationToolTurnBudget.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
 import type { ChatRepository } from '../repositories/ChatRepository';
 import type { ConversationTitleService } from './ConversationTitleService';
 import type { ConversationSummaryService } from './ConversationSummaryService';
-import {
-	extendRollingSummaryAfterReply,
-	type SummaryTurnConfig
-} from './conversationSummaryTurn.util';
-import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
+import type { SummaryTurnConfig } from './conversationSummaryTurn.util';
 import { MAX_TOOL_TURNS } from './conversationTools.config';
 import { parseImageGenerationToolResult, toolResultForLlmHistory } from '$lib/shared/imageGenerationToolResult';
 import { yieldGenerateImageSuccess } from './conversationGenerateImageTurn';
-import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
 import {
 	afterToolExecution,
 	beforeToolExecution,
 	initToolPolicy
 } from './conversationToolPolicy';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
+import { usageProcessEvent } from './conversationTurnUsage.util';
+import { afterAssistantSaved } from './conversationToolTurnAfterSave.util';
+import { streamOneToolTurn } from './conversationToolTurnStream.util';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -47,7 +45,10 @@ export async function* runConversationToolTurns(params: {
 	streamAttachments: readonly ChatAttachment[] | undefined;
 	toolsForTurn: readonly ToolDefinition[];
 	options: Record<string, unknown> | undefined;
+	usageAcc: ChatTurnUsageAccumulator;
 }): AsyncGenerator<ConversationProcessEvent> {
+	if (params.usageAcc.costUsd > 0) yield usageProcessEvent(params.usageAcc);
+
 	let augmentedHistory = params.initialHistory;
 	let toolInvocations = 0;
 	let turn = 0;
@@ -55,39 +56,29 @@ export async function* runConversationToolTurns(params: {
 
 	while (turn < MAX_TOOL_TURNS) {
 		turn++;
-		let assistantContent = '';
-		let assistantReasoning = '';
-		let pendingToolCall: ToolCall | undefined;
-
-		for await (const chunk of params.provider.streamResponse(
+		const stream = streamOneToolTurn({
+			provider: params.provider,
 			augmentedHistory,
-			params.streamAttachments,
-			params.toolsForTurn,
-			params.options
-		)) {
-			if (chunk.toolCall) {
-				pendingToolCall = chunk.toolCall;
-				assistantReasoning = chunk.reasoningContent ?? '';
-				break;
-			}
-			if (chunk.done) break;
-			if (chunk.reasoningContent) {
-				const prev = assistantReasoning;
-				assistantReasoning = appendReasoningStream(assistantReasoning, chunk.reasoningContent);
-				const delta = assistantReasoning.slice(prev.length);
-				if (delta) yield { type: 'reasoning' as const, content: delta };
-			}
-			assistantContent += chunk.content ?? '';
-			yield { type: 'chunk' as const, content: chunk.content ?? '' };
+			streamAttachments: params.streamAttachments,
+			toolsForTurn: params.toolsForTurn,
+			options: params.options,
+			usageAcc: params.usageAcc
+		});
+		let result = await stream.next();
+		while (!result.done) {
+			yield result.value;
+			result = await stream.next();
 		}
+		const { assistantContent, assistantReasoning, pendingToolCall } = result.value;
 
 		if (!pendingToolCall) {
-			await params.messageRepo.create(
+			const saved = await params.messageRepo.create(
 				params.conversationId,
 				'assistant',
 				assistantContent,
 				undefined,
-				assistantReasoning.trim() || undefined
+				assistantReasoning.trim() || undefined,
+				params.usageAcc.snapshot()
 			);
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
@@ -95,37 +86,17 @@ export async function* runConversationToolTurns(params: {
 				model: params.modelLabel,
 				replyChars: assistantContent.length,
 				toolInvocations,
-				llmTurn: turn
+				llmTurn: turn,
+				costUsd: params.usageAcc.costUsd
 			});
-			yield* yieldNewThreadTitleEvents({
-				isNewThread: params.isNewThread,
-				conversationId: params.conversationId,
-				userPrompt: params.userPrompt,
-				assistantContent,
-				userId: params.userId,
-				chatRepo: params.chatRepo,
-				titleService: params.titleService
-			});
-			yield* extendRollingSummaryAfterReply({
-				conversationId: params.conversationId,
-				userId: params.userId,
-				chatRepo: params.chatRepo,
-				messageRepo: params.messageRepo,
-				summaryService: params.summaryService,
-				config: params.summaryConfig
-			});
-			yield { type: 'done' as const, conversationId: params.conversationId };
+			yield usageProcessEvent(params.usageAcc);
+			yield* afterAssistantSaved({ ...params, assistantContent, assistantMessageId: saved.id });
 			return;
 		}
 
-		yield {
-			type: 'tool_call' as const,
-			name: pendingToolCall.name,
-			arguments: pendingToolCall.arguments
-		};
-
+		yield { type: 'tool_call' as const, name: pendingToolCall.name, arguments: pendingToolCall.arguments };
 		const gate = beforeToolExecution(toolPolicy, pendingToolCall);
-		const result = gate.allowed
+		const toolResult = gate.allowed
 			? await executeToolLogged(
 					params.toolExecutor,
 					{ userId: params.userId, conversationId: params.conversationId, llmTurn: turn },
@@ -133,35 +104,33 @@ export async function* runConversationToolTurns(params: {
 				)
 			: (gate.resultText ?? `Policy: ${pendingToolCall.name} blocked.`);
 		if (gate.allowed) toolInvocations++;
-		afterToolExecution(toolPolicy, pendingToolCall, result);
+		afterToolExecution(toolPolicy, pendingToolCall, toolResult);
 
-		const historyResult = toolResultForLlmHistory(pendingToolCall.name, result);
-
-		if (pendingToolCall.name === 'generate_image' && parseImageGenerationToolResult(result)?.ok) {
+		if (pendingToolCall.name === 'generate_image' && parseImageGenerationToolResult(toolResult)?.ok) {
 			yield* yieldGenerateImageSuccess({
 				userId: params.userId,
 				conversationId: params.conversationId,
 				isNewThread: params.isNewThread,
 				userPrompt: params.userPrompt,
 				assistantPreamble: assistantContent,
-				result,
+				result: toolResult,
 				pendingToolCall,
 				messageRepo: params.messageRepo,
 				chatRepo: params.chatRepo,
 				titleService: params.titleService,
 				summaryService: params.summaryService,
-				summaryConfig: params.summaryConfig
+				summaryConfig: params.summaryConfig,
+				usageAcc: params.usageAcc
 			});
 			return;
 		}
 
-		yield { type: 'tool_result' as const, name: pendingToolCall.name, result };
-
+		yield { type: 'tool_result' as const, name: pendingToolCall.name, result: toolResult };
 		augmentedHistory = appendToolExchangeToHistory(
 			augmentedHistory,
 			pendingToolCall,
 			assistantReasoning,
-			historyResult
+			toolResultForLlmHistory(pendingToolCall.name, toolResult)
 		);
 	}
 
@@ -171,49 +140,10 @@ export async function* runConversationToolTurns(params: {
 		toolInvocations,
 		maxToolTurns: MAX_TOOL_TURNS
 	});
-	for await (const ev of eachBudgetExhaustionChunk(
-		params.provider,
+	yield* yieldBudgetExhaustionFinish({
+		...params,
 		augmentedHistory,
-		params.streamAttachments,
-		params.options
-	)) {
-		if (ev.kind === 'reasoning') yield { type: 'reasoning' as const, content: ev.content };
-		else if (ev.kind === 'chunk') yield { type: 'chunk' as const, content: ev.content };
-		else {
-			await params.messageRepo.create(
-				params.conversationId,
-				'assistant',
-				ev.reply,
-				undefined,
-				ev.reasoning.trim() || undefined
-			);
-			logger.info('Assistant reply complete', {
-				userId: params.userId,
-				conversationId: params.conversationId,
-				model: params.modelLabel,
-				replyChars: ev.reply.length,
-				toolInvocations,
-				llmTurn: turn,
-				afterMaxToolTurns: true
-			});
-			yield* yieldNewThreadTitleEvents({
-				isNewThread: params.isNewThread,
-				conversationId: params.conversationId,
-				userPrompt: params.userPrompt,
-				assistantContent: ev.reply,
-				userId: params.userId,
-				chatRepo: params.chatRepo,
-				titleService: params.titleService
-			});
-			yield* extendRollingSummaryAfterReply({
-				conversationId: params.conversationId,
-				userId: params.userId,
-				chatRepo: params.chatRepo,
-				messageRepo: params.messageRepo,
-				summaryService: params.summaryService,
-				config: params.summaryConfig
-			});
-			yield { type: 'done' as const, conversationId: params.conversationId };
-		}
-	}
+		toolInvocations,
+		llmTurn: turn
+	});
 }

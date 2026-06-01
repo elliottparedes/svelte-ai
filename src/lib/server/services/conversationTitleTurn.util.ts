@@ -1,8 +1,11 @@
 import type { ChatRepository } from '../repositories/ChatRepository';
+import type { MessageRepository } from '../repositories/MessageRepository';
 import type { ConversationTitleService } from './ConversationTitleService';
 import type { ConversationProcessEvent } from './conversationProcess.types';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import { logger } from '../logger';
 import { fallbackTitleFromPrompt } from './ConversationTitleService';
+import { usageProcessEvent } from './conversationTurnUsage.util';
 
 export async function* yieldNewThreadTitleEvents(params: {
 	isNewThread: boolean;
@@ -12,12 +15,27 @@ export async function* yieldNewThreadTitleEvents(params: {
 	userId: string;
 	chatRepo: ChatRepository;
 	titleService: ConversationTitleService | undefined;
+	usageAcc?: ChatTurnUsageAccumulator;
+	assistantMessageId?: string;
+	messageRepo?: MessageRepository;
 }): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 	if (!params.isNewThread) return;
 	try {
-		const llmTitle = params.titleService
-			? await params.titleService.generate(params.userPrompt, params.assistantContent)
-			: null;
+		let llmTitle: string | null = null;
+		if (params.titleService) {
+			const { title, usage } = await params.titleService.generate(
+				params.userPrompt,
+				params.assistantContent
+			);
+			llmTitle = title;
+			if (usage) {
+				params.usageAcc?.add(usage);
+				if (params.assistantMessageId && params.messageRepo) {
+					await params.messageRepo.addUsage(params.assistantMessageId, usage);
+				}
+				if (params.usageAcc) yield usageProcessEvent(params.usageAcc);
+			}
+		}
 		const title = llmTitle ?? fallbackTitleFromPrompt(params.userPrompt);
 		const source = llmTitle ? 'llm' : 'fallback';
 		if (!title) return;

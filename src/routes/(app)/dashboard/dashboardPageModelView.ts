@@ -61,6 +61,9 @@ export function createDashboardPageModelView(
 		get isCompacting() {
 			return s.getIsCompacting();
 		},
+		get streamingTurnCostUsd() {
+			return s.getStreamingTurnCostUsd();
+		},
 		get lastRoutedModelId() {
 			return s.getLastRoutedModelId();
 		},

@@ -7,7 +7,10 @@ import {
 	pickSummaryBatch
 } from './conversationSummaryBatch';
 import type { ChatMessage } from '../domain/ChatProvider.interface';
+import type { MessageRepository } from '../repositories/MessageRepository';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import type { ConversationProcessEvent } from './conversationProcess.types';
+import { usageProcessEvent } from './conversationTurnUsage.util';
 import {
 	logRollingSummaryCheck,
 	logRollingSummaryExtended,
@@ -25,6 +28,9 @@ export async function* maybeExtendRollingSummary(params: {
 	summaryService: ConversationSummaryService | undefined;
 	chatRepo: ChatRepository;
 	config: SummaryTurnConfig;
+	usageAcc?: ChatTurnUsageAccumulator;
+	assistantMessageId?: string;
+	messageRepo?: MessageRepository;
 }): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 	if (!params.summaryService || !params.conv) return;
 
@@ -113,8 +119,16 @@ export async function* maybeExtendRollingSummary(params: {
 		yield { type: 'summary_start' as const };
 
 		const started = performance.now();
-		const next = await params.summaryService.extend(fresh.rollingSummary, batch);
+		const { summary: next, usage } = await params.summaryService.extend(fresh.rollingSummary, batch);
 		const durationMs = Math.round(performance.now() - started);
+
+		if (usage) {
+			params.usageAcc?.add(usage);
+			if (params.assistantMessageId && params.messageRepo) {
+				await params.messageRepo.addUsage(params.assistantMessageId, usage);
+			}
+			if (params.usageAcc) yield usageProcessEvent(params.usageAcc);
+		}
 
 		if (!next) {
 			logRollingSummaryFailed({

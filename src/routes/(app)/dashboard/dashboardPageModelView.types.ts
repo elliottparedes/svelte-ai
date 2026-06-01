@@ -21,6 +21,7 @@ export type DashboardPageModelStateAccess = {
 	getStreamingConversationIds: () => ReadonlySet<string>;
 	getErrorMessage: () => string;
 	getIsCompacting: () => boolean;
+	getStreamingTurnCostUsd: () => number;
 	getLastRoutedModelId: () => string;
 	setLastRoutedModelId: (v: string) => void;
 	getDeepReasoningEnabled: () => boolean;

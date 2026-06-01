@@ -47,13 +47,15 @@ export function updateDashboardStreamMessages(
 	streamKey: string,
 	messages: ChatMessage[],
 	errorMessage: string,
-	isCompacting = false
+	isCompacting = false,
+	streamingTurnCostUsd = 0
 ): void {
 	store.setMessageCache(flushMessageCache(store.getMessageCache(), streamKey, messages));
 	if (store.getActiveConversationId() === streamKey) {
 		store.setMessages(messages);
 		store.setError(errorMessage);
 		store.setIsCompacting(isCompacting);
+		store.setStreamingTurnCostUsd(streamingTurnCostUsd);
 	}
 }
 
@@ -96,6 +98,7 @@ export function failDashboardStream(
 ): void {
 	store.setStreamingIds(patchStreamingSet(store.getStreamingIds(), streamKey, false));
 	store.setIsCompacting(false);
+	store.setStreamingTurnCostUsd(0);
 	if (store.getActiveConversationId() === streamKey) store.setError(errorMessage);
 	if (isPendingConversationId(streamKey)) {
 		store.setConversations(store.getConversations().filter((c) => c.id !== streamKey));

@@ -1,4 +1,5 @@
 import type { ChatAttachment, ChatMessage, ChatProvider } from '../domain/ChatProvider.interface';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 
 /** Shown when the tool-turn budget is exhausted and the synthesis pass returns nothing. */
 export const MAX_TOOL_BUDGET_FALLBACK_REPLY =
@@ -8,13 +9,15 @@ async function* yieldFinalTurnWithoutTools(
 	provider: ChatProvider,
 	history: ChatMessage[],
 	imageAttachments: readonly ChatAttachment[] | undefined,
-	options: Record<string, unknown> | undefined
+	options: Record<string, unknown> | undefined,
+	usageAcc: ChatTurnUsageAccumulator
 ): AsyncGenerator<
 	{ type: 'chunk'; content: string } | { type: 'reasoning'; content: string },
 	void,
 	unknown
 > {
 	for await (const chunk of provider.streamResponse(history, imageAttachments, undefined, options)) {
+		if (chunk.usage) usageAcc.add(chunk.usage);
 		if (chunk.toolCall) break;
 		if (chunk.done) break;
 		if (chunk.reasoningContent) {
@@ -34,11 +37,18 @@ export async function* eachBudgetExhaustionChunk(
 	provider: ChatProvider,
 	history: ChatMessage[],
 	imageAttachments: readonly ChatAttachment[] | undefined,
-	options: Record<string, unknown> | undefined
+	options: Record<string, unknown> | undefined,
+	usageAcc: ChatTurnUsageAccumulator
 ): AsyncGenerator<BudgetSynthEvent, void, unknown> {
 	let synthesized = '';
 	let reasoning = '';
-	for await (const part of yieldFinalTurnWithoutTools(provider, history, imageAttachments, options)) {
+	for await (const part of yieldFinalTurnWithoutTools(
+		provider,
+		history,
+		imageAttachments,
+		options,
+		usageAcc
+	)) {
 		if (part.type === 'reasoning') {
 			reasoning += part.content;
 			yield { kind: 'reasoning', content: part.content };

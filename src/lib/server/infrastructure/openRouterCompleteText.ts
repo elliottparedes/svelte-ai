@@ -1,3 +1,6 @@
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
+import { parseOpenRouterUsage } from './openRouterUsage.util';
+
 const BASE = 'https://openrouter.ai/api/v1';
 
 function headers(apiKey: string, httpReferer?: string): Record<string, string> {
@@ -10,7 +13,12 @@ function headers(apiKey: string, httpReferer?: string): Record<string, string> {
 	return h;
 }
 
-/** Non-streaming OpenRouter completion; returns trimmed assistant text or null. */
+export type OpenRouterTextCompletion = {
+	text: string | null;
+	usage: OpenRouterUsage | null;
+};
+
+/** Non-streaming OpenRouter completion; returns trimmed assistant text and usage when present. */
 export async function completeOpenRouterText(
 	apiKey: string,
 	modelId: string,
@@ -18,7 +26,7 @@ export async function completeOpenRouterText(
 	maxTokens: number,
 	httpReferer?: string,
 	signal?: AbortSignal
-): Promise<string | null> {
+): Promise<OpenRouterTextCompletion> {
 	const res = await fetch(`${BASE}/chat/completions`, {
 		method: 'POST',
 		headers: headers(apiKey, httpReferer),
@@ -26,12 +34,15 @@ export async function completeOpenRouterText(
 		signal
 	});
 	const raw = await res.text();
-	if (!res.ok) return null;
+	if (!res.ok) return { text: null, usage: null };
 	try {
-		const json = JSON.parse(raw) as { choices?: Array<{ message?: { content?: string } }> };
-		const text = json.choices?.[0]?.message?.content?.trim();
-		return text || null;
+		const json = JSON.parse(raw) as {
+			choices?: Array<{ message?: { content?: string } }>;
+			usage?: unknown;
+		};
+		const text = json.choices?.[0]?.message?.content?.trim() || null;
+		return { text, usage: parseOpenRouterUsage(json.usage) };
 	} catch {
-		return null;
+		return { text: null, usage: null };
 	}
 }

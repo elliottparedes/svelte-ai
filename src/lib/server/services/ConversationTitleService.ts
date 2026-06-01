@@ -1,3 +1,4 @@
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import { completeOpenRouterText } from '../infrastructure/openRouterCompleteText';
 
 const SYSTEM =
@@ -21,6 +22,8 @@ export function fallbackTitleFromPrompt(userPrompt: string): string {
 	return title.length > 60 ? `${title.slice(0, 57).trim()}...` : title;
 }
 
+export type TitleGenerationResult = { title: string | null; usage: OpenRouterUsage | null };
+
 export class ConversationTitleService {
 	constructor(
 		private readonly apiKey: string,
@@ -28,7 +31,7 @@ export class ConversationTitleService {
 		private readonly httpReferer?: string
 	) {}
 
-	async generate(userPrompt: string, assistantReply: string): Promise<string | null> {
+	async generate(userPrompt: string, assistantReply: string): Promise<TitleGenerationResult> {
 		const user = [
 			'User message:',
 			userPrompt.slice(0, 500),
@@ -36,7 +39,7 @@ export class ConversationTitleService {
 			'Assistant reply:',
 			assistantReply.slice(0, 500)
 		].join('\n');
-		const raw = await completeOpenRouterText(
+		const { text, usage } = await completeOpenRouterText(
 			this.apiKey,
 			this.modelId,
 			[
@@ -46,6 +49,6 @@ export class ConversationTitleService {
 			24,
 			this.httpReferer
 		);
-		return raw ? sanitizeGeneratedTitle(raw) : null;
+		return { title: text ? sanitizeGeneratedTitle(text) : null, usage };
 	}
 }

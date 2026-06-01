@@ -1,4 +1,5 @@
 import type { ChatAttachment } from '../domain/ChatProvider.interface';
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import {
 	OPENROUTER_API_KEY,
 	OPENROUTER_DEFAULT_MODEL,
@@ -21,6 +22,8 @@ export type ModelRouteResult = {
 	tier?: ModelRoutingTier;
 	routerLatencyMs?: number;
 	fallbackReason?: string;
+	/** Present when classifyPromptTier ran a billable OpenRouter completion. */
+	routerUsage?: OpenRouterUsage;
 };
 
 export type IntelligentModelRouteInput = {
@@ -119,9 +122,15 @@ export class IntelligentModelRouter {
 				modelId,
 				source: 'router_llm',
 				tier,
-				routerLatencyMs: classified.latencyMs
+				routerLatencyMs: classified.latencyMs,
+				routerUsage: classified.usage ?? undefined
 			};
-			logger.info('Model route', { ...baseLog, routerModel: OPENROUTER_ROUTER_MODEL, ...result });
+			logger.info('Model route', {
+				...baseLog,
+				routerModel: OPENROUTER_ROUTER_MODEL,
+				...result,
+				routerCostUsd: classified.usage?.costUsd
+			});
 			return result;
 		}
 

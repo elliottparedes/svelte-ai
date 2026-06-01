@@ -29,6 +29,7 @@ export type DashboardStreamStore = {
 	setStreamingIds: (s: Set<string>) => void;
 	setError: (v: string) => void;
 	setIsCompacting: (v: boolean) => void;
+	setStreamingTurnCostUsd: (v: number) => void;
 	setActiveConversationId: (id: string | null) => void;
 	setProjectComposeMode: (v: boolean) => void;
 	setActiveProjectId: (id: string | null) => void;

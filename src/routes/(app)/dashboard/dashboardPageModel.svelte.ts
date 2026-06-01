@@ -22,6 +22,7 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 			getStreamingConversationIds: () => state.streamingConversationIds,
 			getErrorMessage: () => state.errorMessage,
 			getIsCompacting: () => state.isCompacting,
+			getStreamingTurnCostUsd: () => state.streamingTurnCostUsd,
 			getLastRoutedModelId: () => state.lastRoutedModelId,
 			setLastRoutedModelId: (v) => (state.lastRoutedModelId = v),
 			getDeepReasoningEnabled: () => state.deepReasoningEnabled,

@@ -1,4 +1,5 @@
 import {
+	decimal,
 	index,
 	int,
 	longtext,
@@ -64,6 +65,10 @@ export const messages = mysqlTable('messages', {
 	/** Chain-of-thought / reasoning tokens from reasoning models (optional). */
 	reasoningContent: longtext('reasoning_content'),
 	toolCallId: varchar('tool_call_id', { length: 64 }),
+	/** OpenRouter usage.cost for this assistant turn (USD). */
+	costUsd: decimal('cost_usd', { precision: 10, scale: 6 }),
+	promptTokens: int('prompt_tokens'),
+	completionTokens: int('completion_tokens'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
 }, (table) => [
 	index('msg_conversation_id_idx').on(table.conversationId)

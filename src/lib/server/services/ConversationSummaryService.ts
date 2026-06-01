@@ -1,3 +1,4 @@
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import { completeOpenRouterText } from '../infrastructure/openRouterCompleteText';
 import type { ChatMessage } from '../domain/ChatProvider.interface';
 import { formatMessagesForSummarizer } from './conversationSummaryBatch';
@@ -6,6 +7,8 @@ const SYSTEM =
 	'Compress chat history into a concise running summary for another AI. ' +
 	'Preserve: user goals, decisions, constraints, names, numbers, code identifiers, open questions. ' +
 	'Omit: filler, raw tool dumps, repeated phrasing. Output bullet points only, no preamble.';
+
+export type SummaryGenerationResult = { summary: string | null; usage: OpenRouterUsage | null };
 
 export class ConversationSummaryService {
 	constructor(
@@ -18,12 +21,12 @@ export class ConversationSummaryService {
 	async extend(
 		previousSummary: string | null,
 		batch: readonly ChatMessage[]
-	): Promise<string | null> {
+	): Promise<SummaryGenerationResult> {
 		const formatted = formatMessagesForSummarizer(batch);
 		const user = previousSummary
 			? `Previous summary:\n${previousSummary}\n\nNew messages:\n${formatted}`
 			: `Messages:\n${formatted}`;
-		const raw = await completeOpenRouterText(
+		const { text, usage } = await completeOpenRouterText(
 			this.apiKey,
 			this.modelId,
 			[
@@ -33,6 +36,6 @@ export class ConversationSummaryService {
 			this.maxTokens,
 			this.httpReferer
 		);
-		return raw?.trim() || null;
+		return { summary: text?.trim() || null, usage };
 	}
 }

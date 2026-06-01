@@ -9,6 +9,7 @@ import { resolveToolingForTurn } from './conversationToolTurnConfig';
 import { estimateMessagesTokens } from '$lib/shared/estimateContextTokens';
 import { trimChatMessagesByTokenBudget } from './conversationHistoryTrim';
 import { modelOpenRouterModalities } from '../model/modelCapabilities';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 
 const FALLBACK_PROMPT_TOKEN_BUDGET = 28_000;
 
@@ -32,6 +33,7 @@ export async function prepareConversationTurn(p: {
 	visionRelay?: VisionRelayService;
 	userId: string;
 	conversationId: string;
+	usageAcc?: ChatTurnUsageAccumulator;
 }): Promise<PreparedConversationTurn> {
 	const augmentedPromptBase = buildAugmentedPrompt(p.prompt, p.attachments);
 	const imageAttachments = p.attachments?.filter((a) => a.type === 'image' && a.dataUrl);
@@ -41,7 +43,8 @@ export async function prepareConversationTurn(p: {
 		augmentedPrompt: augmentedPromptBase,
 		imageAttachments,
 		model: p.effectiveModel,
-		visionRelay: p.visionRelay
+		visionRelay: p.visionRelay,
+		usageAcc: p.usageAcc
 	});
 
 	const multimodal = p.attachments?.filter(

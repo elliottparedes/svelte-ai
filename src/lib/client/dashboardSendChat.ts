@@ -30,7 +30,8 @@ export type DashboardSendDeps = {
 		streamKey: string,
 		messages: ChatMessage[],
 		errorMessage: string,
-		isCompacting: boolean
+		isCompacting: boolean,
+		streamingTurnCostUsd?: number
 	) => void;
 	onStreamSummaryDone?: (
 		streamKey: string,
@@ -121,7 +122,8 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		routedModelId: null as string | null,
 		isCompacting: false,
 		summaryThroughMessageId: null as string | null,
-		summaryChars: 0
+		summaryChars: 0,
+		streamingTurnCostUsd: 0
 	};
 
 	const useVoice = Boolean(d.voiceModeEnabled || d.immersive);
@@ -170,7 +172,13 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 					);
 				}
 				if (ev.type === 'routing' && ev.modelId) d.onRouting?.(ev.modelId);
-				d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage, acc.isCompacting);
+				d.onStreamMessages(
+					d.streamKey,
+					acc.messages,
+					acc.errorMessage,
+					acc.isCompacting,
+					acc.streamingTurnCostUsd
+				);
 			}
 		})();
 
@@ -181,7 +189,13 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 				const persisted = await refetchMessagesAfterImageGen(acc.doneConversationId);
 				if (persisted) {
 					acc.messages = persisted;
-					d.onStreamMessages(d.streamKey, acc.messages, acc.errorMessage, acc.isCompacting);
+					d.onStreamMessages(
+					d.streamKey,
+					acc.messages,
+					acc.errorMessage,
+					acc.isCompacting,
+					acc.streamingTurnCostUsd
+				);
 				}
 			} catch {
 				// Image is saved server-side; user can reload the chat if refetch fails.

@@ -80,7 +80,7 @@
 				/>
 			</div>
 			{#if user}
-				<SidebarUserFooter {user} {chatQuota} onLogout={onLogout} />
+				<SidebarUserFooter {user} onLogout={onLogout} />
 			{/if}
 		</div>
 	{/if}

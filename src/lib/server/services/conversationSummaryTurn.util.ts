@@ -3,6 +3,7 @@ import type { MessageRepository } from '../repositories/MessageRepository';
 import type { ConversationSummaryService } from './ConversationSummaryService';
 import { normalizeHistoryForProvider } from './conversationHistoryForProvider';
 import { maybeExtendRollingSummary } from './conversationSummaryExtend';
+import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import type { ConversationProcessEvent } from './conversationProcess.types';
 
 const HISTORY_FETCH_LIMIT = 2000;
@@ -20,6 +21,8 @@ export async function* extendRollingSummaryAfterReply(params: {
 	messageRepo: MessageRepository;
 	summaryService: ConversationSummaryService | undefined;
 	config: SummaryTurnConfig | undefined;
+	usageAcc?: ChatTurnUsageAccumulator;
+	assistantMessageId?: string;
 }): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 	if (!params.summaryService || !params.config) return;
 	const conv = await params.chatRepo.findById(params.conversationId);
@@ -36,6 +39,9 @@ export async function* extendRollingSummaryAfterReply(params: {
 		normalizedHistory,
 		summaryService: params.summaryService,
 		chatRepo: params.chatRepo,
-		config: params.config
+		config: params.config,
+		usageAcc: params.usageAcc,
+		assistantMessageId: params.assistantMessageId,
+		messageRepo: params.messageRepo
 	});
 }

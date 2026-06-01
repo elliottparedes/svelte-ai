@@ -1,3 +1,5 @@
+import type { OpenRouterUsage } from './OpenRouterUsage.types';
+
 export interface ChatMessage {
 	id: string;
 	role: 'user' | 'assistant' | 'system' | 'tool';
@@ -6,6 +8,9 @@ export interface ChatMessage {
 	toolCallId?: string;
 	toolCalls?: readonly ToolCall[];
 	reasoningContent?: string;
+	costUsd?: number;
+	promptTokens?: number;
+	completionTokens?: number;
 }
 
 export interface ToolDefinition {
@@ -29,6 +34,7 @@ export interface ChatStreamChunk {
 	content?: string;
 	reasoningContent?: string;
 	toolCall?: ToolCall;
+	usage?: OpenRouterUsage;
 	done: boolean;
 }
 

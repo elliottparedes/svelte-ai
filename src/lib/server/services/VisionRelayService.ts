@@ -1,5 +1,8 @@
 import type { ChatAttachment } from '../domain/ChatProvider.interface';
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
 import { completeOpenRouterVisionRelay } from '../infrastructure/visionRelayOpenRouter';
+
+export type VisionRelayOutcome = { text: string; usage: OpenRouterUsage | null };
 
 export class VisionRelayService {
 	constructor(
@@ -9,7 +12,10 @@ export class VisionRelayService {
 		private readonly httpReferer?: string
 	) {}
 
-	async summarizeForNonVisionModel(userPrompt: string, images: readonly ChatAttachment[]): Promise<string> {
+	async summarizeForNonVisionModel(
+		userPrompt: string,
+		images: readonly ChatAttachment[]
+	): Promise<VisionRelayOutcome> {
 		return completeOpenRouterVisionRelay(
 			this.apiKey,
 			this.relayModelId,

@@ -1,7 +1,23 @@
 import { db } from '../db';
 import { messages } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, sql, desc } from 'drizzle-orm';
 import type { ChatMessage } from '../domain/ChatProvider.interface';
+import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
+import { parseMessageCostUsd, usageFieldsForMessage } from '../services/conversationTurnUsage.util';
+
+function rowToChatMessage(r: typeof messages.$inferSelect): ChatMessage {
+	return {
+		id: r.id,
+		role: r.role as 'user' | 'assistant' | 'system' | 'tool',
+		content: r.content,
+		reasoningContent: r.reasoningContent ?? undefined,
+		createdAt: r.createdAt,
+		toolCallId: r.toolCallId ?? undefined,
+		costUsd: parseMessageCostUsd(r.costUsd),
+		promptTokens: r.promptTokens ?? undefined,
+		completionTokens: r.completionTokens ?? undefined
+	};
+}
 
 export class MessageRepository {
 	async findByConversationId(conversationId: string, limit?: number): Promise<ChatMessage[]> {
@@ -17,16 +33,7 @@ export class MessageRepository {
 		}
 
 		const rows = await query;
-		const ordered = rows.reverse();
-
-		return ordered.map((r) => ({
-			id: r.id,
-			role: r.role as 'user' | 'assistant' | 'system' | 'tool',
-			content: r.content,
-			reasoningContent: r.reasoningContent ?? undefined,
-			createdAt: r.createdAt,
-			toolCallId: r.toolCallId ?? undefined
-		}));
+		return rows.reverse().map(rowToChatMessage);
 	}
 
 	async create(
@@ -34,18 +41,46 @@ export class MessageRepository {
 		role: 'user' | 'assistant' | 'system' | 'tool',
 		content: string,
 		toolCallId?: string,
-		reasoningContent?: string
+		reasoningContent?: string,
+		usage?: OpenRouterUsage | null
 	): Promise<ChatMessage> {
 		const id = crypto.randomUUID();
+		const usageFields = usageFieldsForMessage(usage ?? null);
 		await db.insert(messages).values({
 			id,
 			conversationId,
 			role,
 			content,
 			reasoningContent: reasoningContent ?? null,
-			toolCallId: toolCallId ?? null
+			toolCallId: toolCallId ?? null,
+			costUsd: usageFields.costUsd,
+			promptTokens: usageFields.promptTokens,
+			completionTokens: usageFields.completionTokens
 		});
-		return { id, role, content, reasoningContent, createdAt: new Date(), toolCallId };
+		return {
+			id,
+			role,
+			content,
+			reasoningContent,
+			createdAt: new Date(),
+			toolCallId,
+			costUsd: usage?.costUsd,
+			promptTokens: usage?.promptTokens,
+			completionTokens: usage?.completionTokens
+		};
+	}
+
+	async addUsage(messageId: string, delta: OpenRouterUsage): Promise<void> {
+		if (delta.costUsd === 0 && delta.promptTokens === 0 && delta.completionTokens === 0) return;
+		const fields = usageFieldsForMessage(delta);
+		await db
+			.update(messages)
+			.set({
+				costUsd: sql`coalesce(${messages.costUsd}, 0) + ${fields.costUsd ?? '0'}`,
+				promptTokens: sql`coalesce(${messages.promptTokens}, 0) + ${delta.promptTokens}`,
+				completionTokens: sql`coalesce(${messages.completionTokens}, 0) + ${delta.completionTokens}`
+			})
+			.where(eq(messages.id, messageId));
 	}
 
 	async deleteByConversationId(conversationId: string): Promise<void> {

@@ -36,15 +36,32 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 			reasoningContent?: string | null;
 			createdAt: string;
 			toolCallId?: string;
-		}) => ({
-			...m,
-			role: m.role as ChatMessage['role'],
-			reasoningContent: m.reasoningContent ?? undefined,
-			createdAt: new Date(m.createdAt),
-			...(m.role === 'tool' && m.content
-				? { toolCall: { name: inferToolNameFromContent(m.content), result: m.content } }
-				: {})
-		})
+			costUsd?: number | string | null;
+			promptTokens?: number | null;
+			completionTokens?: number | null;
+		}) => {
+			const costRaw = m.costUsd;
+			const costUsd =
+				typeof costRaw === 'number'
+					? costRaw > 0
+						? costRaw
+						: undefined
+					: typeof costRaw === 'string' && costRaw !== ''
+						? Number(costRaw) || undefined
+						: undefined;
+			return {
+				...m,
+				role: m.role as ChatMessage['role'],
+				reasoningContent: m.reasoningContent ?? undefined,
+				createdAt: new Date(m.createdAt),
+				costUsd,
+				promptTokens: m.promptTokens ?? undefined,
+				completionTokens: m.completionTokens ?? undefined,
+				...(m.role === 'tool' && m.content
+					? { toolCall: { name: inferToolNameFromContent(m.content), result: m.content } }
+					: {})
+			};
+		}
 	);
 	return {
 		messages,

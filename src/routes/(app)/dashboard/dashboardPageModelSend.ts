@@ -31,7 +31,8 @@ export async function runDashboardSendMessage(p: {
 		streamKey: string,
 		messages: ChatMessage[],
 		errorMessage: string,
-		isCompacting: boolean
+		isCompacting: boolean,
+		streamingTurnCostUsd?: number
 	) => void;
 	onStreamSummaryDone?: (
 		streamKey: string,

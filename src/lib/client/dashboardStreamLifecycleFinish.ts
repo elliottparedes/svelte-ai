@@ -1,4 +1,5 @@
 import {
+	fetchConversationThread,
 	fetchNewConversationSummary,
 	fetchProjectConversations
 } from '$lib/client/dashboardRemote';
@@ -16,6 +17,7 @@ export async function finishDashboardStream(
 ): Promise<void> {
 	const { streamKey, conversationId, modelId, wasProjectCompose, projectId } = result;
 	store.setStreamingIds(patchStreamingSet(store.getStreamingIds(), streamKey, false));
+	store.setStreamingTurnCostUsd(0);
 	if (!conversationId) return;
 
 	let cache = store.getMessageCache();
@@ -24,7 +26,15 @@ export async function finishDashboardStream(
 
 	const viewing = store.getActiveConversationId() === streamKey;
 	if (viewing) store.setActiveConversationId(conversationId);
-	if (viewing && cache[conversationId]) store.setMessages(cache[conversationId]);
+	if (viewing) {
+		const thread = await fetchConversationThread(conversationId);
+		if (thread) {
+			store.setMessages(thread.messages);
+			store.setMessageCache(flushMessageCache(store.getMessageCache(), conversationId, thread.messages));
+		} else if (cache[conversationId]) {
+			store.setMessages(cache[conversationId]);
+		}
+	}
 
 	if (modelId) store.onConversationModelSaved(conversationId, modelId);
 

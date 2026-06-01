@@ -36,6 +36,7 @@ import {
 import { ChatQuotaService } from '$lib/server/services/ChatQuotaService';
 import { DomainError, handleDomainError } from '$lib/server/domain/DomainError';
 import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
+import { ChatTurnUsageAccumulator } from '$lib/server/services/chatTurnUsageAccumulator';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
@@ -78,6 +79,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		recentSnippet = buildRoutingHistorySnippet(recent);
 	}
 	const subscriptionTier = parseSubscriptionTier(user.subscriptionTier);
+	const usageAcc = new ChatTurnUsageAccumulator();
 	const routeResult = await new IntelligentModelRouter().route({
 		userId: user.id,
 		conversationId,
@@ -89,6 +91,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		enabledToolNames,
 		recentSnippet
 	});
+	usageAcc.add(routeResult.routerUsage);
 	const effectiveModel = routeResult.modelId;
 	logger.info('Chat request', {
 		userId: user.id,
@@ -96,6 +99,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		model: effectiveModel,
 		routeSource: routeResult.source,
 		routeTier: routeResult.tier,
+		routerCostUsd: routeResult.routerUsage?.costUsd,
 		attachmentCount: attachments?.length ?? 0,
 		projectId,
 		voiceMode: useVoice,
@@ -178,7 +182,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						attachments,
 						effectiveModel,
 						projectId,
-						enabledToolNames
+						enabledToolNames,
+						usageAcc
 					),
 					writeLine,
 					voice
