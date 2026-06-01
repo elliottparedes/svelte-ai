@@ -4,6 +4,7 @@ import { fetchUrlContent } from './fetchUrlContent';
 import { ImageGenerationService } from './imageGenerationService';
 import { executePythonOnPiston } from './pistonClient';
 export type ToolRunContext = { conversationId: string };
+const IMAGE_GENERATION_TEMP_DISABLED = true;
 
 export class ToolExecutor {
 	private readonly imageGenerationService = new ImageGenerationService();
@@ -29,7 +30,9 @@ export class ToolExecutor {
 			case 'map_route':
 				return 'Error: map_route is disabled';
 			case 'generate_image':
-				return await this.imageGenerationService.run(args);
+				return IMAGE_GENERATION_TEMP_DISABLED
+					? 'Error: generate_image is temporarily disabled.'
+					: await this.imageGenerationService.run(args);
 			default:
 				return `Error: unknown tool ${name}`;
 		}

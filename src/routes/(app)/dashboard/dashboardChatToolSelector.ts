@@ -19,13 +19,17 @@ const META: Record<ChatToolId, MetaRow> = {
 	generate_image: { title: 'Generate image', description: 'Create images from a text prompt' }
 };
 
-export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER.map((id) => ({ id, ...META[id] }));
+const TEMP_DISABLED_TOOL_IDS = new Set<ChatToolId>(['generate_image']);
+
+export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER
+	.filter((id) => !TEMP_DISABLED_TOOL_IDS.has(id))
+	.map((id) => ({ id, ...META[id] }));
 
 export const PRESET = {
 	none: [] as ChatToolId[],
 	local: ['datetime', 'fetch_url'] as ChatToolId[],
 	default: DEFAULT_CHAT_TOOL_IDS,
-	all: ALL_CHAT_TOOL_IDS
+	all: ALL_CHAT_TOOL_IDS.filter((id) => !TEMP_DISABLED_TOOL_IDS.has(id))
 };
 
 export function applyPresetSelect(key: string): ChatToolId[] | null {

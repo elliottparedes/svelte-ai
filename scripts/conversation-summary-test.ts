@@ -12,7 +12,10 @@ import {
 	pickSummaryBatch
 } from '../src/lib/server/services/conversationSummaryBatch';
 import { ConversationSummaryService } from '../src/lib/server/services/ConversationSummaryService';
-import { OPENROUTER_API_KEY } from '../src/lib/server/env';
+import {
+	CHAT_SUMMARY_MODEL,
+	OPENROUTER_API_KEY
+} from '../src/lib/server/env';
 import { estimateCompactionProgress } from '../src/lib/shared/estimateCompactionProgress';
 import { compactionThreshold } from '../src/lib/shared/conversationSummaryConfig';
 
@@ -79,10 +82,13 @@ async function testLiveSummaryOptional() {
 		console.log('summary:test — skipping live OpenRouter call (no API key)');
 		return;
 	}
-	const svc = new ConversationSummaryService(OPENROUTER_API_KEY, 'google/gemini-2.0-flash-lite-001', 256);
+	const svc = new ConversationSummaryService(OPENROUTER_API_KEY, CHAT_SUMMARY_MODEL, 256);
 	const batch = [msg('1', 'user', 'Plan a trip to Tokyo'), msg('2', 'assistant', 'When do you want to go?')];
 	const out = await svc.extend(null, batch);
-	assert.ok(out && out.length > 10);
+	assert.ok(
+		out && out.length > 10,
+		`summary model did not return usable output (model=${CHAT_SUMMARY_MODEL})`
+	);
 }
 
 async function main() {

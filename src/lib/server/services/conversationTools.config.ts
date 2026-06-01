@@ -35,7 +35,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'web_search',
 		description:
-			'Search the web via Brave: news, FAQ, infobox, and ranked snippets with URLs (live index, not fiction). Report dates and headlines as real; never dismiss as future-dated vs training. Follow with fetch_url on the best 1–2 links for full articles. Use for current events, news, or anything not in training data.',
+			'Search the web via Brave: news, FAQ, infobox, and ranked snippets with URLs (live index, not fiction). Report dates/headlines as real; never dismiss as future-dated vs training. Snippet-first policy: only use fetch_url for top links if snippets are insufficient/conflicting. In final answer, cite URLs and prefer multiple source domains when available.',
 		parameters: {
 			type: 'object',
 			properties: {

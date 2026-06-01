@@ -81,6 +81,11 @@
 	async function handleFile(file: File) {
 		attachError = '';
 		const caps = { supportsVision, supportsFiles };
+		const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(file.name);
+		if (isImage && !caps.supportsVision) {
+			attachError = 'This model cannot analyze images. Choose a vision model or use optimal routing.';
+			return;
+		}
 		if (!chatFileAllowedForModel(file, caps)) {
 			attachError = chatAttachmentRejectMessage(caps);
 			return;
@@ -118,6 +123,9 @@
 		const caps = { supportsVision, supportsFiles };
 		for (const file of e.dataTransfer?.files ?? []) {
 			if (chatFileAllowedForModel(file, caps)) handleFile(file);
+			else if (file.type.startsWith('image/')) {
+				attachError = 'This model cannot analyze images. Choose a vision model or use optimal routing.';
+			}
 		}
 	}
 </script>

@@ -9,12 +9,16 @@ import {
 import { isBraveSearchConfigured, isPistonConfigured } from '../env';
 import { TOOL_SYSTEM_PROMPT_NO_TOOLS } from './conversationTools.config';
 
+// Temporary cost-control switch: keep image generation disabled in chat tool turns.
+const IMAGE_GENERATION_TEMP_DISABLED = true;
+
 function stripUnconfiguredTools(ids: ChatToolId[]): ChatToolId[] {
 	let out = ids;
 	if (!isPistonConfigured()) out = out.filter((id) => id !== 'execute_python');
 	if (!isBraveSearchConfigured()) {
 		out = out.filter((id) => id !== 'web_search' && id !== 'image_search');
 	}
+	if (IMAGE_GENERATION_TEMP_DISABLED) out = out.filter((id) => id !== 'generate_image');
 	return out;
 }
 

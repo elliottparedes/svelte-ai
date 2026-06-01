@@ -27,9 +27,17 @@ function stripDecorations(s: string): string {
 	return s.replace(/\uE000/g, '').replace(/\uE001/g, '').trim();
 }
 
+function domainOf(url: string | undefined): string {
+	try {
+		return url ? new URL(url).hostname.replace(/^www\./, '') : '';
+	} catch {
+		return '';
+	}
+}
+
 function formatWebHit(index: number, r: BraveWebHit): string {
 	const title = r.title?.trim() || '(no title)';
-	const bits = [`[${index}] ${title}`];
+	const bits = [`[W${index}] ${title}`];
 	const when = r.page_age?.trim() || r.age?.trim();
 	if (when) bits.push(`Date: ${when}`);
 	const snippets = [
@@ -39,18 +47,22 @@ function formatWebHit(index: number, r: BraveWebHit): string {
 	const body = [...new Set(snippets.map(stripDecorations))].join(' ');
 	if (body) bits.push(body);
 	const u = r.url?.trim();
+	const d = domainOf(u);
+	if (d) bits.push(`Domain: ${d}`);
 	if (u) bits.push(`URL: ${u}`);
 	return bits.join('\n');
 }
 
 function formatNewsHit(index: number, r: BraveNewsHit): string {
 	const title = r.title?.trim() || '(no title)';
-	const bits = [`[${index}] ${title}`];
+	const bits = [`[N${index}] ${title}`];
 	const when = r.page_age?.trim() || r.age?.trim();
 	if (when) bits.push(`Date: ${when}`);
 	const snippet = stripDecorations(r.description?.trim() ?? '');
 	if (snippet) bits.push(snippet);
 	const u = r.url?.trim();
+	const d = domainOf(u);
+	if (d) bits.push(`Domain: ${d}`);
 	if (u) bits.push(`URL: ${u}`);
 	return bits.join('\n');
 }
@@ -124,7 +136,7 @@ export function formatBraveWebSearch(data: BraveWebSearchJson, opts: FormatBrave
 	const out = lines.join('\n\n').trim();
 	if (!out) return 'No results found.';
 	const footer =
-		'Note: Snippets only — not full pages. Call fetch_url on key URLs; use offset to paginate through long articles.';
+		'Note: Snippet-first policy — only call fetch_url for the top 1–2 URLs when snippets are insufficient or conflicting. Final answer quality gate: cite source URLs and use at least 2 distinct domains when available; if only one reliable domain is found, say evidence is limited.';
 	const body = out.length > opts.maxChars ? `${out.slice(0, opts.maxChars)}\n…(truncated)` : out;
 	if (body.length + footer.length + 2 <= opts.maxChars) return `${body}\n\n${footer}`;
 	return body;

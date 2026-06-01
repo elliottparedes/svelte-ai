@@ -79,6 +79,15 @@ export class IntelligentModelRouter {
 		const hasImage = input.attachments?.some((a) => a.type === 'image') ?? false;
 		const hasFile = input.attachments?.some((a) => a.type === 'file') ?? false;
 
+		// Auto-routing users who attach images should always land on a vision-capable route.
+		if (hasImage) {
+			const candidate = modelIdForRoutingTier('vision');
+			const modelId = heuristic.resolve(this.toHeuristicInput(input, candidate));
+			const result: ModelRouteResult = { modelId, source: 'router_llm', tier: 'vision' };
+			logger.info('Model route', { ...baseLog, routerModel: 'heuristic:image_attachment', ...result });
+			return result;
+		}
+
 		if (!hasImage && !hasFile && input.prompt.length >= LONG_CONTEXT_PROMPT_CHARS) {
 			const candidate = modelIdForRoutingTier('long_context');
 			const modelId = heuristic.resolve(this.toHeuristicInput(input, candidate));

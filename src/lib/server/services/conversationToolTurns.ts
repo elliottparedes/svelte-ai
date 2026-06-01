@@ -24,6 +24,11 @@ import { MAX_TOOL_TURNS } from './conversationTools.config';
 import { parseImageGenerationToolResult, toolResultForLlmHistory } from '$lib/shared/imageGenerationToolResult';
 import { yieldGenerateImageSuccess } from './conversationGenerateImageTurn';
 import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
+import {
+	afterToolExecution,
+	beforeToolExecution,
+	initToolPolicy
+} from './conversationToolPolicy';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -46,6 +51,7 @@ export async function* runConversationToolTurns(params: {
 	let augmentedHistory = params.initialHistory;
 	let toolInvocations = 0;
 	let turn = 0;
+	const toolPolicy = initToolPolicy(params.userPrompt);
 
 	while (turn < MAX_TOOL_TURNS) {
 		turn++;
@@ -118,12 +124,16 @@ export async function* runConversationToolTurns(params: {
 			arguments: pendingToolCall.arguments
 		};
 
-		const result = await executeToolLogged(
-			params.toolExecutor,
-			{ userId: params.userId, conversationId: params.conversationId, llmTurn: turn },
-			pendingToolCall
-		);
-		toolInvocations++;
+		const gate = beforeToolExecution(toolPolicy, pendingToolCall);
+		const result = gate.allowed
+			? await executeToolLogged(
+					params.toolExecutor,
+					{ userId: params.userId, conversationId: params.conversationId, llmTurn: turn },
+					pendingToolCall
+				)
+			: (gate.resultText ?? `Policy: ${pendingToolCall.name} blocked.`);
+		if (gate.allowed) toolInvocations++;
+		afterToolExecution(toolPolicy, pendingToolCall, result);
 
 		const historyResult = toolResultForLlmHistory(pendingToolCall.name, result);
 

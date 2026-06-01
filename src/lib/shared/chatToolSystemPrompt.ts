@@ -32,7 +32,7 @@ const BULLETS: Record<ChatToolId, string> = {
 	fetch_url:
 		'Fetch plain text from a webpage URL (prefers main/article content). Returns one chunk per call; long pages include total length and an offset hint — call again with offset to read the next section. For weather/API JSON, execute_python with urllib is often faster.',
 	web_search:
-		'Search the web via Brave (news, FAQ, infobox, ranked snippets + URLs). Results are live indexed pages — report them as real news/facts, never as fictional or "future" because of training cutoff. Call fetch_url on key URLs for full page text. Not required for simple weather if execute_python can call wttr.in or open-meteo. Do not loop web_search for [Vision summary] unless the user asks for web lookup.',
+		'Search the web via Brave (news, FAQ, infobox, ranked snippets + URLs). Results are live indexed pages — report them as real news/facts, never as fictional or "future" because of training cutoff. Use snippet-first: only call fetch_url for the top 1-2 URLs if snippets are insufficient or conflicting. In the final answer, cite URLs and prefer at least 2 distinct source domains when available. Not required for simple weather if execute_python can call wttr.in or open-meteo. Do not loop web_search for [Vision summary] unless the user asks for web lookup.',
 	image_search:
 		'Search the web for images. Use when the user wants to see images of something. IMPORTANT: after the tool returns, copy the markdown image links from the result verbatim into your response exactly as-is — do not describe or summarize them. The markdown will render as real images in the UI.',
 	generate_image:
@@ -56,7 +56,7 @@ export function normalizeChatToolIds(ids: readonly string[]): ChatToolId[] {
 
 export function buildChatToolSystemPrompt(ids: readonly ChatToolId[]): string {
 	const lines = ids.map((id) => `- ${id}: ${BULLETS[id]}`).join('\n');
-	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Trust web_search and fetch_url dates over your training memory; do not disclaim results as fictional. Weather in a city: prefer execute_python fetching wttr.in or open-meteo.com. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then execute_python to parse).`;
+	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Trust web_search and fetch_url dates over your training memory; do not disclaim results as fictional. Prefer snippet-first research: only fetch full pages when snippets are not enough. If web_search/fetch_url was used, cite source URLs and prefer at least two distinct domains when available. Weather in a city: prefer execute_python fetching wttr.in or open-meteo.com. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then execute_python to parse).`;
 }
 
 export function buildChatToolSystemPromptNoWeb(ids: readonly ChatToolId[]): string {

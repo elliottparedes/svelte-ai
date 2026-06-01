@@ -20,7 +20,10 @@
 		"telegram:sync-webhook": "node ./node_modules/tsx/dist/cli.mjs scripts/telegram-sync-webhook.ts",
 		"router:benchmark": "node ./node_modules/tsx/dist/cli.mjs scripts/router-model-benchmark.ts",
 		"router:test": "node ./node_modules/tsx/dist/cli.mjs scripts/intelligent-model-router-test.ts",
-		"summary:test": "node ./node_modules/tsx/dist/cli.mjs scripts/conversation-summary-test.ts"
+		"summary:test": "node ./node_modules/tsx/dist/cli.mjs scripts/conversation-summary-test.ts",
+		"summary:ping": "node ./node_modules/tsx/dist/cli.mjs scripts/summary-ping.ts",
+		"api:harness": "bash ./scripts/api-harness.sh",
+		"api:scoreboard": "node ./node_modules/tsx/dist/cli.mjs scripts/api-harness-scoreboard.ts logs/curl-tests"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-node": "^5.5.4",

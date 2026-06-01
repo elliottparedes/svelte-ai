@@ -7,6 +7,7 @@ import {
 } from '../env';
 import type { BraveWebSearchJson } from './braveSearch.types';
 import { braveWebGet } from './braveSearchRequest';
+import { buildBraveQueryVariants, mergeBraveWebSearchResults } from './braveWebSearchMerge';
 import { formatBraveWebSearch } from './braveWebSearchFormat';
 
 export { braveImageSearch } from './braveImageSearch';
@@ -29,16 +30,6 @@ function webParams(q: string, count: number, offset: number): URLSearchParams {
 	return p;
 }
 
-function mergeWebPages(a: BraveWebSearchJson, b: BraveWebSearchJson): BraveWebSearchJson {
-	return {
-		query: a.query ?? b.query,
-		faq: a.faq ?? b.faq,
-		infobox: a.infobox ?? b.infobox,
-		news: a.news ?? b.news,
-		web: { results: [...(a.web?.results ?? []), ...(b.web?.results ?? [])] }
-	};
-}
-
 export async function braveWebSearch(apiKey: string, query: string): Promise<string> {
 	const q = query.trim();
 	if (!q) return 'Error: empty search query';
@@ -46,23 +37,34 @@ export async function braveWebSearch(apiKey: string, query: string): Promise<str
 
 	const want = BRAVE_SEARCH_MAX_RESULTS;
 	const firstCount = Math.min(WEB_PAGE_SIZE, want);
+	const variants = buildBraveQueryVariants(q);
 
 	try {
-		const res = await braveWebGet(apiKey, webParams(q, firstCount, 0));
-		if (!res.ok) return `Error: Brave web search failed (${res.status})`;
+		const variantResponses = await Promise.all(
+			variants.map(async (variant, index) => {
+				const res = await braveWebGet(
+					apiKey,
+					webParams(variant, index === 0 ? firstCount : Math.min(10, firstCount), 0)
+				);
+				if (!res.ok) return null;
+				return (await res.json()) as BraveWebSearchJson;
+			})
+		);
+		const valid = variantResponses.filter((x): x is BraveWebSearchJson => x !== null);
+		if (valid.length === 0) return 'Error: Brave web search failed';
 
-		let data = (await res.json()) as BraveWebSearchJson;
-		const remaining = want - (data.web?.results?.length ?? 0);
-		if (remaining > 0 && want > WEB_PAGE_SIZE) {
+		const primary = valid[0];
+		const remaining = want - (primary.web?.results?.length ?? 0);
+		if (remaining > 0 && want > WEB_PAGE_SIZE && variants.length > 0) {
 			const res2 = await braveWebGet(
 				apiKey,
-				webParams(q, Math.min(WEB_PAGE_SIZE, remaining), 1)
+				webParams(variants[0], Math.min(WEB_PAGE_SIZE, remaining), 1)
 			);
 			if (res2.ok) {
-				const page2 = (await res2.json()) as BraveWebSearchJson;
-				data = mergeWebPages(data, page2);
+				valid.push((await res2.json()) as BraveWebSearchJson);
 			}
 		}
+		const data = mergeBraveWebSearchResults(valid, want);
 
 		const has =
 			(data.web?.results?.length ?? 0) > 0 ||

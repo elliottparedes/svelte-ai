@@ -10,6 +10,17 @@ export function sanitizeGeneratedTitle(raw: string): string | null {
 	return t || null;
 }
 
+export function fallbackTitleFromPrompt(userPrompt: string): string {
+	const cleaned = userPrompt
+		.replace(/\s+/g, ' ')
+		.replace(/^[\W_]+|[\W_]+$/g, '')
+		.trim();
+	if (!cleaned) return 'New chat';
+	const words = cleaned.split(' ').filter(Boolean).slice(0, 6);
+	const title = words.join(' ');
+	return title.length > 60 ? `${title.slice(0, 57).trim()}...` : title;
+}
+
 export class ConversationTitleService {
 	constructor(
 		private readonly apiKey: string,
