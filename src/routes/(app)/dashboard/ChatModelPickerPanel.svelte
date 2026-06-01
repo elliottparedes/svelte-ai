@@ -1,21 +1,27 @@
 <script lang="ts">
 	import type { ModelProviderGroup } from '$lib/types/dashboard';
 	import { filterModelPickerGroups } from '$lib/client/filterModelPickerGroups';
+	import ChatModelPickerRow from './ChatModelPickerRow.svelte';
 	import './thinScroll.css';
 
 	let {
 		groups,
 		selectedModelId,
+		favoriteModelIds = [],
 		searchQuery = $bindable(''),
-		onPick
+		onPick,
+		onToggleFavorite
 	} = $props<{
 		groups: ModelProviderGroup[];
 		selectedModelId: string;
+		favoriteModelIds?: string[];
 		searchQuery?: string;
 		onPick: (modelId: string) => void;
+		onToggleFavorite: (modelId: string) => void;
 	}>();
 
 	const filtered = $derived(filterModelPickerGroups(groups, searchQuery));
+	const favoriteSet = $derived(new Set(favoriteModelIds));
 
 	let searchInput = $state<HTMLInputElement | null>(null);
 
@@ -34,17 +40,13 @@
 				<div class="group">
 					<div class="group-label">{group.label}</div>
 					{#each group.models as m (m.id)}
-						<button
-							type="button"
-							class="row"
-							class:selected={m.id === selectedModelId}
-							role="option"
-							aria-selected={m.id === selectedModelId}
-							onclick={() => onPick(m.id)}
-						>
-							<span class="name">{m.name}</span>
-							<span class="id">{m.id}</span>
-						</button>
+						<ChatModelPickerRow
+							model={m}
+							selected={m.id === selectedModelId}
+							isFavorite={favoriteSet.has(m.id)}
+							onPick={() => onPick(m.id)}
+							onToggleFavorite={() => onToggleFavorite(m.id)}
+						/>
 					{/each}
 				</div>
 			{/each}
@@ -140,39 +142,5 @@
 		letter-spacing: 0.06em;
 		color: #6c7086;
 		background: #11111b;
-	}
-	.row {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.1rem;
-		width: 100%;
-		text-align: left;
-		border: none;
-		background: none;
-		padding: 0.4rem 0.75rem;
-		cursor: pointer;
-		color: #cdd6f4;
-	}
-	.row:hover {
-		background: #1e1e2e;
-	}
-	.row.selected {
-		background: #252537;
-	}
-	.row.selected .name {
-		color: #89b4fa;
-	}
-	.name {
-		font-size: 0.8rem;
-		line-height: 1.25;
-	}
-	.id {
-		font-size: 0.65rem;
-		color: #6c7086;
-		max-width: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
 	}
 </style>

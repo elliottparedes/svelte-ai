@@ -7,11 +7,15 @@
 		models,
 		modelGroups,
 		selectedModelId = $bindable(''),
+		favoriteModelIds = [],
+		onToggleFavorite,
 		disabled = false
 	} = $props<{
 		models: Model[];
 		modelGroups: ModelProviderGroup[];
 		selectedModelId?: string;
+		favoriteModelIds?: string[];
+		onToggleFavorite?: (modelId: string) => void;
 		disabled?: boolean;
 	}>();
 
@@ -76,7 +80,14 @@
 		<span class="chev" class:up={open} aria-hidden="true">▾</span>
 	</button>
 	{#if open}
-		<ChatModelPickerPanel groups={grouped} {selectedModelId} bind:searchQuery onPick={pick} />
+		<ChatModelPickerPanel
+			groups={grouped}
+			{selectedModelId}
+			{favoriteModelIds}
+			bind:searchQuery
+			onPick={pick}
+			onToggleFavorite={(id) => onToggleFavorite?.(id)}
+		/>
 	{/if}
 </div>
 

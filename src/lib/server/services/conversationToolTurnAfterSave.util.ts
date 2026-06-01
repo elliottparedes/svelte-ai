@@ -22,6 +22,7 @@ export async function* afterAssistantSaved(params: {
 	usageAcc: ChatTurnUsageAccumulator;
 	assistantMessageId: string;
 }): AsyncGenerator<ConversationProcessEvent> {
+	yield { type: 'done' as const, conversationId: params.conversationId };
 	yield* yieldNewThreadTitleEvents({
 		isNewThread: params.isNewThread,
 		conversationId: params.conversationId,
@@ -44,5 +45,4 @@ export async function* afterAssistantSaved(params: {
 		usageAcc: params.usageAcc,
 		assistantMessageId: params.assistantMessageId
 	});
-	yield { type: 'done' as const, conversationId: params.conversationId };
 }

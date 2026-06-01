@@ -49,6 +49,9 @@ export function createDashboardPageModel(data: DashboardPageLoadData) {
 		},
 		actions,
 		state.getModels,
+		state.getModelGroups,
+		state.getFavoriteModelIds,
+		state.toggleFavoriteModelId,
 		state.syncPageLoadData,
 		() => state.data
 	);

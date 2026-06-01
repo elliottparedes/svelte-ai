@@ -40,6 +40,7 @@ export type DashboardSendDeps = {
 		summaryChars: number
 	) => void;
 	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
+	onStreamReplyDone?: (streamKey: string, conversationId: string) => void;
 	onStreamFinish: (result: StreamFinishResult) => Promise<void>;
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
 	voiceModeEnabled?: boolean;
@@ -163,6 +164,9 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 					imageGenNeedsRefetch = true;
 				}
 				acc = accumulateChatSse(acc, ev, assistantId);
+				if (ev.type === 'done') {
+					d.onStreamReplyDone?.(d.streamKey, ev.conversationId);
+				}
 				if (ev.type === 'summary_done') {
 					d.onStreamSummaryDone?.(
 						d.streamKey,

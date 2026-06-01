@@ -131,6 +131,8 @@
 					onSend={model.sendMessage}
 					models={model.models}
 					modelGroups={model.modelGroups}
+					favoriteModelIds={model.favoriteModelIds}
+					onToggleFavorite={model.toggleFavoriteModelId}
 					usesAutoRouting={model.usesAutoRouting}
 					chatQuota={model.chatQuota ?? layoutQuota}
 					bind:selectedModelId={model.lastRoutedModelId}

@@ -41,6 +41,7 @@ export async function runDashboardSendMessage(p: {
 		summaryChars: number
 	) => void;
 	onStreamTitle: (streamKey: string, conversationId: string, title: string) => void;
+	onStreamReplyDone?: (streamKey: string, conversationId: string) => void;
 	onStreamFinish: Parameters<typeof sendDashboardChatMessage>[0]['onStreamFinish'];
 	onStreamFailed: (streamKey: string, errorMessage: string) => void;
 	onRoutedModel: (modelId: string) => void;
@@ -64,6 +65,7 @@ export async function runDashboardSendMessage(p: {
 		setAttachments: p.setAttachments,
 		onStreamMessages: p.onStreamMessages,
 		onStreamTitle: p.onStreamTitle,
+		onStreamReplyDone: p.onStreamReplyDone,
 		onStreamFinish: p.onStreamFinish,
 		onStreamFailed: p.onStreamFailed,
 		onRouting: p.onRoutedModel,

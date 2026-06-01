@@ -1,4 +1,4 @@
-import type { DashboardPageLoadData, Model } from '$lib/types/dashboard';
+import type { DashboardPageLoadData } from '$lib/types/dashboard';
 import { DEFAULT_CHAT_TOOL_IDS, type ChatToolId } from '$lib/shared/chatToolSystemPrompt';
 import type {
 	ChatAttachmentInput,
@@ -14,6 +14,7 @@ import {
 	stampConversationModelLists
 } from './dashboardPageModelStreamStore';
 import { createDashboardPageModelStateShell } from './dashboardPageModelStateShell';
+import { createDashboardModelCatalogState } from './dashboardPageModelCatalog.svelte';
 
 const DEEP_REASONING_KEY = 'dashboardDeepReasoning';
 
@@ -32,9 +33,9 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 	let errorMessage = $state('');
 	let isCompacting = $state(false);
 	let streamingTurnCostUsd = $state(0);
-	let models = $state<Model[]>([...initial.models]);
+	const catalog = createDashboardModelCatalogState(initial);
 	let ttsEnabled = $state(initial.ttsEnabled);
-	let lastRoutedModelId = $state(initial.defaultModelId || (initial.models[0]?.id ?? ''));
+	let lastRoutedModelId = $state(catalog.resolveDefaultModelId(initial.defaultModelId));
 	let deepReasoningEnabled = $state(
 		typeof sessionStorage !== 'undefined' && sessionStorage.getItem(DEEP_REASONING_KEY) === '1'
 	);
@@ -68,10 +69,10 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 		if (key === syncedPageLoadKey) return;
 		syncedPageLoadKey = key;
 		pageLoadData = next;
-		models = [...next.models];
+		catalog.setCatalogFromLoad(next);
 		ttsEnabled = next.ttsEnabled;
-		if (lastRoutedModelId && !models.some((m) => m.id === lastRoutedModelId)) {
-			lastRoutedModelId = next.defaultModelId || (models[0]?.id ?? '');
+		if (lastRoutedModelId && !catalog.hasModel(lastRoutedModelId)) {
+			lastRoutedModelId = catalog.resolveDefaultModelId(next.defaultModelId);
 		}
 	}
 
@@ -97,7 +98,8 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 		getData: () => pageLoadData,
 		getIsActiveStreaming: () =>
 			activeConversationId !== null && streamingConversationIds.has(activeConversationId),
-		getModels: () => models,
+		getModels: () => catalog.getModels(),
+		getModelGroups: () => catalog.getModelGroups(),
 		getTtsEnabled: () => ttsEnabled,
 		flushActiveToCache: () => {
 			messageCache = flushActiveMessageCache(messageCache, activeConversationId, messages);
@@ -158,5 +160,10 @@ export function createDashboardPageModelState(initial: DashboardPageLoadData) {
 		}
 	});
 
-	return Object.assign(shell, { syncPageLoadData });
+	return Object.assign(shell, {
+		syncPageLoadData,
+		toggleFavoriteModelId: catalog.toggleFavoriteModelId,
+		getFavoriteModelIds: catalog.getFavoriteModelIds,
+		resolveDefaultModelId: () => catalog.resolveDefaultModelId(pageLoadData.defaultModelId)
+	});
 }

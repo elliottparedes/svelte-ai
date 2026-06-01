@@ -5,6 +5,7 @@ import {
 	applyDashboardStreamTitle,
 	failDashboardStream,
 	finishDashboardStream,
+	releaseDashboardStreamLock,
 	updateDashboardStreamMessages,
 	applyDashboardStreamSummaryDone
 } from '$lib/client/dashboardStreamLifecycle';
@@ -71,6 +72,7 @@ export function createDashboardPageModelActions(state: DashboardPageModelStateSh
 				applyDashboardStreamSummaryDone(store, key, conversationId, watermark, summaryChars),
 			onStreamTitle: (key, conversationId, title) =>
 				applyDashboardStreamTitle(store, key, conversationId, title),
+			onStreamReplyDone: (key) => releaseDashboardStreamLock(store, key),
 			onStreamFinish: async (result) => {
 				await finishDashboardStream(store, result);
 				if (state.immersiveVoiceOpen && state.immersivePhase !== 'error') {

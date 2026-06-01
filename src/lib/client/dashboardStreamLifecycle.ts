@@ -91,6 +91,11 @@ export function applyDashboardStreamTitle(
 	store.setProjectConversations(patch(store.getProjectConversations()));
 }
 
+/** Unlocks chat input after the assistant reply; stream may still send title/summary. */
+export function releaseDashboardStreamLock(store: DashboardStreamStore, streamKey: string): void {
+	store.setStreamingIds(patchStreamingSet(store.getStreamingIds(), streamKey, false));
+}
+
 export function failDashboardStream(
 	store: DashboardStreamStore,
 	streamKey: string,

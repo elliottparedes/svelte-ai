@@ -81,6 +81,9 @@ export function createDashboardNavActions(state: DashboardPageModelStateShell) {
 		state.messages = [];
 		state.errorMessage = '';
 		state.streamingTurnCostUsd = 0;
+		if (!state.data.usesAutoRouting) {
+			state.lastRoutedModelId = state.resolveDefaultModelId();
+		}
 	}
 
 	function startProjectCompose() {

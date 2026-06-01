@@ -15,6 +15,9 @@ export function createDashboardPageModelView(
 	s: DashboardPageModelStateAccess,
 	actions: DashboardPageModelHandlers,
 	getModels: () => import('$lib/types/dashboard').Model[],
+	getModelGroups: () => import('$lib/types/dashboard').ModelProviderGroup[],
+	getFavoriteModelIds: () => string[],
+	toggleFavoriteModelId: (id: string) => void,
 	syncPageLoadData: (next: import('$lib/types/dashboard').DashboardPageLoadData) => void,
 	getPageLoadData: () => import('$lib/types/dashboard').DashboardPageLoadData
 ) {
@@ -146,8 +149,12 @@ export function createDashboardPageModelView(
 			return getModels();
 		},
 		get modelGroups() {
-			return getPageLoadData().modelGroups;
+			return getModelGroups();
 		},
+		get favoriteModelIds() {
+			return getFavoriteModelIds();
+		},
+		toggleFavoriteModelId,
 		get usesAutoRouting() {
 			return getPageLoadData().usesAutoRouting;
 		},

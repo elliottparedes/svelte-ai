@@ -45,6 +45,7 @@ export async function* yieldGenerateImageSuccess(params: {
 	const sseToolResult = toolResultForLlmHistory('generate_image', params.result);
 	yield { type: 'tool_result' as const, name: 'generate_image', result: sseToolResult };
 	yield { type: 'chunk' as const, content: IMAGE_GENERATION_REPLY };
+	yield { type: 'done' as const, conversationId: params.conversationId };
 	yield* yieldNewThreadTitleEvents({
 		isNewThread: params.isNewThread,
 		conversationId: params.conversationId,
@@ -67,5 +68,4 @@ export async function* yieldGenerateImageSuccess(params: {
 		usageAcc: params.usageAcc,
 		assistantMessageId: saved.id
 	});
-	yield { type: 'done' as const, conversationId: params.conversationId };
 }

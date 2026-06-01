@@ -7,6 +7,8 @@
 		models,
 		modelGroups,
 		selectedModelId = $bindable(''),
+		favoriteModelIds = [],
+		onToggleFavorite,
 		disabled = false,
 		messages = [],
 		streamingTurnCostUsd = 0,
@@ -15,6 +17,8 @@
 		models: Model[];
 		modelGroups: ModelProviderGroup[];
 		selectedModelId?: string;
+		favoriteModelIds?: string[];
+		onToggleFavorite?: (modelId: string) => void;
 		disabled?: boolean;
 		messages?: ChatMessage[];
 		streamingTurnCostUsd?: number;
@@ -26,7 +30,14 @@
 	<div class="model-left">
 		<span class="pro-badge">Pro</span>
 		<span class="label">Model</span>
-		<ChatModelSelector {models} {modelGroups} bind:selectedModelId {disabled} />
+		<ChatModelSelector
+			{models}
+			{modelGroups}
+			bind:selectedModelId
+			{favoriteModelIds}
+			{onToggleFavorite}
+			{disabled}
+		/>
 	</div>
 	<ChatThreadCostBadge {messages} {streamingTurnCostUsd} {isStreaming} />
 </div>

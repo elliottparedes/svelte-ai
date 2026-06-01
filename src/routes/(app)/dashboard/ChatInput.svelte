@@ -23,6 +23,8 @@
 		onSend,
 		models,
 		modelGroups = [],
+		favoriteModelIds = [],
+		onToggleFavorite,
 		usesAutoRouting = true,
 		chatQuota,
 		routedModelId = '',
@@ -40,6 +42,8 @@
 		onSend: () => void;
 		models: Model[];
 		modelGroups?: import('$lib/types/dashboard').ModelProviderGroup[];
+		favoriteModelIds?: string[];
+		onToggleFavorite?: (modelId: string) => void;
 		usesAutoRouting?: boolean;
 		chatQuota?: import('$lib/types/dashboard').ChatQuotaView;
 		routedModelId?: string;
@@ -155,6 +159,8 @@
 				{models}
 				{modelGroups}
 				bind:selectedModelId
+				{favoriteModelIds}
+				{onToggleFavorite}
 				disabled={isStreaming}
 				{messages}
 				{streamingTurnCostUsd}
