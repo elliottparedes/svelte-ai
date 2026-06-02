@@ -4,6 +4,9 @@ import { completeOpenRouterText } from '../infrastructure/openRouterCompleteText
 const SYSTEM =
 	'Write a short chat title (3–6 words). Output only the title: no quotes, no punctuation at the end, max 60 characters.';
 
+const PROMPT_ONLY_SYSTEM =
+	'Write a short chat title (3–6 words) for a conversation that starts with the user message below. Output only the title: no quotes, no punctuation at the end, max 60 characters.';
+
 export function sanitizeGeneratedTitle(raw: string): string | null {
 	let t = raw.replace(/^["'`]+|["'`]+$/g, '').replace(/\s+/g, ' ').trim();
 	if (!t) return null;
@@ -31,7 +34,34 @@ export class ConversationTitleService {
 		private readonly httpReferer?: string
 	) {}
 
-	async generate(userPrompt: string, assistantReply: string): Promise<TitleGenerationResult> {
+	/** Title from the user message only — run in parallel with the main chat stream. */
+	async generateFromUserPrompt(
+		userPrompt: string,
+		options?: { timeoutMs?: number }
+	): Promise<TitleGenerationResult> {
+		const signal =
+			options?.timeoutMs != null && options.timeoutMs > 0
+				? AbortSignal.timeout(options.timeoutMs)
+				: undefined;
+		const { text, usage } = await completeOpenRouterText(
+			this.apiKey,
+			this.modelId,
+			[
+				{ role: 'system', content: PROMPT_ONLY_SYSTEM },
+				{ role: 'user', content: userPrompt.slice(0, 800) }
+			],
+			20,
+			this.httpReferer,
+			signal
+		);
+		return { title: text ? sanitizeGeneratedTitle(text) : null, usage };
+	}
+
+	async generate(
+		userPrompt: string,
+		assistantReply: string,
+		options?: { timeoutMs?: number }
+	): Promise<TitleGenerationResult> {
 		const user = [
 			'User message:',
 			userPrompt.slice(0, 500),
@@ -39,6 +69,10 @@ export class ConversationTitleService {
 			'Assistant reply:',
 			assistantReply.slice(0, 500)
 		].join('\n');
+		const signal =
+			options?.timeoutMs != null && options.timeoutMs > 0
+				? AbortSignal.timeout(options.timeoutMs)
+				: undefined;
 		const { text, usage } = await completeOpenRouterText(
 			this.apiKey,
 			this.modelId,
@@ -47,7 +81,8 @@ export class ConversationTitleService {
 				{ role: 'user', content: user }
 			],
 			24,
-			this.httpReferer
+			this.httpReferer,
+			signal
 		);
 		return { title: text ? sanitizeGeneratedTitle(text) : null, usage };
 	}

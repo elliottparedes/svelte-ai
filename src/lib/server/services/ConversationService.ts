@@ -21,6 +21,7 @@ import {
 	logRollingSummaryStaleWatermark
 } from './conversationSummaryLog.util';
 import { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
+import { beginNewThreadTitleJob } from './conversationTitleBackground';
 
 const HISTORY_FETCH_LIMIT = 2000;
 
@@ -102,6 +103,15 @@ export class ConversationService {
 			attachmentCount: attachments?.length ?? 0,
 			rollingSummaryApplied: assembled.applied
 		});
+
+		if (isNewThread) {
+			beginNewThreadTitleJob(convId, prompt, {
+				userId,
+				chatRepo: this.chatRepo,
+				titleService: this.titleService,
+				messageRepo: this.messageRepo
+			});
+		}
 
 		const toolsCapable = modelSupportsTools(effectiveModel);
 		const prepared = await prepareConversationTurn({

@@ -66,8 +66,12 @@ export const VISION_RELAY_ENABLED = getEnv('VISION_RELAY_ENABLED', 'true').toLow
 export const VISION_RELAY_MODEL = getEnv('VISION_RELAY_MODEL', 'google/gemini-2.0-flash-001');
 export const VISION_RELAY_MAX_TOKENS = Number(getEnv('VISION_RELAY_MAX_TOKENS', '512')) || 512;
 /** Cheap OpenRouter model for auto-generated chat titles after the first reply. */
-export const CHAT_TITLE_MODEL = getEnv('CHAT_TITLE_MODEL', 'google/gemini-2.0-flash-lite-001');
+export const CHAT_TITLE_MODEL = getEnv('CHAT_TITLE_MODEL', 'google/gemini-2.5-flash');
 export const CHAT_TITLE_ENABLED = getEnv('CHAT_TITLE_ENABLED', 'true').toLowerCase() !== 'false';
+export const CHAT_TITLE_TIMEOUT_MS = Math.min(
+	30_000,
+	Math.max(1000, Number(getEnv('CHAT_TITLE_TIMEOUT_MS', '12000')) || 12000)
+);
 /** Cheap model for incremental rolling conversation summaries (LLM context only). */
 export const CHAT_SUMMARY_MODEL = getEnv('CHAT_SUMMARY_MODEL', 'google/gemini-2.0-flash-lite-001');
 export const CHAT_SUMMARY_ENABLED = getEnv('CHAT_SUMMARY_ENABLED', 'true').toLowerCase() !== 'false';

@@ -5,7 +5,7 @@ import type { ConversationTitleService } from './ConversationTitleService';
 import type { ConversationSummaryService } from './ConversationSummaryService';
 import type { SummaryTurnConfig } from './conversationSummaryTurn.util';
 import type { ConversationProcessEvent } from './conversationProcess.types';
-import { yieldNewThreadTitleEvents } from './conversationTitleTurn.util';
+import { completeNewThreadTitleJob } from './conversationTitleBackground';
 import { extendRollingSummaryAfterReply } from './conversationSummaryTurn.util';
 import {
 	assistantContentForImageGeneration,
@@ -46,18 +46,14 @@ export async function* yieldGenerateImageSuccess(params: {
 	yield { type: 'tool_result' as const, name: 'generate_image', result: sseToolResult };
 	yield { type: 'chunk' as const, content: IMAGE_GENERATION_REPLY };
 	yield { type: 'done' as const, conversationId: params.conversationId };
-	yield* yieldNewThreadTitleEvents({
-		isNewThread: params.isNewThread,
-		conversationId: params.conversationId,
-		userPrompt: params.userPrompt,
-		assistantContent: stored,
-		userId: params.userId,
-		chatRepo: params.chatRepo,
-		titleService: params.titleService,
-		usageAcc: params.usageAcc,
-		assistantMessageId: saved.id,
-		messageRepo: params.messageRepo
-	});
+	if (params.isNewThread) {
+		completeNewThreadTitleJob(
+			params.conversationId,
+			stored,
+			saved.id,
+			params.usageAcc
+		);
+	}
 	yield* extendRollingSummaryAfterReply({
 		conversationId: params.conversationId,
 		userId: params.userId,
