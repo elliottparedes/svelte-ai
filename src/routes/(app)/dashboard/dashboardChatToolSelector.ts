@@ -15,7 +15,6 @@ const META: Record<ChatToolId, MetaRow> = {
 	datetime: { title: 'Date & time', description: 'Use the current date and time' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
 	web_search: { title: 'Web search', description: 'Search the web for live information' },
-	image_search: { title: 'Image search', description: 'Find images on the web' },
 	generate_image: { title: 'Generate image', description: 'Create images from a text prompt' }
 };
 

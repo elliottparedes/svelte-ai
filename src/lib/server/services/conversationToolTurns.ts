@@ -47,7 +47,7 @@ export async function* runConversationToolTurns(params: {
 	options: Record<string, unknown> | undefined;
 	usageAcc: ChatTurnUsageAccumulator;
 }): AsyncGenerator<ConversationProcessEvent> {
-	if (params.usageAcc.costUsd > 0) yield usageProcessEvent(params.usageAcc);
+	if (params.usageAcc.totalCostUsd > 0) yield usageProcessEvent(params.usageAcc);
 
 	let augmentedHistory = params.initialHistory;
 	let toolInvocations = 0;
@@ -78,7 +78,8 @@ export async function* runConversationToolTurns(params: {
 				assistantContent,
 				undefined,
 				assistantReasoning.trim() || undefined,
-				params.usageAcc.snapshot()
+				params.usageAcc.snapshot(),
+				params.usageAcc.snapshotExternal()
 			);
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
@@ -87,7 +88,9 @@ export async function* runConversationToolTurns(params: {
 				replyChars: assistantContent.length,
 				toolInvocations,
 				llmTurn: turn,
-				costUsd: params.usageAcc.costUsd
+				costUsd: params.usageAcc.totalCostUsd,
+				llmCostUsd: params.usageAcc.costUsd,
+				toolCostUsd: params.usageAcc.toolCostUsd
 			});
 			yield usageProcessEvent(params.usageAcc);
 			yield* afterAssistantSaved({ ...params, assistantContent, assistantMessageId: saved.id });
@@ -100,7 +103,8 @@ export async function* runConversationToolTurns(params: {
 			? await executeToolLogged(
 					params.toolExecutor,
 					{ userId: params.userId, conversationId: params.conversationId, llmTurn: turn },
-					pendingToolCall
+					pendingToolCall,
+					params.usageAcc
 				)
 			: (gate.resultText ?? `Policy: ${pendingToolCall.name} blocked.`);
 		if (gate.allowed) toolInvocations++;

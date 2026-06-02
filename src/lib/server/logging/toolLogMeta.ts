@@ -1,4 +1,5 @@
 /** Safe summaries for logs — avoid full URLs, page bodies, or long user queries. */
+import type { ExternalToolUsage } from '../domain/ExternalToolUsage.types';
 
 export function toolArgsForLog(name: string, args: Record<string, unknown>): Record<string, unknown> {
 	switch (name) {
@@ -29,9 +30,19 @@ export function toolArgsForLog(name: string, args: Record<string, unknown>): Rec
 	}
 }
 
-export function toolResultForLog(tool: string, result: string): Record<string, unknown> {
+export function toolResultForLog(
+	tool: string,
+	result: string,
+	usage?: ExternalToolUsage
+): Record<string, unknown> {
 	const failed = result.startsWith('Error:');
 	const base: Record<string, unknown> = { ok: !failed, resultChars: result.length };
+	if (usage) {
+		base.provider = usage.provider;
+		base.toolCostUsd = usage.costUsd;
+		base.requests = usage.requests;
+		base.queries = usage.queries;
+	}
 	if (failed) {
 		base.errorPreview = result.slice(0, 280);
 		return base;

@@ -6,6 +6,10 @@ import {
 import type { BraveImageHit, BraveImageSearchJson } from './braveSearch.types';
 import { isImageUrlLoadable } from './braveImageUrlCheck';
 import { braveImagesGet } from './braveSearchRequest';
+import type { ExternalToolUsage } from '../domain/ExternalToolUsage.types';
+
+const BRAVE_SEARCH_COST_PER_REQUEST_USD = 0.005;
+export type BraveImageSearchResult = { content: string; usage?: ExternalToolUsage };
 
 /** Brave-proxied thumbnails load reliably; direct hotlinks often 403 in the browser. */
 function imageSrc(r: BraveImageHit): string | null {
@@ -48,10 +52,13 @@ async function pickLoadableImages(hits: BraveImageHit[], max: number): Promise<s
 	return out;
 }
 
-export async function braveImageSearch(apiKey: string, query: string): Promise<string> {
+export async function braveImageSearchWithUsage(
+	apiKey: string,
+	query: string
+): Promise<BraveImageSearchResult> {
 	const q = query.trim();
-	if (!q) return 'Error: empty search query';
-	if (!apiKey) return 'Error: image search is not configured (set BRAVE_SEARCH_API_KEY)';
+	if (!q) return { content: 'Error: empty search query' };
+	if (!apiKey) return { content: 'Error: image search is not configured (set BRAVE_SEARCH_API_KEY)' };
 
 	const max = BRAVE_SEARCH_IMAGE_MAX_RESULTS;
 	const params = new URLSearchParams({
@@ -65,12 +72,22 @@ export async function braveImageSearch(apiKey: string, query: string): Promise<s
 
 	try {
 		const res = await braveImagesGet(apiKey, params);
-		if (!res.ok) return `Error: Brave image search failed (${res.status})`;
+		const usage = {
+			provider: 'brave_search' as const,
+			toolName: 'image_search',
+			requests: 1,
+			costUsd: BRAVE_SEARCH_COST_PER_REQUEST_USD
+		};
+		if (!res.ok) return { content: `Error: Brave image search failed (${res.status})`, usage };
 		const data = (await res.json()) as BraveImageSearchJson;
 		const out = await pickLoadableImages(data.results ?? [], max);
-		if (out.length === 0) return 'No image results found.';
-		return out.join('\n');
+		if (out.length === 0) return { content: 'No image results found.', usage };
+		return { content: out.join('\n'), usage };
 	} catch {
-		return 'Error: image search failed';
+		return { content: 'Error: image search failed' };
 	}
+}
+
+export async function braveImageSearch(apiKey: string, query: string): Promise<string> {
+	return (await braveImageSearchWithUsage(apiKey, query)).content;
 }

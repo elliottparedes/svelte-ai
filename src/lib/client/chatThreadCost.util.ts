@@ -3,8 +3,9 @@ import type { ChatMessage } from '$lib/types/dashboard';
 export function sumAssistantCostUsd(messages: readonly ChatMessage[]): number {
 	let total = 0;
 	for (const m of messages) {
-		if (m.role === 'assistant' && typeof m.costUsd === 'number' && m.costUsd > 0) {
-			total += m.costUsd;
+		if (m.role === 'assistant') {
+			if (typeof m.costUsd === 'number' && m.costUsd > 0) total += m.costUsd;
+			if (typeof m.toolCostUsd === 'number' && m.toolCostUsd > 0) total += m.toolCostUsd;
 		}
 	}
 	return total;

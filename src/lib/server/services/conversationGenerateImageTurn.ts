@@ -39,7 +39,8 @@ export async function* yieldGenerateImageSuccess(params: {
 		stored,
 		undefined,
 		undefined,
-		params.usageAcc.snapshot()
+		params.usageAcc.snapshot(),
+		params.usageAcc.snapshotExternal()
 	);
 	yield usageProcessEvent(params.usageAcc);
 	const sseToolResult = toolResultForLlmHistory('generate_image', params.result);

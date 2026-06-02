@@ -14,6 +14,9 @@ export interface ChatMessage {
 	toolCall?: ChatMessageToolCall;
 	/** OpenRouter usage.cost for this assistant turn (USD). */
 	costUsd?: number;
+	/** External tool spend for this assistant turn (USD). */
+	toolCostUsd?: number;
+	toolUsageJson?: string;
 	promptTokens?: number;
 	completionTokens?: number;
 }

@@ -17,7 +17,7 @@ type ToolPolicyState = {
 const QUICK_BASE = { web: 2, fetch: 2 };
 const DEEP_BASE = { web: 4, fetch: 5 };
 const ESCALATION_STEPS = 2;
-const URL_RE = /URL:\s*(https?:\/\/\S+)/g;
+const URL_RE = /(?:URL:\s*|\[\d+\]\s*)(https?:\/\/\S+)/g;
 
 function inferMode(prompt: string): SearchMode {
 	if (
@@ -40,7 +40,11 @@ function normalizeQuery(query: string): string {
 }
 
 function webSearchSignal(result: string): { signal: SearchSignal; domainCount: number } {
-	const hasWebBlock = result.includes('[Web results]') || result.includes('[News]');
+	const hasWebBlock =
+		result.includes('[Web search]') ||
+		result.includes('[Web results]') ||
+		result.includes('[News]') ||
+		result.includes('[Brave Answers]');
 	const domains = new Set<string>();
 	let m: RegExpExecArray | null = null;
 	while ((m = URL_RE.exec(result)) !== null) {

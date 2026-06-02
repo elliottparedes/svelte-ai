@@ -9,6 +9,8 @@ export interface ChatMessage {
 	toolCalls?: readonly ToolCall[];
 	reasoningContent?: string;
 	costUsd?: number;
+	toolCostUsd?: number;
+	toolUsageJson?: string;
 	promptTokens?: number;
 	completionTokens?: number;
 }

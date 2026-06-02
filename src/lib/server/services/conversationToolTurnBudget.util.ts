@@ -29,7 +29,8 @@ export async function* yieldBudgetExhaustionFinish(
 				ev.reply,
 				undefined,
 				ev.reasoning.trim() || undefined,
-				params.usageAcc.snapshot()
+				params.usageAcc.snapshot(),
+				params.usageAcc.snapshotExternal()
 			);
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
@@ -39,7 +40,9 @@ export async function* yieldBudgetExhaustionFinish(
 				toolInvocations: params.toolInvocations,
 				llmTurn: params.llmTurn,
 				afterMaxToolTurns: true,
-				costUsd: params.usageAcc.costUsd
+				costUsd: params.usageAcc.totalCostUsd,
+				llmCostUsd: params.usageAcc.costUsd,
+				toolCostUsd: params.usageAcc.toolCostUsd
 			});
 			yield usageProcessEvent(params.usageAcc);
 			yield* afterAssistantSaved({

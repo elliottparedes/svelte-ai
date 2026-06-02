@@ -1,41 +1,53 @@
-import { BRAVE_SEARCH_API_KEY } from '../env';
-import { braveWebSearch, braveImageSearch } from './braveSearchClient';
+import type { ExternalToolUsage } from '../domain/ExternalToolUsage.types';
+import { braveImageSearchWithUsage } from './braveImageSearch';
 import { fetchUrlContent } from './fetchUrlContent';
 import { ImageGenerationService } from './imageGenerationService';
 import { executePythonOnPiston } from './pistonClient';
+import { WebSearchRouter } from './WebSearchRouter';
+import { BRAVE_SEARCH_API_KEY } from '../env';
 export type ToolRunContext = { conversationId: string };
+export type ToolRunResult = { content: string; usage?: ExternalToolUsage };
 const IMAGE_GENERATION_TEMP_DISABLED = true;
 
 export class ToolExecutor {
 	private readonly imageGenerationService = new ImageGenerationService();
 
-	constructor(private readonly braveApiKey: string = BRAVE_SEARCH_API_KEY) {}
+	constructor(
+		private readonly braveApiKey: string = BRAVE_SEARCH_API_KEY,
+		private readonly webSearchRouter: WebSearchRouter = new WebSearchRouter()
+	) {}
 
 	async run(
 		name: string,
 		args: Record<string, unknown>,
-		ctx?: ToolRunContext
-	): Promise<string> {
+		_ctx?: ToolRunContext
+	): Promise<ToolRunResult> {
 		switch (name) {
 			case 'execute_python':
-				return await executePythonOnPiston(String(args.code ?? ''));
+				return { content: await executePythonOnPiston(String(args.code ?? '')) };
 			case 'datetime':
-				return this.runDatetime();
+				return { content: this.runDatetime() };
 			case 'fetch_url':
-				return await fetchUrlContent(String(args.url ?? ''), args.offset);
+				return { content: await fetchUrlContent(String(args.url ?? ''), args.offset) };
 			case 'web_search':
-				return await braveWebSearch(this.braveApiKey, String(args.query ?? ''));
+				return await this.runWebSearch(String(args.query ?? ''));
 			case 'image_search':
-				return await braveImageSearch(this.braveApiKey, String(args.query ?? ''));
+				return await braveImageSearchWithUsage(this.braveApiKey, String(args.query ?? ''));
 			case 'map_route':
-				return 'Error: map_route is disabled';
+				return { content: 'Error: map_route is disabled' };
 			case 'generate_image':
-				return IMAGE_GENERATION_TEMP_DISABLED
-					? 'Error: generate_image is temporarily disabled.'
-					: await this.imageGenerationService.run(args);
+				return {
+					content: IMAGE_GENERATION_TEMP_DISABLED
+						? 'Error: generate_image is temporarily disabled.'
+						: await this.imageGenerationService.run(args)
+				};
 			default:
-				return `Error: unknown tool ${name}`;
+				return { content: `Error: unknown tool ${name}` };
 		}
+	}
+
+	private async runWebSearch(query: string): Promise<ToolRunResult> {
+		return await this.webSearchRouter.search(query);
 	}
 
 	private runDatetime(): string {

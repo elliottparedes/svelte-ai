@@ -37,10 +37,13 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 			createdAt: string;
 			toolCallId?: string;
 			costUsd?: number | string | null;
+			toolCostUsd?: number | string | null;
+			toolUsageJson?: string | null;
 			promptTokens?: number | null;
 			completionTokens?: number | null;
 		}) => {
 			const costRaw = m.costUsd;
+			const toolCostRaw = m.toolCostUsd;
 			const costUsd =
 				typeof costRaw === 'number'
 					? costRaw > 0
@@ -49,12 +52,22 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 					: typeof costRaw === 'string' && costRaw !== ''
 						? Number(costRaw) || undefined
 						: undefined;
+			const toolCostUsd =
+				typeof toolCostRaw === 'number'
+					? toolCostRaw > 0
+						? toolCostRaw
+						: undefined
+					: typeof toolCostRaw === 'string' && toolCostRaw !== ''
+						? Number(toolCostRaw) || undefined
+						: undefined;
 			return {
 				...m,
 				role: m.role as ChatMessage['role'],
 				reasoningContent: m.reasoningContent ?? undefined,
 				createdAt: new Date(m.createdAt),
 				costUsd,
+				toolCostUsd,
+				toolUsageJson: m.toolUsageJson ?? undefined,
 				promptTokens: m.promptTokens ?? undefined,
 				completionTokens: m.completionTokens ?? undefined,
 				...(m.role === 'tool' && m.content

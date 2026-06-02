@@ -3,7 +3,14 @@ export type ChatRoutingSource = 'explicit' | 'deep_reasoning' | 'router_llm' | '
 export type ChatSseEvent =
 	| { type: 'chunk'; content: string }
 	| { type: 'reasoning'; content: string }
-	| { type: 'usage'; turnCostUsd: number; turnPromptTokens: number; turnCompletionTokens: number }
+	| {
+			type: 'usage';
+			turnCostUsd: number;
+			turnLlmCostUsd: number;
+			turnToolCostUsd: number;
+			turnPromptTokens: number;
+			turnCompletionTokens: number;
+	  }
 	| { type: 'audio'; data: string }
 	| { type: 'routing'; modelId: string; source: ChatRoutingSource; tier?: string }
 	| { type: 'tool_call'; name: string; arguments?: Record<string, unknown> }
@@ -30,6 +37,8 @@ function* parseSseDataLines(lines: string[]): Generator<ChatSseEvent> {
 				yield {
 					type: 'usage',
 					turnCostUsd: Number(parsed.turnCostUsd ?? 0),
+					turnLlmCostUsd: Number(parsed.turnLlmCostUsd ?? parsed.turnCostUsd ?? 0),
+					turnToolCostUsd: Number(parsed.turnToolCostUsd ?? 0),
 					turnPromptTokens: Number(parsed.turnPromptTokens ?? 0),
 					turnCompletionTokens: Number(parsed.turnCompletionTokens ?? 0)
 				};

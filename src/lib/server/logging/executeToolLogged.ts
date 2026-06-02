@@ -2,11 +2,13 @@ import type { ToolCall } from '../domain/ChatProvider.interface';
 import type { ToolExecutor } from '../infrastructure/ToolExecutor';
 import { logger } from '../logger';
 import { toolArgsForLog, toolResultForLog } from './toolLogMeta';
+import type { ChatTurnUsageAccumulator } from '../services/chatTurnUsageAccumulator';
 
 export async function executeToolLogged(
 	executor: ToolExecutor,
 	ctx: { userId: string; conversationId: string; llmTurn: number },
-	call: ToolCall
+	call: ToolCall,
+	usageAcc?: ChatTurnUsageAccumulator
 ): Promise<string> {
 	logger.info('Tool call issued', {
 		userId: ctx.userId,
@@ -27,6 +29,7 @@ export async function executeToolLogged(
 	const result = await executor.run(call.name, call.arguments, {
 		conversationId: ctx.conversationId
 	});
+	if (result.usage) usageAcc?.addExternal(result.usage);
 	const durationMs = Math.round(performance.now() - t0);
 
 	logger.info('Tool call finished', {
@@ -36,8 +39,8 @@ export async function executeToolLogged(
 		tool: call.name,
 		durationMs,
 		llmTurn: ctx.llmTurn,
-		...toolResultForLog(call.name, result)
+		...toolResultForLog(call.name, result.content, result.usage)
 	});
 
-	return result;
+	return result.content;
 }

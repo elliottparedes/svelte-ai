@@ -3,7 +3,12 @@ import { messages } from '../db/schema';
 import { eq, sql, desc } from 'drizzle-orm';
 import type { ChatMessage } from '../domain/ChatProvider.interface';
 import type { OpenRouterUsage } from '../domain/OpenRouterUsage.types';
-import { parseMessageCostUsd, usageFieldsForMessage } from '../services/conversationTurnUsage.util';
+import type { ExternalToolUsageSummary } from '../domain/ExternalToolUsage.types';
+import {
+	parseMessageCostUsd,
+	toolUsageFieldsForMessage,
+	usageFieldsForMessage
+} from '../services/conversationTurnUsage.util';
 
 function rowToChatMessage(r: typeof messages.$inferSelect): ChatMessage {
 	return {
@@ -14,6 +19,8 @@ function rowToChatMessage(r: typeof messages.$inferSelect): ChatMessage {
 		createdAt: r.createdAt,
 		toolCallId: r.toolCallId ?? undefined,
 		costUsd: parseMessageCostUsd(r.costUsd),
+		toolCostUsd: parseMessageCostUsd(r.toolCostUsd),
+		toolUsageJson: r.toolUsageJson ?? undefined,
 		promptTokens: r.promptTokens ?? undefined,
 		completionTokens: r.completionTokens ?? undefined
 	};
@@ -42,10 +49,12 @@ export class MessageRepository {
 		content: string,
 		toolCallId?: string,
 		reasoningContent?: string,
-		usage?: OpenRouterUsage | null
+		usage?: OpenRouterUsage | null,
+		toolUsage?: ExternalToolUsageSummary | null
 	): Promise<ChatMessage> {
 		const id = crypto.randomUUID();
 		const usageFields = usageFieldsForMessage(usage ?? null);
+		const toolFields = toolUsageFieldsForMessage(toolUsage ?? null);
 		await db.insert(messages).values({
 			id,
 			conversationId,
@@ -54,6 +63,8 @@ export class MessageRepository {
 			reasoningContent: reasoningContent ?? null,
 			toolCallId: toolCallId ?? null,
 			costUsd: usageFields.costUsd,
+			toolCostUsd: toolFields.toolCostUsd,
+			toolUsageJson: toolFields.toolUsageJson,
 			promptTokens: usageFields.promptTokens,
 			completionTokens: usageFields.completionTokens
 		});
@@ -65,6 +76,8 @@ export class MessageRepository {
 			createdAt: new Date(),
 			toolCallId,
 			costUsd: usage?.costUsd,
+			toolCostUsd: toolUsage?.costUsd,
+			toolUsageJson: toolFields.toolUsageJson ?? undefined,
 			promptTokens: usage?.promptTokens,
 			completionTokens: usage?.completionTokens
 		};

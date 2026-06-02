@@ -67,6 +67,10 @@ export const messages = mysqlTable('messages', {
 	toolCallId: varchar('tool_call_id', { length: 64 }),
 	/** OpenRouter usage.cost for this assistant turn (USD). */
 	costUsd: decimal('cost_usd', { precision: 10, scale: 6 }),
+	/** External tool cost for this assistant turn (USD), kept separate from LLM cost. */
+	toolCostUsd: decimal('tool_cost_usd', { precision: 10, scale: 6 }),
+	/** JSON ExternalToolUsage[] with provider request/query/token details. */
+	toolUsageJson: text('tool_usage_json'),
 	promptTokens: int('prompt_tokens'),
 	completionTokens: int('completion_tokens'),
 	createdAt: timestamp('created_at').defaultNow().notNull()
