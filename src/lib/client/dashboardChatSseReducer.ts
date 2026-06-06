@@ -6,6 +6,7 @@ export type ChatSseAccum = {
 	messages: ChatMessage[];
 	assistantContent: string;
 	assistantReasoning: string;
+	sawToolCall?: boolean;
 	doneConversationId: string | null;
 	errorMessage: string;
 	routedModelId: string | null;
@@ -71,7 +72,7 @@ export function accumulateChatSse(
 				assistantIdx >= 0
 					? [...prev.slice(0, assistantIdx), toolEntry, ...prev.slice(assistantIdx)]
 					: [...prev, toolEntry];
-			return { ...acc, messages };
+			return { ...acc, messages, sawToolCall: true };
 		}
 		case 'tool_result': {
 			const prev = acc.messages;
@@ -96,7 +97,7 @@ export function accumulateChatSse(
 					}
 				];
 			}
-			return { ...acc, messages };
+			return { ...acc, messages, sawToolCall: true };
 		}
 		case 'usage':
 			return { ...acc, streamingTurnCostUsd: ev.turnCostUsd };
@@ -115,6 +116,21 @@ export function accumulateChatSse(
 				doneConversationId: acc.doneConversationId ?? ev.conversationId
 			};
 		case 'done':
+			if (acc.sawToolCall && !acc.assistantContent.trim() && acc.assistantReasoning.trim()) {
+				const assistantContent = acc.assistantReasoning;
+				const messages = acc.messages.map((m) =>
+					m.id === assistantId ? { ...m, content: assistantContent, reasoningContent: undefined } : m
+				);
+				return {
+					...acc,
+					assistantContent,
+					assistantReasoning: '',
+					messages,
+					doneConversationId: ev.conversationId,
+					isCompacting: false,
+					streamingTurnCostUsd: 0
+				};
+			}
 			return {
 				...acc,
 				doneConversationId: ev.conversationId,

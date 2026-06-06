@@ -1,4 +1,4 @@
-export type ExternalToolProvider = 'brave_answers' | 'brave_search' | 'serper';
+export type ExternalToolProvider = 'brave_answers' | 'brave_search' | 'exa' | 'serper';
 
 export type ExternalToolUsage = {
 	provider: ExternalToolProvider;

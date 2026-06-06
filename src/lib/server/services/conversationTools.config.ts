@@ -18,7 +18,7 @@ export const TOOLS: ToolDefinition[] = [
 	{
 		name: 'fetch_url',
 		description:
-			'Fetch webpage text (HTML stripped to plain text). Returns one chunk per call; use offset to read later sections of long pages.',
+			'Fetch clean full-page text for a URL, using Exa extraction when configured and direct fetch as fallback. Returns one chunk per call; use offset to read later sections of long pages.',
 		parameters: {
 			type: 'object',
 			properties: {

@@ -32,6 +32,29 @@
 		return { destroy() { node.removeEventListener('click', onClick); } };
 	}
 
+	function enhanceLinks(node: HTMLElement) {
+		function openLinksInNewTabs() {
+			node.querySelectorAll('a[href]').forEach((anchor) => {
+				const link = anchor as HTMLAnchorElement;
+				const href = link.getAttribute('href') ?? '';
+				if (!href || href.startsWith('#') || href.toLowerCase().startsWith('javascript:')) return;
+				link.target = '_blank';
+				link.rel = 'noopener noreferrer';
+			});
+		}
+
+		openLinksInNewTabs();
+
+		const observer = new MutationObserver(openLinksInNewTabs);
+		observer.observe(node, { childList: true, subtree: true });
+
+		return {
+			destroy() {
+				observer.disconnect();
+			}
+		};
+	}
+
 	function enhanceCodeBlocks(node: HTMLElement) {
 		function addButtonsAndHighlight() {
 			node.querySelectorAll('pre code').forEach((code) => {
@@ -89,7 +112,7 @@
 	}
 </style>
 
-<div class="inkstream-markdown" use:enhanceCodeBlocks use:markdownBlobifyDataImages={html} use:markdownHideBrokenImages use:interceptImageClicks>{@html html}</div>
+<div class="inkstream-markdown" use:enhanceCodeBlocks use:enhanceLinks use:markdownBlobifyDataImages={html} use:markdownHideBrokenImages use:interceptImageClicks>{@html html}</div>
 
 {#if lightbox}
 	<div class="lightbox-portal" use:portalToBody>
