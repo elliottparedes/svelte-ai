@@ -18,13 +18,19 @@
 		height: 100%;
 		margin: 0;
 		overflow: hidden;
+		background: #181825;
+	}
+	:global(html) {
+		min-height: -webkit-fill-available;
 	}
 	.root-shell {
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+		height: 100dvh;
 		min-height: 0;
 		overflow: hidden;
+		background: #181825;
 	}
 	.root-content {
 		display: flex;

@@ -3,7 +3,7 @@
 	import SidebarProjectsSection from './SidebarProjectsSection.svelte';
 	import SidebarChatsSection from './SidebarChatsSection.svelte';
 	import SidebarUserFooter from './SidebarUserFooter.svelte';
-	import type { Conversation, DashboardUser, Project } from '$lib/types/dashboard';
+	import type { Conversation, DashboardUser, Model, Project } from '$lib/types/dashboard';
 	import type { ChatQuotaView } from '$lib/types/app';
 
 	let {
@@ -17,6 +17,7 @@
 		onDelete,
 		onRename,
 		streamingConversationIds,
+		models,
 		user,
 		chatQuota = null,
 		onLogout,
@@ -33,6 +34,7 @@
 		onDelete: (id: string) => void;
 		onRename: (id: string, title: string) => void;
 		streamingConversationIds: ReadonlySet<string>;
+		models: Model[];
 		user: DashboardUser | null;
 		chatQuota?: ChatQuotaView | null;
 		onLogout: () => void;
@@ -74,6 +76,7 @@
 					{activeId}
 					{activeProjectId}
 					{streamingConversationIds}
+					{models}
 					{onSelect}
 					{onDelete}
 					{onRename}

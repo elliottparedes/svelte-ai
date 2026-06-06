@@ -2,9 +2,11 @@
 	display: flex;
 	flex: 1;
 	min-height: 0;
+	height: 100%;
 	width: 100%;
 	max-width: 100%;
 	overflow: hidden;
+	background: #181825;
 }
 .chat-main {
 	flex: 1;
@@ -15,10 +17,13 @@
 	min-height: 0;
 	position: relative;
 	z-index: 1;
+	overflow: hidden;
 }
 .chat-input-area {
 	position: sticky;
 	bottom: 0;
 	padding: 0 1rem 2rem;
 	background: linear-gradient(transparent, #181825 30%);
+	z-index: 5;
+	flex-shrink: 0;
 }

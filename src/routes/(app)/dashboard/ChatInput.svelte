@@ -79,7 +79,8 @@
 	const fileAcceptAttr = $derived(chatInputFileAcceptAttr(supportsVision, supportsFiles));
 
 	function handleKeyDown(e: KeyboardEvent) {
-		if (e.key === 'Enter' && !e.shiftKey) {
+		const finePointer = window.matchMedia('(pointer: fine)').matches;
+		if (e.key === 'Enter' && !e.shiftKey && finePointer) {
 			e.preventDefault();
 			onSend();
 		}

@@ -1,13 +1,16 @@
 <script lang="ts">
 	let {
 		projectName,
-		onNewChatInProject
-	} = $props<{ projectName: string; onNewChatInProject: () => void }>();
+		onNewChatInProject,
+		showNewChat = true
+	} = $props<{ projectName: string; onNewChatInProject: () => void; showNewChat?: boolean }>();
 </script>
 
 <div class="project-header">
 	<h2>{projectName}</h2>
-	<button class="new-chat-btn" onclick={onNewChatInProject}>✚ New chat in project</button>
+	{#if showNewChat}
+		<button class="new-chat-btn" onclick={onNewChatInProject}>✚ New chat in project</button>
+	{/if}
 </div>
 
 <style>

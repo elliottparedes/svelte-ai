@@ -3,7 +3,7 @@
 	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import SidebarConversationRow from './SidebarConversationRow.svelte';
-	import type { Conversation, Project } from '$lib/types/dashboard';
+	import type { Conversation, Model, Project } from '$lib/types/dashboard';
 
 	let {
 		conversations,
@@ -13,10 +13,12 @@
 		onSelect,
 		onDelete,
 		onRename,
-		streamingConversationIds
+		streamingConversationIds,
+		models
 	} = $props<{
 		conversations: Conversation[];
 		projects: Project[];
+		models: Model[];
 		activeId: string | null;
 		activeProjectId: string | null;
 		onSelect: (id: string) => void;
@@ -101,6 +103,7 @@
 				{projects}
 				{activeId}
 				{activeProjectId}
+				{models}
 				streaming={streamingConversationIds.has(conv.id)}
 				menuOpen={openMenuId === conv.id}
 				onToggle={(e: MouseEvent) => toggleMenu(conv.id, e)}

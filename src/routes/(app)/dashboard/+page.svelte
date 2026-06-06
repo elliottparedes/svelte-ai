@@ -70,6 +70,7 @@
 		onDelete={model.deleteConversation}
 		onRename={model.renameConversation}
 		streamingConversationIds={model.streamingConversationIds}
+		models={model.models}
 		{user}
 		chatQuota={layoutQuota}
 		onLogout={model.logout}
@@ -95,6 +96,8 @@
 				projects={model.projects}
 				activeProjectId={model.activeProjectId}
 				projectConversations={model.projectConversations}
+				models={model.models}
+				isMobile={viewport.isMobile}
 				bind:editingProjectPrompt={model.editingProjectPrompt}
 				bind:projectPromptValue={model.projectPromptValue}
 				onNewChatInProject={model.startProjectCompose}

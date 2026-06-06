@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Conversation, Project } from '$lib/types/dashboard';
+	import type { Conversation, Model, Project } from '$lib/types/dashboard';
 
 	import DashboardProjectChatsGrid from './DashboardProjectChatsGrid.svelte';
 	import DashboardProjectPanelHeader from './DashboardProjectPanelHeader.svelte';
@@ -9,6 +9,8 @@
 		projects,
 		activeProjectId,
 		projectConversations,
+		models,
+		isMobile = false,
 		editingProjectPrompt = $bindable(false),
 		projectPromptValue = $bindable(''),
 		onNewChatInProject,
@@ -23,6 +25,8 @@
 		projects: Project[];
 		activeProjectId: string;
 		projectConversations: Conversation[];
+		models: Model[];
+		isMobile?: boolean;
 		editingProjectPrompt?: boolean;
 		projectPromptValue?: string;
 		onNewChatInProject: () => void;
@@ -42,6 +46,7 @@
 	<DashboardProjectPanelHeader
 		projectName={activeProject?.name ?? 'Project'}
 		{onNewChatInProject}
+		showNewChat={!isMobile}
 	/>
 	<DashboardProjectPromptSection
 		{activeProject}
@@ -51,8 +56,14 @@
 		{onCancelEditPrompt}
 		{onStartEditPrompt}
 	/>
+	{#if isMobile}
+		<div class="mobile-project-actions">
+			<button class="mobile-new-chat-btn" onclick={onNewChatInProject}>✚ New chat in project</button>
+		</div>
+	{/if}
 	<DashboardProjectChatsGrid
 		{projectConversations}
+		{models}
 		{streamingConversationIds}
 		{onOpenConversation}
 		{onRenameChat}
@@ -77,5 +88,23 @@
 	.project-view::-webkit-scrollbar-thumb {
 		background: #45475a;
 		border-radius: 3px;
+	}
+	.mobile-project-actions {
+		display: flex;
+		justify-content: flex-end;
+		margin: -0.5rem auto 1.75rem;
+		max-width: 900px;
+		width: 100%;
+		padding: 0 0.5rem;
+	}
+	.mobile-new-chat-btn {
+		background: #45475a;
+		color: #cdd6f4;
+		border: none;
+		border-radius: 8px;
+		padding: 0.55rem 0.8rem;
+		font-size: 0.85rem;
+		line-height: 1.2;
+		cursor: pointer;
 	}
 </style>

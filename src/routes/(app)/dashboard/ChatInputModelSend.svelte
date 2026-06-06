@@ -17,7 +17,7 @@
 		type="button"
 		class="send-btn"
 		disabled={isStreaming || (!value.trim() && attachmentsLen === 0)}
-		onclick={onSend}
+		onclick={() => onSend()}
 		aria-label="Send message"
 	>
 		<span class="send-label">Send</span>

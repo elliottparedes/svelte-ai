@@ -2,10 +2,11 @@
 	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import SidebarChatLoadingDots from './SidebarChatLoadingDots.svelte';
-	import type { Conversation } from '$lib/types/dashboard';
+	import type { Conversation, Model } from '$lib/types/dashboard';
 
 	let {
 		conv,
+		models,
 		streaming = false,
 		editing,
 		editValue = $bindable(''),
@@ -16,6 +17,7 @@
 		cancelRename
 	} = $props<{
 		conv: Conversation;
+		models: Model[];
 		streaming?: boolean;
 		editing: boolean;
 		editValue?: string;
@@ -25,6 +27,14 @@
 		submitRename: (e: Event) => void;
 		cancelRename: (e: Event) => void;
 	}>();
+
+	const modelLabel = $derived.by(() => {
+		if (!conv.modelId) return 'Model not recorded';
+		const found = models.find((m: Model) => m.id === conv.modelId);
+		if (found) return found.name;
+		const slash = conv.modelId.lastIndexOf('/');
+		return slash >= 0 ? conv.modelId.slice(slash + 1) : conv.modelId;
+	});
 
 	let deleteModalOpen = $state(false);
 
@@ -50,13 +60,16 @@
 		<button type="button" class="card-main" onclick={onOpen}>
 			<div class="card-title">
 				{#if conv.title.trim()}
-					{conv.title}
+					<span>{conv.title}</span>
 				{/if}
 				{#if streaming}
 					<SidebarChatLoadingDots />
 				{/if}
 			</div>
-			<div class="card-meta">{new Date(conv.createdAt).toLocaleDateString()}</div>
+			<div class="card-meta">
+				<span>{new Date(conv.createdAt).toLocaleDateString()}</span>
+				<span class="model-meta" title={conv.modelId ?? modelLabel}>Model: {modelLabel}</span>
+			</div>
 		</button>
 		<button type="button" class="icon-btn" title="Rename chat" onclick={onStartRename}>✎</button>
 		<button

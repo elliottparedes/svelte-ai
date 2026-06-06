@@ -1,15 +1,17 @@
 <script lang="ts">
 	import DashboardProjectChatCard from './DashboardProjectChatCard.svelte';
-	import type { Conversation } from '$lib/types/dashboard';
+	import type { Conversation, Model } from '$lib/types/dashboard';
 
 	let {
 		projectConversations,
+		models,
 		onOpenConversation,
 		onRenameChat,
 		onDeleteChat,
 		streamingConversationIds
 	} = $props<{
 		projectConversations: Conversation[];
+		models: Model[];
 		onOpenConversation: (id: string) => void;
 		onRenameChat: (id: string, title: string) => void | Promise<void>;
 		onDeleteChat: (id: string) => void | Promise<void>;
@@ -49,6 +51,7 @@
 		{#each projectConversations as conv}
 			<DashboardProjectChatCard
 				{conv}
+				{models}
 				streaming={streamingConversationIds.has(conv.id)}
 				editing={editingId === conv.id}
 				bind:editValue={editingValue}
