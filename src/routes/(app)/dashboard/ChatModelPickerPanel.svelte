@@ -26,6 +26,8 @@
 	let searchInput = $state<HTMLInputElement | null>(null);
 
 	$effect(() => {
+		const shouldAutoFocus = window.matchMedia('(pointer: fine)').matches;
+		if (!shouldAutoFocus) return;
 		const t = window.setTimeout(() => searchInput?.focus(), 0);
 		return () => window.clearTimeout(t);
 	});
@@ -142,5 +144,23 @@
 		letter-spacing: 0.06em;
 		color: #6c7086;
 		background: #11111b;
+	}
+
+	@media (max-width: 768px) {
+		.panel.drop-up {
+			position: fixed;
+			left: max(0.65rem, env(safe-area-inset-left, 0px));
+			right: max(0.65rem, env(safe-area-inset-right, 0px));
+			bottom: max(6.5rem, calc(5.75rem + env(safe-area-inset-bottom, 0px)));
+			top: auto;
+			min-width: 0;
+			max-width: none;
+			width: auto;
+			z-index: 100;
+		}
+
+		.list {
+			max-height: min(45dvh, 22rem);
+		}
 	}
 </style>

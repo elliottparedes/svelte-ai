@@ -139,4 +139,12 @@
 	.chev.up {
 		transform: rotate(180deg);
 	}
+
+	@media (max-width: 768px) {
+		.trigger {
+			min-height: 2.5rem;
+			padding: 0.5rem 0.65rem;
+			touch-action: manipulation;
+		}
+	}
 </style>

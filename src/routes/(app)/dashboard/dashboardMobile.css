@@ -286,15 +286,6 @@
 		-webkit-overflow-scrolling: touch;
 	}
 
-	.panel.drop-up {
-		position: fixed;
-		left: max(0.65rem, env(safe-area-inset-left, 0px));
-		right: max(0.65rem, env(safe-area-inset-right, 0px));
-		bottom: max(6.5rem, calc(5.75rem + env(safe-area-inset-bottom, 0px)));
-		min-width: 0;
-		max-width: none;
-		width: auto;
-	}
 }
 
 @media (max-width: 480px) {
