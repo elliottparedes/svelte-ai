@@ -44,6 +44,7 @@ export async function* runConversationToolTurns(params: {
 	initialHistory: ChatMessage[];
 	streamAttachments: readonly ChatAttachment[] | undefined;
 	toolsForTurn: readonly ToolDefinition[];
+	sandboxFiles: readonly { name: string; content: string }[];
 	options: Record<string, unknown> | undefined;
 	usageAcc: ChatTurnUsageAccumulator;
 }): AsyncGenerator<ConversationProcessEvent> {
@@ -102,7 +103,12 @@ export async function* runConversationToolTurns(params: {
 		const toolResult = gate.allowed
 			? await executeToolLogged(
 					params.toolExecutor,
-					{ userId: params.userId, conversationId: params.conversationId, llmTurn: turn },
+					{
+						userId: params.userId,
+						conversationId: params.conversationId,
+						llmTurn: turn,
+						sandboxFiles: params.sandboxFiles
+					},
 					pendingToolCall,
 					params.usageAcc
 				)

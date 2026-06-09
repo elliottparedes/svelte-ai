@@ -2,10 +2,15 @@ import type { ChatAttachment, ChatMessage, ChatProvider } from '../domain/ChatPr
 import type { Conversation } from '../domain/Conversation.types';
 import type { ProjectRepository } from '../repositories/ProjectRepository';
 import type { VisionRelayService } from './VisionRelayService';
-import { augmentHistory, buildAugmentedPrompt } from './conversationPrompt.util';
+import { augmentHistory } from './conversationPrompt.util';
 import { buildSystemMessagesForTurn } from './conversationSystemMessages';
 import { maybeApplyVisionRelay, VISION_RELAY_SYSTEM_HINT } from './conversationVisionRelay.util';
 import { resolveToolingForTurn } from './conversationToolTurnConfig';
+import {
+	augmentPromptForSandbox,
+	sandboxFilesFromAttachments,
+	sandboxSystemHint
+} from './conversationSandboxFiles.util';
 import { estimateMessagesTokens } from '$lib/shared/estimateContextTokens';
 import { trimChatMessagesByTokenBudget } from './conversationHistoryTrim';
 import { modelOpenRouterModalities } from '../model/modelCapabilities';
@@ -18,6 +23,7 @@ export type PreparedConversationTurn = {
 	streamAttachments: readonly ChatAttachment[] | undefined;
 	options: Record<string, unknown> | undefined;
 	effectiveNames: string[];
+	sandboxFiles: readonly { name: string; content: string }[];
 };
 
 export async function prepareConversationTurn(p: {
@@ -35,7 +41,15 @@ export async function prepareConversationTurn(p: {
 	conversationId: string;
 	usageAcc?: ChatTurnUsageAccumulator;
 }): Promise<PreparedConversationTurn> {
-	const augmentedPromptBase = buildAugmentedPrompt(p.prompt, p.attachments);
+	const preTooling = resolveToolingForTurn({
+		toolsCapable: p.toolsCapable,
+		relayApplied: false,
+		enabledToolNames: p.enabledToolNames
+	});
+	const sandboxFiles = preTooling.effectiveNames.includes('execute_python')
+		? sandboxFilesFromAttachments(p.attachments)
+		: [];
+	const augmentedPromptBase = augmentPromptForSandbox(p.prompt, p.attachments, sandboxFiles);
 	const imageAttachments = p.attachments?.filter((a) => a.type === 'image' && a.dataUrl);
 	const { augmentedPrompt, relayApplied } = await maybeApplyVisionRelay({
 		userId: p.userId,
@@ -58,16 +72,15 @@ export async function prepareConversationTurn(p: {
 		streamAttachments = multimodal?.length ? multimodal : undefined;
 	}
 
-	const { effectiveNames, systemContentForMessages } = resolveToolingForTurn({
+	const tooling = resolveToolingForTurn({
 		toolsCapable: p.toolsCapable,
 		relayApplied,
 		enabledToolNames: p.enabledToolNames
 	});
-	const systemMessages = await buildSystemMessagesForTurn(
-		p.conv,
-		p.projectRepo,
-		systemContentForMessages
-	);
+	const toolSystem = sandboxFiles.length
+		? `${tooling.systemContentForMessages}\n\n${sandboxSystemHint(sandboxFiles)}`
+		: tooling.systemContentForMessages;
+	const systemMessages = await buildSystemMessagesForTurn(p.conv, p.projectRepo, toolSystem);
 
 	const relaySystem: ChatMessage[] = relayApplied
 		? [{ id: 'system-vision-relay', role: 'system', content: VISION_RELAY_SYSTEM_HINT, createdAt: new Date() }]
@@ -90,5 +103,11 @@ export async function prepareConversationTurn(p: {
 				}
 			: undefined;
 
-	return { augmentedHistory, streamAttachments, options, effectiveNames };
+	return {
+		augmentedHistory,
+		streamAttachments,
+		options,
+		effectiveNames: tooling.effectiveNames,
+		sandboxFiles
+	};
 }

@@ -14,8 +14,12 @@ export function applyOpenRouterStreamPayloadOptions(
 /** Ask OpenRouter to return reasoning tokens (DeepSeek R1, Kimi K2 Thinking, etc.). */
 export function applyOpenRouterReasoningOption(
 	payload: Record<string, unknown>,
-	modelId: string | undefined
+	modelId: string | undefined,
+	toolsActive = false
 ): void {
 	if (!modelId || !modelSupportsReasoning(modelId)) return;
+	// Hybrid models (e.g. DeepSeek V3.1 Terminus) often plan tool use in reasoning
+	// tokens but finish with stop instead of tool_calls when both are enabled.
+	if (toolsActive) return;
 	payload.reasoning = { enabled: true };
 }

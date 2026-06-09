@@ -134,6 +134,16 @@ export class ConversationService {
 				? []
 				: toolDefinitionsForOrderedNames(prepared.effectiveNames);
 
+		if (prepared.sandboxFiles.length > 0) {
+			logger.info('Chat sandbox files prepared', {
+				userId,
+				conversationId: convId,
+				sandboxFileCount: prepared.sandboxFiles.length,
+				sandboxFileBytes: prepared.sandboxFiles.reduce((n, f) => n + f.content.length, 0),
+				sandboxNames: prepared.sandboxFiles.map((f) => f.name)
+			});
+		}
+
 		yield* runConversationToolTurns({
 			userId,
 			conversationId: convId,
@@ -150,6 +160,7 @@ export class ConversationService {
 			initialHistory: prepared.augmentedHistory,
 			streamAttachments: prepared.streamAttachments,
 			toolsForTurn,
+			sandboxFiles: prepared.sandboxFiles,
 			options: prepared.options,
 			usageAcc: usageAcc ?? new ChatTurnUsageAccumulator()
 		});

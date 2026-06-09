@@ -6,7 +6,12 @@ import type { ChatTurnUsageAccumulator } from '../services/chatTurnUsageAccumula
 
 export async function executeToolLogged(
 	executor: ToolExecutor,
-	ctx: { userId: string; conversationId: string; llmTurn: number },
+	ctx: {
+		userId: string;
+		conversationId: string;
+		llmTurn: number;
+		sandboxFiles?: readonly { name: string; content: string }[];
+	},
 	call: ToolCall,
 	usageAcc?: ChatTurnUsageAccumulator
 ): Promise<string> {
@@ -27,7 +32,8 @@ export async function executeToolLogged(
 
 	const t0 = performance.now();
 	const result = await executor.run(call.name, call.arguments, {
-		conversationId: ctx.conversationId
+		conversationId: ctx.conversationId,
+		sandboxFiles: ctx.sandboxFiles
 	});
 	if (result.usage) usageAcc?.addExternal(result.usage);
 	const durationMs = Math.round(performance.now() - t0);

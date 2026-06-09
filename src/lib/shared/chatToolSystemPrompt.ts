@@ -24,7 +24,7 @@ export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
 
 const BULLETS: Record<ChatToolId, string> = {
 	execute_python:
-		'Run Python 3.12. Includes numpy, pandas, scipy, sympy + urllib HTTP. Use for: DataFrames, CSV/TSV you paste, stats, Monte Carlo, exact math, API analysis, and parsing fetched text. Do not use Python for simple current weather/local condition lookups; use web_search first. No requests/beautifulsoup/matplotlib — use fetch_url for HTML then parse with pandas. Always print() results.',
+		'Run Python 3.12 with inkstream_sandbox helpers: inkstream_profile(path) first for CSV attachments, inkstream_read_csv(path), inkstream_group_means(df, by, [cols]), inkstream_show(df). Never embed attachment data in code. Always print(); use .head(20) on large outputs.',
 	datetime:
 		'Get the current date and time (ISO). The system message already states today; call this if you need to re-check mid-conversation.',
 	fetch_url:
@@ -52,7 +52,7 @@ export function normalizeChatToolIds(ids: readonly string[]): ChatToolId[] {
 
 export function buildChatToolSystemPrompt(ids: readonly ChatToolId[]): string {
 	const lines = ids.map((id) => `- ${id}: ${BULLETS[id]}`).join('\n');
-	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Trust web_search and fetch_url dates over your training memory; do not disclaim results as fictional. For latest/current/newest claims, use web_search and then fetch_url 1-2 authoritative result URLs before finalizing. If web_search/fetch_url was used, cite source URLs and prefer at least two distinct domains when available. Weather/current local conditions: use web_search first. Use execute_python only for calculations, historical weather datasets, or structured API analysis. User-provided URL: fetch_url. Finding sources: web_search. You may chain tools (e.g. web_search then fetch_url or execute_python to parse).`;
+	return `You have access to the following tools. Use them whenever they would help answer the user's question accurately:\n\n${lines}\n\nImportant: For real-time data (weather, prices, news), you MUST call a tool — do not guess from training data. Trust web_search and fetch_url dates over your training memory; do not disclaim results as fictional. For latest/current/newest claims, use web_search and then fetch_url 1-2 authoritative result URLs before finalizing. If web_search/fetch_url was used, cite source URLs and prefer at least two distinct domains when available. User-attached CSV/text: use execute_python with inkstream_profile first, then inkstream_group_means — not web_search. Live weather conditions: web_search. User-provided URL: fetch_url. You may chain tools (e.g. web_search then fetch_url or execute_python to parse).`;
 }
 
 export function buildChatToolSystemPromptNoWeb(ids: readonly ChatToolId[]): string {

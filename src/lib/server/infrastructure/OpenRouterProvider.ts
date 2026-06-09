@@ -17,8 +17,10 @@ import {
 } from './openRouterModelsCatalog';
 import { applyOpenRouterReasoningOption } from './openRouterChatRequest.util';
 import { appendReasoningStream } from '$lib/shared/appendReasoningStream';
+import { readStreamChunkWithIdleTimeout } from './openRouterStreamRead.util';
 
 const BASE = 'https://openrouter.ai/api/v1';
+const STREAM_IDLE_MS = 120_000;
 
 export class OpenRouterProvider implements ChatProvider {
 	constructor(
@@ -63,7 +65,11 @@ export class OpenRouterProvider implements ChatProvider {
 		const pdfPlugins = openRouterPdfPluginsForChat(attachments, options?.model as string | undefined);
 		if (pdfPlugins) payload.plugins = pdfPlugins;
 		applyOpenRouterStreamPayloadOptions(payload, options);
-		applyOpenRouterReasoningOption(payload, options?.model as string | undefined);
+		applyOpenRouterReasoningOption(
+			payload,
+			options?.model as string | undefined,
+			Boolean(tools && tools.length > 0)
+		);
 
 		const res = await fetch(`${BASE}/chat/completions`, {
 			method: 'POST',
@@ -85,7 +91,7 @@ export class OpenRouterProvider implements ChatProvider {
 
 		try {
 			while (true) {
-				const { done, value } = await reader.read();
+				const { done, value } = await readStreamChunkWithIdleTimeout(reader, STREAM_IDLE_MS);
 				if (done) break;
 				buffer += decoder.decode(value, { stream: true });
 				const lines = buffer.split('\n');

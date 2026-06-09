@@ -3,7 +3,7 @@ import type { ToolDefinition } from '../domain/ChatProvider.interface';
 export const EXECUTE_PYTHON_TOOL: ToolDefinition = {
 	name: 'execute_python',
 	description:
-		'Run Python 3.12 in a sandbox. Preinstalled: numpy, pandas, scipy, sympy (+ stdlib urllib for HTTP). NOT available: requests, beautifulsoup4, matplotlib, sklearn. Use for math, dataframes, CSV-like parsing, stats, simulations, weather APIs (wttr.in, open-meteo), JSON via urllib. Always print() results. For HTML pages use fetch_url then pandas/read_csv on text; for discovery use web_search.',
+		'Run Python 3.12 in a sandbox with inkstream_sandbox helpers (always available): inkstream_profile(path) for EDA overview; inkstream_read_csv(path) to load CSV with numeric coercion; inkstream_group_means(df, by, [cols], top=20) for safe group summaries; inkstream_show(df) to print head(25). Attachments are preloaded as files — never embed raw data in code. Always print(); avoid numpy unless needed.',
 	parameters: {
 		type: 'object',
 		properties: {

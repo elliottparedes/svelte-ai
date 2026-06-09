@@ -7,7 +7,10 @@ import { executePythonOnPiston } from './pistonClient';
 import { WebSearchRouter } from './WebSearchRouter';
 import { BRAVE_SEARCH_API_KEY } from '../env';
 import { EXA_AI_API_KEY } from '../env/searchEnv';
-export type ToolRunContext = { conversationId: string };
+export type ToolRunContext = {
+	conversationId: string;
+	sandboxFiles?: readonly { name: string; content: string }[];
+};
 export type ToolRunResult = { content: string; usage?: ExternalToolUsage };
 const IMAGE_GENERATION_TEMP_DISABLED = true;
 
@@ -23,11 +26,16 @@ export class ToolExecutor {
 	async run(
 		name: string,
 		args: Record<string, unknown>,
-		_ctx?: ToolRunContext
+		ctx?: ToolRunContext
 	): Promise<ToolRunResult> {
 		switch (name) {
 			case 'execute_python':
-				return { content: await executePythonOnPiston(String(args.code ?? '')) };
+				return {
+					content: await executePythonOnPiston(
+						String(args.code ?? ''),
+						ctx?.sandboxFiles ?? []
+					)
+				};
 			case 'datetime':
 				return { content: this.runDatetime() };
 			case 'fetch_url':

@@ -6,12 +6,25 @@ import {
 	PISTON_URL
 } from '../env';
 import { formatPistonExecuteResult, type PistonExecuteBody } from './pistonFormatResult';
+import { wrapPistonMainPy } from './pistonMainWrap.util';
+import { withPistonLock } from './pistonExecuteLock';
+import { INKSTREAM_SANDBOX_PY } from './pistonSandboxLib.py';
 
 type PistonRuntime = { language: string; version: string };
 
 let cachedPythonVersion: string | null = null;
 
-export async function executePythonOnPiston(code: string): Promise<string> {
+export async function executePythonOnPiston(
+	code: string,
+	extraFiles: readonly { name: string; content: string }[] = []
+): Promise<string> {
+	return withPistonLock(() => executePythonOnPistonUnlocked(code, extraFiles));
+}
+
+async function executePythonOnPistonUnlocked(
+	code: string,
+	extraFiles: readonly { name: string; content: string }[] = []
+): Promise<string> {
 	if (!isPistonConfigured()) {
 		return 'Error: Python execution is not configured (set PISTON_URL)';
 	}
@@ -20,6 +33,13 @@ export async function executePythonOnPiston(code: string): Promise<string> {
 
 	const version = await resolvePythonVersion();
 	const base = PISTON_URL.replace(/\/$/, '');
+	const mainPy = wrapPistonMainPy(trimmed, extraFiles);
+	// main.py MUST be first — Piston runs files[0]; data files must not be .py or listed first.
+	const files = [
+		{ name: 'main.py', content: mainPy },
+		{ name: 'inkstream_sandbox.py', content: INKSTREAM_SANDBOX_PY },
+		...extraFiles.map((f) => ({ name: f.name, content: f.content }))
+	];
 
 	let res: Response;
 	try {
@@ -29,7 +49,7 @@ export async function executePythonOnPiston(code: string): Promise<string> {
 			body: JSON.stringify({
 				language: 'python',
 				version,
-				files: [{ name: 'main.py', content: trimmed }],
+				files,
 				run_timeout: PISTON_RUN_TIMEOUT_MS
 			})
 		});
