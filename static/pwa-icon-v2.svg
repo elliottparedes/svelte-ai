@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Inkstream">
+	<defs>
+		<linearGradient id="inkstream-flow" x1="48" y1="464" x2="464" y2="48" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#89b4fa" />
+			<stop offset="1" stop-color="#cba6f7" />
+		</linearGradient>
+		<linearGradient id="inkstream-glow" x1="256" y1="0" x2="256" y2="512" gradientUnits="userSpaceOnUse">
+			<stop stop-color="#89b4fa" stop-opacity="0.22" />
+			<stop offset="1" stop-color="#cba6f7" stop-opacity="0" />
+		</linearGradient>
+	</defs>
+
+	<rect width="512" height="512" rx="108" fill="#1e1e2e" />
+	<rect width="512" height="512" rx="108" fill="url(#inkstream-glow)" />
+	<rect x="44" y="44" width="424" height="424" rx="76" stroke="#45475a" stroke-width="10" />
+
+	<path
+		d="M96 332
+			C96 261 167 223 221 250
+			C205 179 293 163 342 201
+			C386 163 440 196 424 257
+			C473 273 462 333 413 344
+			H124
+			C102 344 86 350 96 332Z"
+		fill="#313244"
+		stroke="url(#inkstream-flow)"
+		stroke-width="22"
+		stroke-linejoin="round"
+	/>
+	<path
+		d="M133 332c-30-16-26-51 5-64"
+		stroke="url(#inkstream-flow)"
+		stroke-width="18"
+		stroke-linecap="round"
+	/>
+	<path
+		d="M392 344c27-13 33-45 9-61"
+		stroke="url(#inkstream-flow)"
+		stroke-width="18"
+		stroke-linecap="round"
+	/>
+
+	<path d="M160 400h192" stroke="#cdd6f4" stroke-width="20" stroke-linecap="round" />
+	<path d="M192 432h128" stroke="#a6adc8" stroke-width="16" stroke-linecap="round" opacity="0.7" />
+	<circle cx="352" cy="432" r="12" fill="#89b4fa" />
+</svg>
