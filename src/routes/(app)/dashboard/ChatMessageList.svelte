@@ -75,8 +75,7 @@
 				<ChatMessageRow
 					msg={row.msg}
 					toolMessages={row.toolMessages}
-					messages={displayMessages}
-					{isStreaming}
+					isStreaming={isStreaming && row.msg.id === lastAssistantId}
 					modelLabel={row.msg.id === lastAssistantId ? resolveModelLabel(routedModelId) : ''}
 				/>
 			{/each}

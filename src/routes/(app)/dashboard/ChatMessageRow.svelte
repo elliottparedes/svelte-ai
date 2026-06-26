@@ -8,20 +8,14 @@
 	let {
 		msg,
 		toolMessages = [],
-		messages,
 		isStreaming,
 		modelLabel = ''
 	} = $props<{
 		msg: ChatMessage;
 		toolMessages?: ChatMessage[];
-		messages: ChatMessage[];
 		isStreaming: boolean;
 		modelLabel?: string;
 	}>();
-
-	const streamingThis = $derived(
-		isStreaming && messages.length > 0 && messages[messages.length - 1].id === msg.id
-	);
 
 	const parsed = $derived(parseMessageAttachments(msg.content));
 </script>
@@ -34,8 +28,8 @@
 	<ChatAssistantTurnRow
 		{msg}
 		{toolMessages}
-		showCopy={!streamingThis}
-		streaming={streamingThis}
+		showCopy={!isStreaming}
+		streaming={isStreaming}
 		{modelLabel}
 	/>
 {/if}

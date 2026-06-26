@@ -29,7 +29,7 @@
 	{/if}
 	{#if toolMessages.length > 0}
 		<div class="tool-stack">
-			{#each toolMessages as tool (tool.id)}
+			{#each toolMessages as tool, index (`${tool.id}:${index}`)}
 				<ChatToolBlock msg={tool} compact />
 			{/each}
 		</div>

@@ -37,6 +37,12 @@ function upsertStreamingAssistant(
 	];
 }
 
+function nextStreamingToolMessageId(prev: readonly ChatMessage[], toolCallId: string | undefined): string {
+	if (!toolCallId) return crypto.randomUUID();
+	const seen = prev.filter((m) => m.role === 'tool' && m.toolCallId === toolCallId).length;
+	return seen === 0 ? toolCallId : `${toolCallId}#${seen + 1}`;
+}
+
 export function accumulateChatSse(
 	acc: ChatSseAccum,
 	ev: ChatSseEvent,
@@ -65,7 +71,7 @@ export function accumulateChatSse(
 				reasoningContent: acc.assistantReasoning || undefined
 			});
 			const toolEntry: ChatMessage = {
-				id: ev.toolCallId || crypto.randomUUID(),
+				id: nextStreamingToolMessageId(messages, ev.toolCallId),
 				role: 'tool',
 				content: '',
 				createdAt: new Date(),
@@ -97,7 +103,7 @@ export function accumulateChatSse(
 				messages = [
 					...messages,
 					{
-						id: ev.toolCallId || crypto.randomUUID(),
+						id: nextStreamingToolMessageId(messages, ev.toolCallId),
 						role: 'tool',
 						content: ev.result,
 						createdAt: new Date(),
