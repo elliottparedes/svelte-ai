@@ -40,6 +40,7 @@ export async function prepareConversationTurn(p: {
 	userId: string;
 	conversationId: string;
 	usageAcc?: ChatTurnUsageAccumulator;
+	browserTimeZone?: string;
 }): Promise<PreparedConversationTurn> {
 	const preTooling = resolveToolingForTurn({
 		toolsCapable: p.toolsCapable,
@@ -80,7 +81,12 @@ export async function prepareConversationTurn(p: {
 	const toolSystem = sandboxFiles.length
 		? `${tooling.systemContentForMessages}\n\n${sandboxSystemHint(sandboxFiles)}`
 		: tooling.systemContentForMessages;
-	const systemMessages = await buildSystemMessagesForTurn(p.conv, p.projectRepo, toolSystem);
+	const systemMessages = await buildSystemMessagesForTurn(
+		p.conv,
+		p.projectRepo,
+		toolSystem,
+		p.browserTimeZone
+	);
 
 	const relaySystem: ChatMessage[] = relayApplied
 		? [{ id: 'system-vision-relay', role: 'system', content: VISION_RELAY_SYSTEM_HINT, createdAt: new Date() }]

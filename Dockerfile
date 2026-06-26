@@ -9,6 +9,7 @@ RUN npm run build && npm prune --omit=dev
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+ENV BODY_SIZE_LIMIT=20M
 COPY package.json package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build

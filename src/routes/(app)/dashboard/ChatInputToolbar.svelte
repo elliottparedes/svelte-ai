@@ -3,7 +3,6 @@
 	import ChatToolSelector from './ChatToolSelector.svelte';
 	import ChatMicButton from './ChatMicButton.svelte';
 	import ChatDeepThinkButton from './ChatDeepThinkButton.svelte';
-	import ChatQuotaBadge from './ChatQuotaBadge.svelte';
 	import type { ChatAttachmentInput, ChatMessage, Model, ModelProviderGroup } from '$lib/types/dashboard';
 	import type { ChatQuotaView } from '$lib/types/dashboard';
 	import {
@@ -52,11 +51,6 @@
 
 <div class="input-footer">
 	<div class="footer-left">
-		{#if chatQuota}
-			<ChatQuotaBadge quota={chatQuota} />
-		{:else}
-			<span class="quota-missing" title="Reload the page">Plan: —</span>
-		{/if}
 		<ChatContextMeter {messages} {summaryThroughMessageId} />
 		{#if showAttachButton}
 			<button
@@ -66,7 +60,7 @@
 				onclick={onAttachClick}
 				disabled={isUploading}
 			>
-				<span>＋</span>
+				<span>+</span>
 			</button>
 		{/if}
 		{#if modelSupportsTools}
@@ -104,9 +98,5 @@
 	}
 	.icon-btn:hover:not(:disabled) {
 		color: #cdd6f4;
-	}
-	.quota-missing {
-		font-size: 0.75rem;
-		color: #f38ba8;
 	}
 </style>

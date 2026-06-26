@@ -9,6 +9,8 @@ import { BRAVE_SEARCH_API_KEY } from '../env';
 import { EXA_AI_API_KEY } from '../env/searchEnv';
 export type ToolRunContext = {
 	conversationId: string;
+	userId?: string;
+	llmTurn?: number;
 	sandboxFiles?: readonly { name: string; content: string }[];
 };
 export type ToolRunResult = { content: string; usage?: ExternalToolUsage };
@@ -36,12 +38,10 @@ export class ToolExecutor {
 						ctx?.sandboxFiles ?? []
 					)
 				};
-			case 'datetime':
-				return { content: this.runDatetime() };
 			case 'fetch_url':
 				return await this.runFetchUrl(String(args.url ?? ''), args.offset);
 			case 'web_search':
-				return await this.runWebSearch(String(args.query ?? ''));
+				return await this.runWebSearch(String(args.query ?? ''), ctx);
 			case 'image_search':
 				return await braveImageSearchWithUsage(this.braveApiKey, String(args.query ?? ''));
 			case 'map_route':
@@ -57,7 +57,8 @@ export class ToolExecutor {
 		}
 	}
 
-	private async runWebSearch(query: string): Promise<ToolRunResult> {
+	private async runWebSearch(query: string, ctx?: ToolRunContext): Promise<ToolRunResult> {
+		void ctx;
 		return await this.webSearchRouter.search(query);
 	}
 
@@ -67,9 +68,5 @@ export class ToolExecutor {
 			if (!result.content.startsWith('Error:')) return result;
 		}
 		return { content: await fetchUrlContent(url, offset) };
-	}
-
-	private runDatetime(): string {
-		return new Date().toISOString();
 	}
 }

@@ -11,11 +11,6 @@ export const MAX_TOOL_TURNS = 12;
 export const TOOLS: ToolDefinition[] = [
 	EXECUTE_PYTHON_TOOL,
 	{
-		name: 'datetime',
-		description: 'Get the current date and time in ISO 8601 format.',
-		parameters: { type: 'object', properties: {} }
-	},
-	{
 		name: 'fetch_url',
 		description:
 			'Fetch clean full-page text for a URL, using Exa extraction when configured and direct fetch as fallback. Returns one chunk per call; use offset to read later sections of long pages.',

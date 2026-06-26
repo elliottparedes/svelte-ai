@@ -46,7 +46,8 @@ export class ConversationService {
 		model?: string,
 		projectId?: string,
 		enabledToolNames?: readonly string[],
-		usageAcc?: ChatTurnUsageAccumulator
+		usageAcc?: ChatTurnUsageAccumulator,
+		browserTimeZone?: string
 	): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 		const isNewThread = !conversationId;
 		const { convId, effectiveModel } = await resolveConversationForPrompt(
@@ -127,7 +128,8 @@ export class ConversationService {
 			visionRelay: this.visionRelay,
 			userId,
 			conversationId: convId,
-			usageAcc
+			usageAcc,
+			browserTimeZone
 		});
 		const toolsForTurn =
 			!toolsCapable || prepared.effectiveNames.length === 0

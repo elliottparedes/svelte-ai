@@ -4,7 +4,6 @@ import { estimateTokensFromText } from './estimateContextTokens';
 export const ESTIMATED_FULL_TOOL_STACK_TOKENS = 3200;
 export const CHAT_TOOL_ORDER = [
 	'execute_python',
-	'datetime',
 	'fetch_url',
 	'web_search',
 	// 'map_route', // MAP_ROUTE_DISABLED — re-enable when route tool returns
@@ -17,7 +16,6 @@ export const ALL_CHAT_TOOL_IDS: ChatToolId[] = [...CHAT_TOOL_ORDER];
 /** Dashboard default: live/web tools on; generate_image off. */
 export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
 	'execute_python',
-	'datetime',
 	'fetch_url',
 	'web_search'
 ];
@@ -25,8 +23,6 @@ export const DEFAULT_CHAT_TOOL_IDS: ChatToolId[] = [
 const BULLETS: Record<ChatToolId, string> = {
 	execute_python:
 		'Run Python 3.12 with inkstream_sandbox helpers: inkstream_profile(path) first for CSV attachments, inkstream_read_csv(path), inkstream_group_means(df, by, [cols]), inkstream_show(df). Never embed attachment data in code. Always print(); use .head(20) on large outputs.',
-	datetime:
-		'Get the current date and time (ISO). The system message already states today; call this if you need to re-check mid-conversation.',
 	fetch_url:
 		'Fetch plain text from a webpage URL (prefers main/article content). Returns one chunk per call; long pages include total length and an offset hint — call again with offset to read the next section. For weather/API JSON, execute_python with urllib is often faster.',
 	web_search:

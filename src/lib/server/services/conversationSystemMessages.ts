@@ -6,11 +6,17 @@ import { buildClockSystemContent } from './conversationClockContext';
 export async function buildSystemMessagesForTurn(
 	conv: { projectId?: string | null } | null,
 	projectRepo: ProjectRepository | undefined,
-	toolSystemContent: string = TOOL_SYSTEM_PROMPT
+	toolSystemContent: string = TOOL_SYSTEM_PROMPT,
+	browserTimeZone?: string
 ): Promise<ChatMessage[]> {
 	const now = new Date();
 	const systemMessages: ChatMessage[] = [
-		{ id: 'system-clock', role: 'system', content: buildClockSystemContent(now), createdAt: now },
+		{
+			id: 'system-clock',
+			role: 'system',
+			content: buildClockSystemContent(now, browserTimeZone),
+			createdAt: now
+		},
 		{ id: 'system-tools', role: 'system', content: toolSystemContent, createdAt: now }
 	];
 	if (conv?.projectId && projectRepo) {

@@ -5,10 +5,23 @@
 		max-height: 100dvh;
 	}
 
-	.app-layout .sidebar.mobile.collapsed {
-		width: 0;
+	.app-layout .sidebar.mobile {
+		position: fixed;
+		inset: 0 auto 0 0;
+		width: min(86vw, 260px);
+		max-width: calc(100vw - max(0.5rem, env(safe-area-inset-left, 0px)));
 		min-width: 0;
-		overflow: hidden;
+		z-index: 40;
+		box-sizing: border-box;
+		flex: 0 0 auto;
+		transition:
+			transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0.28s;
+		will-change: transform;
+	}
+
+	.app-layout .sidebar.mobile.collapsed {
+		transform: translateX(calc(-100% - 0.75rem));
 		visibility: hidden;
 		pointer-events: none;
 	}
@@ -22,14 +35,13 @@
 	}
 
 	.app-layout .sidebar.mobile:not(.collapsed) {
-		position: fixed;
-		inset: 0 auto 0 0;
-		width: min(86vw, 260px);
-		max-width: calc(100vw - max(0.5rem, env(safe-area-inset-left, 0px)));
-		min-width: 0;
-		z-index: 40;
+		transform: translateX(0);
+		visibility: visible;
+		pointer-events: auto;
+		transition:
+			transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+			visibility 0s linear 0s;
 		box-shadow: 4px 0 28px rgb(0 0 0 / 0.4);
-		box-sizing: border-box;
 	}
 
 	.sidebar-backdrop {

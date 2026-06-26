@@ -55,6 +55,7 @@ export type DashboardSendDeps = {
 export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<void> {
 	const text = d.text.trim();
 	if (!text && d.attachments.length === 0) return;
+	const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone?.trim();
 
 	d.setInputValue('');
 	const attachmentSummary = d.attachments
@@ -100,7 +101,10 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 		if (d.voiceModeEnabled) payload.voiceMode = true;
 		res = await fetch('/api/v1/chat', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
+			headers: {
+				'Content-Type': 'application/json',
+				...(browserTimeZone ? { 'X-User-Timezone': browserTimeZone } : {})
+			},
 			body: JSON.stringify(payload)
 		});
 	} catch {

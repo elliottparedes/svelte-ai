@@ -25,9 +25,6 @@
 		<polyline points="8 6 8 18 16 18" />
 		<line x1="8" y1="12" x2="14" y2="12" />
 		<line x1="8" y1="15" x2="12" y2="15" />
-	{:else if id === 'datetime'}
-		<circle cx="12" cy="12" r="8.5" />
-		<polyline points="12 7 12 12 15.5 14" />
 	{:else if id === 'fetch_url'}
 		<path d="M10 13a4.5 4.5 0 0 0 6.4 0l1.6-1.6a4.5 4.5 0 0 0-6.4-6.4L10 6" />
 		<path d="M14 11a4.5 4.5 0 0 0-6.4 0L6 12.6a4.5 4.5 0 0 0 6.4 6.4L14 18" />

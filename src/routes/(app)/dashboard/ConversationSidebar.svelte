@@ -102,6 +102,7 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		flex-shrink: 0;
 	}
 	.sidebar.collapsed {
 		width: 48px;

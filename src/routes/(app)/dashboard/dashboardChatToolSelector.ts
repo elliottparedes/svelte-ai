@@ -12,7 +12,6 @@ type MetaRow = Omit<ToolRowMeta, 'id'>;
 
 const META: Record<ChatToolId, MetaRow> = {
 	execute_python: { title: 'Python', description: 'Math, APIs, light weather/HTTP' },
-	datetime: { title: 'Date & time', description: 'Use the current date and time' },
 	fetch_url: { title: 'Fetch URL', description: 'Read text from a webpage link' },
 	web_search: { title: 'Web search', description: 'Search the web for live information' },
 	generate_image: { title: 'Generate image', description: 'Create images from a text prompt' }
@@ -26,7 +25,7 @@ export const TOOL_ROWS: readonly ToolRowMeta[] = CHAT_TOOL_ORDER
 
 export const PRESET = {
 	none: [] as ChatToolId[],
-	local: ['datetime', 'fetch_url'] as ChatToolId[],
+	local: ['fetch_url'] as ChatToolId[],
 	default: DEFAULT_CHAT_TOOL_IDS,
 	all: ALL_CHAT_TOOL_IDS.filter((id) => !TEMP_DISABLED_TOOL_IDS.has(id))
 };

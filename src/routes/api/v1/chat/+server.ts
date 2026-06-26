@@ -41,6 +41,7 @@ import { ChatTurnUsageAccumulator } from '$lib/server/services/chatTurnUsageAccu
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
 	if (!user) error(401, 'Unauthorized');
+	const browserTimeZone = request.headers.get('x-user-timezone')?.trim() || undefined;
 
 	try {
 		await new ChatQuotaService().assertCanSend(user);
@@ -183,7 +184,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						effectiveModel,
 						projectId,
 						enabledToolNames,
-						usageAcc
+						usageAcc,
+						browserTimeZone
 					),
 					writeLine,
 					voice
