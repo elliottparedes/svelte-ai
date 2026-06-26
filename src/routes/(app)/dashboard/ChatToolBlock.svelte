@@ -2,10 +2,10 @@
 	import ToolCallCollapsible from './ToolCallCollapsible.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
 
-	let { msg } = $props<{ msg: ChatMessage }>();
+	let { msg, compact = false } = $props<{ msg: ChatMessage; compact?: boolean }>();
 </script>
 
-<div class="tool-row">
+<div class="tool-row" class:compact>
 	{#if msg.toolCall}
 		<div class="tool-inline">
 			<ToolCallCollapsible
@@ -25,6 +25,9 @@
 		justify-content: flex-start;
 		width: 100%;
 		animation: messageIn 0.25s ease-out;
+	}
+	.tool-row.compact {
+		animation: none;
 	}
 	.tool-inline {
 		flex: 0 0 auto;

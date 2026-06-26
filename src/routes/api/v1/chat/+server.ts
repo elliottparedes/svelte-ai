@@ -4,6 +4,7 @@ import { chatPromptSchema } from '$lib/server/validation/conversation.schema';
 import { OpenRouterProvider } from '$lib/server/infrastructure/OpenRouterProvider';
 import { ChatRepository } from '$lib/server/repositories/ChatRepository';
 import { MessageRepository } from '$lib/server/repositories/MessageRepository';
+import { ConversationTurnRepository } from '$lib/server/repositories/ConversationTurnRepository';
 import { ProjectRepository } from '$lib/server/repositories/ProjectRepository';
 import { ConversationService } from '$lib/server/services/ConversationService';
 import { ToolExecutor } from '$lib/server/infrastructure/ToolExecutor';
@@ -37,6 +38,7 @@ import { ChatQuotaService } from '$lib/server/services/ChatQuotaService';
 import { DomainError, handleDomainError } from '$lib/server/domain/DomainError';
 import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
 import { ChatTurnUsageAccumulator } from '$lib/server/services/chatTurnUsageAccumulator';
+import { createConversationTurnAuditState } from '$lib/server/services/conversationTurnAudit';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
@@ -74,6 +76,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	const useVoice = Boolean(voiceMode && isElevenLabsConfigured());
 
 	const messageRepo = new MessageRepository();
+	const turnRepo = new ConversationTurnRepository();
+	const turnAudit = createConversationTurnAuditState();
 	let recentSnippet: string | undefined;
 	if (conversationId) {
 		const recent = await messageRepo.findByConversationId(conversationId, 4);
@@ -144,7 +148,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		visionRelay,
 		titleService,
 		summaryService,
-		summaryConfig
+		summaryConfig,
+		turnRepo
 	);
 
 	const encoder = new TextEncoder();
@@ -185,7 +190,17 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 						projectId,
 						enabledToolNames,
 						usageAcc,
-						browserTimeZone
+						browserTimeZone,
+						routeResult.source,
+						routeResult.tier,
+						Boolean(deepReasoning),
+						JSON.stringify({
+							browserTimeZone: browserTimeZone ?? null,
+							projectId: projectId ?? null,
+							voiceMode: useVoice,
+							attachmentCount: attachments?.length ?? 0
+						}),
+						turnAudit
 					),
 					writeLine,
 					voice
@@ -198,6 +213,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				controller.close();
 			} catch (err) {
 				if (err instanceof DomainError) {
+					if (turnAudit.turnId) {
+						const snap = usageAcc.snapshot();
+						await turnRepo.finalize(turnAudit.turnId, {
+							assistantMessageId: turnAudit.assistantMessageId,
+							responseChars: turnAudit.assistantChars,
+							llmCostUsd: snap.costUsd,
+							toolCostUsd: usageAcc.toolCostUsd,
+							totalCostUsd: usageAcc.totalCostUsd,
+							promptTokens: snap.promptTokens,
+							completionTokens: snap.completionTokens,
+							toolCallsJson: turnAudit.toolCalls.length ? JSON.stringify(turnAudit.toolCalls) : null,
+							status: 'error',
+							errorMessage: err.message
+						});
+					}
 					controller.enqueue(
 						encoder.encode(`data: ${JSON.stringify({ type: 'error', message: err.message })}\n\n`)
 					);
@@ -211,6 +241,21 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					conversationId: resolvedConversationId,
 					durationMs: Math.round(performance.now() - started)
 				});
+				if (turnAudit.turnId) {
+					const snap = usageAcc.snapshot();
+					await turnRepo.finalize(turnAudit.turnId, {
+						assistantMessageId: turnAudit.assistantMessageId,
+						responseChars: turnAudit.assistantChars,
+						llmCostUsd: snap.costUsd,
+						toolCostUsd: usageAcc.toolCostUsd,
+						totalCostUsd: usageAcc.totalCostUsd,
+						promptTokens: snap.promptTokens,
+						completionTokens: snap.completionTokens,
+						toolCallsJson: turnAudit.toolCalls.length ? JSON.stringify(turnAudit.toolCalls) : null,
+						status: 'error',
+						errorMessage: msg
+					});
+				}
 				controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', message: msg })}\n\n`));
 				controller.close();
 			}

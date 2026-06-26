@@ -31,6 +31,7 @@ function upsertStreamingAssistant(
 			id: assistantId,
 			role: 'assistant' as const,
 			content: '',
+			createdAt: new Date(),
 			...patch
 		}
 	];
@@ -59,20 +60,21 @@ export function accumulateChatSse(
 			return { ...acc, assistantReasoning, messages };
 		}
 		case 'tool_call': {
+			const messages = upsertStreamingAssistant(acc.messages, assistantId, {
+				content: acc.assistantContent,
+				reasoningContent: acc.assistantReasoning || undefined
+			});
 			const toolEntry: ChatMessage = {
-				id: crypto.randomUUID(),
+				id: ev.toolCallId || crypto.randomUUID(),
 				role: 'tool',
 				content: '',
 				createdAt: new Date(),
+				toolCallId: ev.toolCallId,
+				toolName: ev.name,
+				toolArgumentsJson: ev.arguments ? JSON.stringify(ev.arguments) : undefined,
 				toolCall: { name: ev.name, arguments: ev.arguments }
 			};
-			const prev = acc.messages;
-			const assistantIdx = prev.findIndex((m) => m.id === assistantId);
-			const messages =
-				assistantIdx >= 0
-					? [...prev.slice(0, assistantIdx), toolEntry, ...prev.slice(assistantIdx)]
-					: [...prev, toolEntry];
-			return { ...acc, messages, sawToolCall: true };
+			return { ...acc, messages: [...messages, toolEntry], sawToolCall: true };
 		}
 		case 'tool_result': {
 			const prev = acc.messages;
@@ -80,8 +82,13 @@ export function accumulateChatSse(
 			let updated = false;
 			for (let i = messages.length - 1; i >= 0; i--) {
 				const m = messages[i];
-				if (m.role === 'tool' && m.toolCall && m.toolCall.result === undefined) {
-					messages[i] = { ...m, toolCall: { ...m.toolCall, result: ev.result } };
+				if (m.role === 'tool' && m.toolCallId === ev.toolCallId) {
+					const toolCall = m.toolCall ?? { name: ev.name };
+					messages[i] = {
+						...m,
+						content: ev.result,
+						toolCall: { name: toolCall.name, arguments: toolCall.arguments, result: ev.result }
+					};
 					updated = true;
 					break;
 				}
@@ -90,9 +97,12 @@ export function accumulateChatSse(
 				messages = [
 					...messages,
 					{
-						id: crypto.randomUUID(),
+						id: ev.toolCallId || crypto.randomUUID(),
 						role: 'tool',
-						content: '',
+						content: ev.result,
+						createdAt: new Date(),
+						toolCallId: ev.toolCallId,
+						toolName: ev.name,
 						toolCall: { name: ev.name, result: ev.result }
 					}
 				];

@@ -29,9 +29,14 @@ export const conversationIdSchema = z.object({
 	id: z.string().uuid()
 });
 
+export const reportConversationIssueSchema = z.object({
+	clientContext: z.record(z.string(), z.unknown()).optional()
+});
+
 export const createConversationSchema = z.object({
 	title: z.string().min(1).max(200)
 });
 
 export type ChatPromptInput = z.infer<typeof chatPromptSchema>;
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
+export type ReportConversationIssueInput = z.infer<typeof reportConversationIssueSchema>;

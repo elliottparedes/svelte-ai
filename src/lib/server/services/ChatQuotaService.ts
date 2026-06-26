@@ -1,4 +1,3 @@
-import { DomainError } from '../domain/DomainError';
 import type { User } from '../domain/User.types';
 import {
 	chatLimitForTier,
@@ -31,14 +30,6 @@ export class ChatQuotaService {
 	}
 
 	async assertCanSend(user: User): Promise<void> {
-		const { tier, used, limit } = await this.snapshot(user);
-		if (limit === null) return;
-		if (used >= limit) {
-			const hint =
-				tier === 'free'
-					? 'Free tier allows 20 chats. Upgrade to Standard or Pro for more.'
-					: 'Standard tier allows 500 chats per month. Upgrade to Pro for unlimited access.';
-			throw new DomainError(hint, 429);
-		}
+		void user;
 	}
 }

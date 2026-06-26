@@ -1,17 +1,19 @@
 <script lang="ts">
 	import ChatUserBlock from './ChatUserBlock.svelte';
 	import ChatToolBlock from './ChatToolBlock.svelte';
-	import ChatAssistantBlock from './ChatAssistantBlock.svelte';
+	import ChatAssistantTurnRow from './ChatAssistantTurnRow.svelte';
 	import type { ChatMessage } from '$lib/types/dashboard';
 	import { parseMessageAttachments } from '$lib/client/chatMessageList.utils';
 
 	let {
 		msg,
+		toolMessages = [],
 		messages,
 		isStreaming,
 		modelLabel = ''
 	} = $props<{
 		msg: ChatMessage;
+		toolMessages?: ChatMessage[];
 		messages: ChatMessage[];
 		isStreaming: boolean;
 		modelLabel?: string;
@@ -29,5 +31,11 @@
 {:else if msg.role === 'tool'}
 	<ChatToolBlock {msg} />
 {:else}
-	<ChatAssistantBlock {msg} showCopy={!streamingThis} streaming={streamingThis} {modelLabel} />
+	<ChatAssistantTurnRow
+		{msg}
+		{toolMessages}
+		showCopy={!streamingThis}
+		streaming={streamingThis}
+		{modelLabel}
+	/>
 {/if}

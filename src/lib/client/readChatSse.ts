@@ -13,8 +13,8 @@ export type ChatSseEvent =
 	  }
 	| { type: 'audio'; data: string }
 	| { type: 'routing'; modelId: string; source: ChatRoutingSource; tier?: string }
-	| { type: 'tool_call'; name: string; arguments?: Record<string, unknown> }
-	| { type: 'tool_result'; name: string; result: string }
+	| { type: 'tool_call'; toolCallId: string; name: string; arguments?: Record<string, unknown> }
+	| { type: 'tool_result'; toolCallId: string; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
 	| { type: 'summary_start' }
 	| { type: 'summary_done'; conversationId: string; summaryThroughMessageId: string; summaryChars: number }
@@ -54,12 +54,14 @@ function* parseSseDataLines(lines: string[]): Generator<ChatSseEvent> {
 			} else if (t === 'tool_call') {
 				yield {
 					type: 'tool_call',
+					toolCallId: String(parsed.toolCallId ?? ''),
 					name: String(parsed.name),
 					arguments: parsed.arguments as Record<string, unknown> | undefined
 				};
 			} else if (t === 'tool_result') {
 				yield {
 					type: 'tool_result',
+					toolCallId: String(parsed.toolCallId ?? ''),
 					name: String(parsed.name),
 					result: String(parsed.result ?? '')
 				};

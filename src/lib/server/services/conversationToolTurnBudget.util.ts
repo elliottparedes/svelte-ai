@@ -27,11 +27,34 @@ export async function* yieldBudgetExhaustionFinish(
 				params.conversationId,
 				'assistant',
 				ev.reply,
-				undefined,
-				ev.reasoning.trim() || undefined,
-				params.usageAcc.snapshot(),
-				params.usageAcc.snapshotExternal()
+				{
+					turnId: params.turnId,
+					turnSequence: 1000 + params.toolInvocations,
+					reasoningContent: ev.reasoning.trim() || undefined,
+					usage: params.usageAcc.snapshot(),
+					toolUsage: params.usageAcc.snapshotExternal()
+				}
 			);
+			if (params.turnAudit) {
+				params.turnAudit.assistantMessageId = saved.id;
+				params.turnAudit.assistantChars = ev.reply.length;
+			}
+			if (params.turnRepo && params.turnId) {
+				const snapshot = params.usageAcc.snapshot();
+				await params.turnRepo.finalize(params.turnId, {
+					assistantMessageId: saved.id,
+					responseChars: ev.reply.length,
+					llmCostUsd: snapshot.costUsd,
+					toolCostUsd: params.usageAcc.toolCostUsd,
+					totalCostUsd: params.usageAcc.totalCostUsd,
+					promptTokens: snapshot.promptTokens,
+					completionTokens: snapshot.completionTokens,
+					toolCallsJson: params.turnAudit?.toolCalls.length
+						? JSON.stringify(params.turnAudit.toolCalls)
+						: null,
+					status: 'completed'
+				});
+			}
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
 				conversationId: params.conversationId,

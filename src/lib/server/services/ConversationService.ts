@@ -2,6 +2,7 @@ import type { ChatAttachment, ChatProvider } from '../domain/ChatProvider.interf
 import type { ChatRepository } from '../repositories/ChatRepository';
 import type { MessageRepository } from '../repositories/MessageRepository';
 import type { ProjectRepository } from '../repositories/ProjectRepository';
+import type { ConversationTurnRepository } from '../repositories/ConversationTurnRepository';
 import type { ToolExecutor } from '../infrastructure/ToolExecutor';
 import { logger } from '../logger';
 import { resolveConversationForPrompt } from './conversationResolve.util';
@@ -22,6 +23,8 @@ import {
 } from './conversationSummaryLog.util';
 import { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import { beginNewThreadTitleJob } from './conversationTitleBackground';
+import type { ConversationTurnAuditState } from './conversationTurnAudit';
+import { attachmentsAuditJson } from './conversationTurnAudit';
 
 const HISTORY_FETCH_LIMIT = 2000;
 
@@ -35,7 +38,8 @@ export class ConversationService {
 		private readonly visionRelay?: VisionRelayService,
 		private readonly titleService?: ConversationTitleService,
 		private readonly summaryService?: ConversationSummaryService,
-		private readonly summaryConfig?: SummaryTurnConfig
+		private readonly summaryConfig?: SummaryTurnConfig,
+		private readonly turnRepo?: ConversationTurnRepository
 	) {}
 
 	async *processPrompt(
@@ -47,7 +51,12 @@ export class ConversationService {
 		projectId?: string,
 		enabledToolNames?: readonly string[],
 		usageAcc?: ChatTurnUsageAccumulator,
-		browserTimeZone?: string
+		browserTimeZone?: string,
+		routeSource?: string,
+		routeTier?: string | null,
+		deepReasoning = false,
+		requestMetaJson?: string | null,
+		turnAudit?: ConversationTurnAuditState
 	): AsyncGenerator<ConversationProcessEvent, void, unknown> {
 		const isNewThread = !conversationId;
 		const { convId, effectiveModel } = await resolveConversationForPrompt(
@@ -68,7 +77,23 @@ export class ConversationService {
 				})
 				.join(' ') ?? '';
 		const storedContent = attachmentSummary ? `${prompt}\n${attachmentSummary}` : prompt;
-		await this.messageRepo.create(convId, 'user', storedContent);
+		const userMessage = await this.messageRepo.create(convId, 'user', storedContent);
+		const currentTurnAudit = turnAudit;
+		if (this.turnRepo) {
+			currentTurnAudit && (currentTurnAudit.turnId = await this.turnRepo.create({
+				conversationId: convId,
+				userId,
+				userMessageId: userMessage.id,
+				modelId: effectiveModel ?? 'default',
+				routeSource,
+				routeTier,
+				deepReasoning,
+				enabledToolNames,
+				attachmentsJson: attachmentsAuditJson(attachments),
+				requestMetaJson: requestMetaJson ?? null,
+				promptChars: prompt.length
+			}));
+		}
 		const rawHistory = await this.messageRepo.findByConversationId(convId, HISTORY_FETCH_LIMIT);
 		const conv = await this.chatRepo.findById(convId);
 		const assembled = assembleHistoryWithSummary(
@@ -164,7 +189,10 @@ export class ConversationService {
 			toolsForTurn,
 			sandboxFiles: prepared.sandboxFiles,
 			options: prepared.options,
-			usageAcc: usageAcc ?? new ChatTurnUsageAccumulator()
+			usageAcc: usageAcc ?? new ChatTurnUsageAccumulator(),
+			turnId: currentTurnAudit?.turnId,
+			turnAudit: currentTurnAudit,
+			turnRepo: this.turnRepo
 		});
 	}
 }

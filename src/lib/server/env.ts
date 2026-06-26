@@ -100,7 +100,7 @@ export const OPENROUTER_ROUTER_MODEL = getEnv(
 /** Model used when the user enables deep reasoning on the dashboard. */
 export const OPENROUTER_REASONING_MODEL = getEnv(
 	'OPENROUTER_REASONING_MODEL',
-	'deepseek/deepseek-r1-0528'
+	'moonshotai/kimi-k2-thinking'
 );
 
 /** ElevenLabs streaming TTS; empty disables voice mode. */

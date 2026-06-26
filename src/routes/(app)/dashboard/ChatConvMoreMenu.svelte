@@ -8,6 +8,7 @@
 		isOpen,
 		onToggle,
 		onRename,
+		onReportIssue,
 		onDelete,
 		onMoveToProject
 	} = $props<{
@@ -16,6 +17,7 @@
 		isOpen: boolean;
 		onToggle: (e: MouseEvent) => void;
 		onRename: (conv: Conversation, e: MouseEvent) => void;
+		onReportIssue: (id: string, e: MouseEvent) => void | Promise<void>;
 		onDelete: (id: string, e: MouseEvent) => void;
 		onMoveToProject: (convId: string, projectId: string | null) => Promise<void>;
 	}>();
@@ -89,6 +91,7 @@
 				{showAddSection}
 				bind:projectPickerOpen
 				{onRename}
+				{onReportIssue}
 				{onDelete}
 				{onMoveToProject}
 			/>

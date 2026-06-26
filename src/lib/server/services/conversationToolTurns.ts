@@ -5,6 +5,7 @@ import type {
 	ToolDefinition
 } from '../domain/ChatProvider.interface';
 import type { MessageRepository } from '../repositories/MessageRepository';
+import type { ConversationTurnRepository } from '../repositories/ConversationTurnRepository';
 import type { ToolExecutor } from '../infrastructure/ToolExecutor';
 import { executeToolLogged } from '../logging/executeToolLogged';
 import { logger } from '../logger';
@@ -27,6 +28,7 @@ import type { ChatTurnUsageAccumulator } from './chatTurnUsageAccumulator';
 import { usageProcessEvent } from './conversationTurnUsage.util';
 import { afterAssistantSaved } from './conversationToolTurnAfterSave.util';
 import { streamOneToolTurn } from './conversationToolTurnStream.util';
+import type { ConversationTurnAuditState } from './conversationTurnAudit';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -47,6 +49,9 @@ export async function* runConversationToolTurns(params: {
 	sandboxFiles: readonly { name: string; content: string }[];
 	options: Record<string, unknown> | undefined;
 	usageAcc: ChatTurnUsageAccumulator;
+	turnId?: string;
+	turnAudit?: ConversationTurnAuditState;
+	turnRepo?: ConversationTurnRepository;
 }): AsyncGenerator<ConversationProcessEvent> {
 	if (params.usageAcc.totalCostUsd > 0) yield usageProcessEvent(params.usageAcc);
 
@@ -77,11 +82,34 @@ export async function* runConversationToolTurns(params: {
 				params.conversationId,
 				'assistant',
 				assistantContent,
-				undefined,
-				assistantReasoning.trim() || undefined,
-				params.usageAcc.snapshot(),
-				params.usageAcc.snapshotExternal()
+				{
+					turnId: params.turnId,
+					turnSequence: 1000 + toolInvocations,
+					reasoningContent: assistantReasoning.trim() || undefined,
+					usage: params.usageAcc.snapshot(),
+					toolUsage: params.usageAcc.snapshotExternal()
+				}
 			);
+			if (params.turnAudit) {
+				params.turnAudit.assistantMessageId = saved.id;
+				params.turnAudit.assistantChars = assistantContent.length;
+			}
+			if (params.turnRepo && params.turnId) {
+				const snapshot = params.usageAcc.snapshot();
+				await params.turnRepo.finalize(params.turnId, {
+					assistantMessageId: saved.id,
+					responseChars: assistantContent.length,
+					llmCostUsd: snapshot.costUsd,
+					toolCostUsd: params.usageAcc.toolCostUsd,
+					totalCostUsd: params.usageAcc.totalCostUsd,
+					promptTokens: snapshot.promptTokens,
+					completionTokens: snapshot.completionTokens,
+					toolCallsJson: params.turnAudit?.toolCalls.length
+						? JSON.stringify(params.turnAudit.toolCalls)
+						: null,
+					status: 'completed'
+				});
+			}
 			logger.info('Assistant reply complete', {
 				userId: params.userId,
 				conversationId: params.conversationId,
@@ -98,7 +126,17 @@ export async function* runConversationToolTurns(params: {
 			return;
 		}
 
-		yield { type: 'tool_call' as const, name: pendingToolCall.name, arguments: pendingToolCall.arguments };
+		yield {
+			type: 'tool_call' as const,
+			toolCallId: pendingToolCall.id,
+			name: pendingToolCall.name,
+			arguments: pendingToolCall.arguments
+		};
+		params.turnAudit?.toolCalls.push({
+			toolCallId: pendingToolCall.id,
+			name: pendingToolCall.name,
+			arguments: pendingToolCall.arguments
+		});
 		const gate = beforeToolExecution(toolPolicy, pendingToolCall);
 		const toolResult = gate.allowed
 			? await executeToolLogged(
@@ -131,11 +169,29 @@ export async function* runConversationToolTurns(params: {
 				summaryService: params.summaryService,
 				summaryConfig: params.summaryConfig,
 				usageAcc: params.usageAcc
+				,
+				turnId: params.turnId,
+				turnAudit: params.turnAudit,
+				turnRepo: params.turnRepo
 			});
 			return;
 		}
 
-		yield { type: 'tool_result' as const, name: pendingToolCall.name, result: toolResult };
+		const auditTool = params.turnAudit?.toolCalls.find((x) => x.toolCallId === pendingToolCall.id);
+		if (auditTool) auditTool.result = toolResult;
+		await params.messageRepo.create(params.conversationId, 'tool', toolResult, {
+			turnId: params.turnId,
+			turnSequence: turn * 100 + toolInvocations + 1,
+			toolCallId: pendingToolCall.id,
+			toolName: pendingToolCall.name,
+			toolArgumentsJson: JSON.stringify(pendingToolCall.arguments)
+		});
+		yield {
+			type: 'tool_result' as const,
+			toolCallId: pendingToolCall.id,
+			name: pendingToolCall.name,
+			result: toolResult
+		};
 		augmentedHistory = appendToolExchangeToHistory(
 			augmentedHistory,
 			pendingToolCall,

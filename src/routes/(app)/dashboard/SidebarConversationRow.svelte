@@ -10,9 +10,11 @@
 		activeId,
 		activeProjectId,
 		streaming = false,
+		recentlyReported = false,
 		menuOpen,
 		onToggle,
 		onRenameStart,
+		onReportIssue,
 		onDelete,
 		onMoveToProject,
 		onSelect
@@ -23,9 +25,11 @@
 		activeId: string | null;
 		activeProjectId: string | null;
 		streaming?: boolean;
+		recentlyReported?: boolean;
 		menuOpen: boolean;
 		onToggle: (e: MouseEvent) => void;
 		onRenameStart: (c: Conversation, e: MouseEvent) => void;
+		onReportIssue: (id: string, e: MouseEvent) => void | Promise<void>;
 		onDelete: (id: string, e: MouseEvent) => void;
 		onMoveToProject: (convId: string, projectId: string | null) => Promise<void>;
 		onSelect: (id: string) => void;
@@ -48,6 +52,9 @@
 		{#if modelLabel}
 			<span class="conv-model">{modelLabel}</span>
 		{/if}
+		{#if recentlyReported}
+			<span class="report-pill">Reported</span>
+		{/if}
 		{#if streaming}
 			<SidebarChatLoadingDots />
 		{/if}
@@ -58,6 +65,7 @@
 		isOpen={menuOpen}
 		onToggle={onToggle}
 		onRename={onRenameStart}
+		{onReportIssue}
 		onDelete={onDelete}
 		onMoveToProject={onMoveToProject}
 	/>
@@ -113,5 +121,17 @@
 		white-space: nowrap;
 		color: #6c7086;
 		font-size: 0.7rem;
+	}
+	.report-pill {
+		display: inline-flex;
+		align-items: center;
+		margin-top: 0.28rem;
+		padding: 0.12rem 0.38rem;
+		border: 1px solid rgba(243, 139, 168, 0.4);
+		border-radius: 999px;
+		background: rgba(243, 139, 168, 0.12);
+		color: #f5b4c8;
+		font-size: 0.65rem;
+		line-height: 1.3;
 	}
 </style>

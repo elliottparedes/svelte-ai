@@ -5,7 +5,11 @@ export interface ChatMessage {
 	role: 'user' | 'assistant' | 'system' | 'tool';
 	content: string;
 	createdAt: Date;
+	turnId?: string;
+	turnSequence?: number;
 	toolCallId?: string;
+	toolName?: string;
+	toolArgumentsJson?: string;
 	toolCalls?: readonly ToolCall[];
 	reasoningContent?: string;
 	costUsd?: number;

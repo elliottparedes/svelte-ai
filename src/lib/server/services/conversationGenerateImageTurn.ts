@@ -29,6 +29,9 @@ export async function* yieldGenerateImageSuccess(params: {
 	summaryService?: ConversationSummaryService;
 	summaryConfig?: SummaryTurnConfig;
 	usageAcc: ChatTurnUsageAccumulator;
+	turnId?: string;
+	turnAudit?: import('./conversationTurnAudit').ConversationTurnAuditState;
+	turnRepo?: import('../repositories/ConversationTurnRepository').ConversationTurnRepository;
 }): AsyncGenerator<ConversationProcessEvent> {
 	const imageBlock = assistantContentForImageGeneration(params.result);
 	const preamble = params.assistantPreamble.trim();
@@ -37,14 +40,39 @@ export async function* yieldGenerateImageSuccess(params: {
 		params.conversationId,
 		'assistant',
 		stored,
-		undefined,
-		undefined,
-		params.usageAcc.snapshot(),
-		params.usageAcc.snapshotExternal()
+		{
+			turnId: params.turnId,
+			turnSequence: 1000,
+			usage: params.usageAcc.snapshot(),
+			toolUsage: params.usageAcc.snapshotExternal()
+		}
 	);
+	if (params.turnAudit) {
+		params.turnAudit.assistantMessageId = saved.id;
+		params.turnAudit.assistantChars = stored.length;
+	}
+	if (params.turnRepo && params.turnId) {
+		const snapshot = params.usageAcc.snapshot();
+		await params.turnRepo.finalize(params.turnId, {
+			assistantMessageId: saved.id,
+			responseChars: stored.length,
+			llmCostUsd: snapshot.costUsd,
+			toolCostUsd: params.usageAcc.toolCostUsd,
+			totalCostUsd: params.usageAcc.totalCostUsd,
+			promptTokens: snapshot.promptTokens,
+			completionTokens: snapshot.completionTokens,
+			toolCallsJson: params.turnAudit?.toolCalls.length ? JSON.stringify(params.turnAudit.toolCalls) : null,
+			status: 'completed'
+		});
+	}
 	yield usageProcessEvent(params.usageAcc);
 	const sseToolResult = toolResultForLlmHistory('generate_image', params.result);
-	yield { type: 'tool_result' as const, name: 'generate_image', result: sseToolResult };
+	yield {
+		type: 'tool_result' as const,
+		toolCallId: params.pendingToolCall.id,
+		name: 'generate_image',
+		result: sseToolResult
+	};
 	yield { type: 'chunk' as const, content: IMAGE_GENERATION_REPLY };
 	yield { type: 'done' as const, conversationId: params.conversationId };
 	if (params.isNewThread) {

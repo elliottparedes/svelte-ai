@@ -12,6 +12,15 @@ function inferToolNameFromContent(content: string): string {
 	return 'tool';
 }
 
+function parseToolArgs(raw: string | null | undefined): Record<string, unknown> | undefined {
+	if (!raw) return undefined;
+	try {
+		return JSON.parse(raw) as Record<string, unknown>;
+	} catch {
+		return undefined;
+	}
+}
+
 export type ConversationThread = {
 	messages: ChatMessage[];
 	modelId: string | null;
@@ -35,7 +44,11 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 			content: string;
 			reasoningContent?: string | null;
 			createdAt: string;
+			turnId?: string | null;
+			turnSequence?: number | null;
 			toolCallId?: string;
+			toolName?: string | null;
+			toolArgumentsJson?: string | null;
 			costUsd?: number | string | null;
 			toolCostUsd?: number | string | null;
 			toolUsageJson?: string | null;
@@ -65,13 +78,24 @@ export async function fetchConversationThread(conversationId: string): Promise<C
 				role: m.role as ChatMessage['role'],
 				reasoningContent: m.reasoningContent ?? undefined,
 				createdAt: new Date(m.createdAt),
+				turnId: m.turnId ?? undefined,
+				turnSequence: m.turnSequence ?? undefined,
+				toolCallId: m.toolCallId ?? undefined,
+				toolName: m.toolName ?? undefined,
+				toolArgumentsJson: m.toolArgumentsJson ?? undefined,
 				costUsd,
 				toolCostUsd,
 				toolUsageJson: m.toolUsageJson ?? undefined,
 				promptTokens: m.promptTokens ?? undefined,
 				completionTokens: m.completionTokens ?? undefined,
 				...(m.role === 'tool' && m.content
-					? { toolCall: { name: inferToolNameFromContent(m.content), result: m.content } }
+					? {
+							toolCall: {
+								name: m.toolName ?? inferToolNameFromContent(m.content),
+								arguments: parseToolArgs(m.toolArgumentsJson),
+								result: m.content
+							}
+						}
 					: {})
 			};
 		}
@@ -133,6 +157,19 @@ export async function moveConversationToProject(
 		body: JSON.stringify({ projectId })
 	});
 	return res.ok;
+}
+
+export async function reportConversationIssueApi(
+	conversationId: string,
+	clientContext?: Record<string, unknown>
+): Promise<{ ok: true; reportId: string; turnId: string } | null> {
+	const res = await fetch(`/api/v1/conversations/${conversationId}/report-issue`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ clientContext })
+	});
+	if (!res.ok) return null;
+	return (await res.json()) as { ok: true; reportId: string; turnId: string };
 }
 
 export async function fetchNewConversationSummary(

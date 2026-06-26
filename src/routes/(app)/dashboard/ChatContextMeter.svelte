@@ -29,6 +29,7 @@
 <div class="meter-wrap">
 	<button type="button" class="meter" aria-label={ariaLabel}>
 		<ChatContextMeterRing pct={progress.pct} warn={progress.pct >= 88} />
+		<span class="meter-value">{Math.max(1, progress.unsummarizedCount)}</span>
 	</button>
 	<div class="hover-tip" role="tooltip">{hoverTip}</div>
 </div>
@@ -50,6 +51,7 @@
 		background: transparent;
 		border-radius: 50%;
 		cursor: default;
+		color: #cdd6f4;
 	}
 	.meter:focus {
 		outline: none;
@@ -84,5 +86,27 @@
 	.meter-wrap:focus-within .hover-tip {
 		opacity: 1;
 		visibility: visible;
+	}
+	.meter-value {
+		position: absolute;
+		font-size: 0.5rem;
+		font-weight: 700;
+		line-height: 1;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+	}
+	@media (max-width: 768px) {
+		.meter {
+			width: 1.9rem;
+			height: 1.9rem;
+			background: rgba(17, 17, 27, 0.92);
+			border: 1px solid #313244;
+		}
+		.hover-tip {
+			left: 0;
+			transform: none;
+			bottom: auto;
+			top: calc(100% + 8px);
+			min-width: 12rem;
+		}
 	}
 </style>

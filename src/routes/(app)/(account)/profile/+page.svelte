@@ -2,17 +2,24 @@
 	import { page } from '$app/stores';
 	import AppPageHeader from '$lib/components/app/AppPageHeader.svelte';
 	import ProfileDetails from './ProfileDetails.svelte';
-import ProfileChatDangerZone from './ProfileChatDangerZone.svelte';
+	import ProfileChatDangerZone from './ProfileChatDangerZone.svelte';
+	import ProfileMonthlySpendCard from './ProfileMonthlySpendCard.svelte';
 	import ProfileTelegramBots from './ProfileTelegramBots.svelte';
 	import type { PublicUser } from '$lib/types/app';
 
 	const user = $derived($page.data.user as PublicUser | null);
+	const monthlySpend = $derived(
+		$page.data.monthlySpend as { amountUsd: number; rangeLabel: string } | null
+	);
 </script>
 
 {#if user}
 	<AppPageHeader title="Profile" subtitle="Your account details" />
 	<div class="profile-sections">
 		<ProfileDetails {user} />
+		{#if monthlySpend}
+			<ProfileMonthlySpendCard {...monthlySpend} />
+		{/if}
 		<ProfileTelegramBots />
 		<ProfileChatDangerZone />
 	</div>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { moveConversationToProject } from '$lib/client/dashboardRemote';
+	import { moveConversationToProject, reportConversationIssueApi } from '$lib/client/dashboardRemote';
 	import DeleteChatConfirmModal from './DeleteChatConfirmModal.svelte';
 	import SidebarChatRenameRow from './SidebarChatRenameRow.svelte';
 	import SidebarConversationRow from './SidebarConversationRow.svelte';
@@ -30,6 +30,7 @@
 	let editingId = $state<string | null>(null);
 	let editingValue = $state('');
 	let openMenuId = $state<string | null>(null);
+	let reportedConversationIds = $state<string[]>([]);
 
 	$effect(() => {
 		if (!openMenuId) return;
@@ -56,16 +57,12 @@
 
 	function submitRename(e: Event) {
 		e.stopPropagation();
-		const id = editingId;
-		const val = editingValue.trim();
+		const id = editingId, val = editingValue.trim();
 		editingId = null;
 		if (id && val) onRename(id, val);
 	}
 
-	function cancelRename(e: Event) {
-		e.stopPropagation();
-		editingId = null;
-	}
+	function cancelRename(e: Event) { e.stopPropagation(); editingId = null; }
 
 	let pendingDelete = $state<{ id: string; title: string } | null>(null);
 
@@ -76,13 +73,29 @@
 		pendingDelete = { id, title };
 	}
 
-	function cancelPendingDelete() {
-		pendingDelete = null;
+	function cancelPendingDelete() { pendingDelete = null; }
+
+	async function handleReportIssue(id: string, e: MouseEvent) {
+		e.stopPropagation();
+		openMenuId = null;
+		const reported = await reportConversationIssueApi(id, {
+			routedModelId:
+				conversations.find((c: Conversation) => c.id === id)?.modelId ?? null,
+			viewport: { width: window.innerWidth, height: window.innerHeight },
+			standalone:
+				window.matchMedia('(display-mode: standalone)').matches ||
+				(navigator as Navigator & { standalone?: boolean }).standalone === true,
+			userAgent: navigator.userAgent
+		});
+		if (!reported) return;
+		reportedConversationIds = [id, ...reportedConversationIds.filter((value) => value !== id)];
+		window.setTimeout(() => {
+			reportedConversationIds = reportedConversationIds.filter((value) => value !== id);
+		}, 8000);
 	}
 
 	function confirmPendingDelete() {
-		const p = pendingDelete;
-		pendingDelete = null;
+		const p = pendingDelete; pendingDelete = null;
 		if (p) void onDelete(p.id);
 	}
 
@@ -105,9 +118,11 @@
 				{activeProjectId}
 				{models}
 				streaming={streamingConversationIds.has(conv.id)}
+				recentlyReported={reportedConversationIds.includes(conv.id)}
 				menuOpen={openMenuId === conv.id}
 				onToggle={(e: MouseEvent) => toggleMenu(conv.id, e)}
 				onRenameStart={startRename}
+				onReportIssue={handleReportIssue}
 				onDelete={handleDelete}
 				onMoveToProject={moveToProject}
 				onSelect={onSelect}

@@ -11,7 +11,12 @@ export interface ChatMessage {
 	/** Reasoning-model chain-of-thought (streamed + persisted when present). */
 	reasoningContent?: string;
 	createdAt?: Date | string;
+	turnId?: string;
+	turnSequence?: number;
 	toolCall?: ChatMessageToolCall;
+	toolCallId?: string;
+	toolName?: string;
+	toolArgumentsJson?: string;
 	/** OpenRouter usage.cost for this assistant turn (USD). */
 	costUsd?: number;
 	/** External tool spend for this assistant turn (USD). */

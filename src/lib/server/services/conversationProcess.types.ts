@@ -9,8 +9,8 @@ export type ConversationProcessEvent =
 			turnPromptTokens: number;
 			turnCompletionTokens: number;
 	  }
-	| { type: 'tool_call'; name: string; arguments: Record<string, unknown> }
-	| { type: 'tool_result'; name: string; result: string }
+	| { type: 'tool_call'; toolCallId: string; name: string; arguments: Record<string, unknown> }
+	| { type: 'tool_result'; toolCallId: string; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
 	| { type: 'summary_start' }
 	| { type: 'summary_done'; conversationId: string; summaryThroughMessageId: string; summaryChars: number }

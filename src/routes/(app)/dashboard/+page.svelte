@@ -2,7 +2,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import ConversationSidebar from './ConversationSidebar.svelte';
-	import ChatMessageList from './ChatMessageList.svelte';
+	import ChatThreadPane from './ChatThreadPane.svelte';
 	import ChatInput from './ChatInput.svelte';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 	import DashboardProjectPanel from './DashboardProjectPanel.svelte';
@@ -74,6 +74,8 @@
 		{user}
 		chatQuota={layoutQuota}
 		onLogout={model.logout}
+		onCollapse={() => (model.sidebarCollapsed = true)}
+		onExpand={() => (model.sidebarCollapsed = false)}
 		bind:collapsed={model.sidebarCollapsed}
 		isMobile={viewport.isMobile}
 	/>
@@ -115,7 +117,7 @@
 			{#if model.messages.length === 0 && !model.projectComposeMode}
 				<WelcomeScreen />
 			{:else}
-				<ChatMessageList
+				<ChatThreadPane
 					messages={model.messages}
 					isStreaming={model.isStreaming}
 					isCompacting={model.isCompacting}

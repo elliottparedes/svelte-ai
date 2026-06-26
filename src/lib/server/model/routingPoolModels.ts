@@ -10,7 +10,7 @@ export const ROUTING_POOL_MODEL_IDS: readonly string[] = [
 	'google/gemini-2.5-flash',
 	'x-ai/grok-4.3',
 	'meta-llama/llama-4-scout',
-	'deepseek/deepseek-r1-0528',
+	'moonshotai/kimi-k2-thinking',
 	'openai/gpt-4o-mini'
 ];
 

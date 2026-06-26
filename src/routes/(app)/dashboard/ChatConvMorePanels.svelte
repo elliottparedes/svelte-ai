@@ -5,6 +5,7 @@
 		showAddSection,
 		projectPickerOpen = $bindable(),
 		onRename,
+		onReportIssue,
 		onDelete,
 		onMoveToProject
 	} = $props<{
@@ -13,6 +14,7 @@
 		showAddSection: boolean;
 		projectPickerOpen: boolean;
 		onRename: (c: { id: string; title: string; projectId?: string | null }, e: MouseEvent) => void;
+		onReportIssue: (id: string, e: MouseEvent) => void | Promise<void>;
 		onDelete: (id: string, e: MouseEvent) => void;
 		onMoveToProject: (convId: string, projectId: string | null) => Promise<void>;
 	}>();
@@ -20,6 +22,7 @@
 
 <div class="card">
 	<button type="button" class="row" onclick={(e) => onRename(conv, e)}>Rename</button>
+	<button type="button" class="row" onclick={(e) => void onReportIssue(conv.id, e)}>Report issue</button>
 	{#if showAddSection}
 		<div class="sec">Add to project</div>
 		<button

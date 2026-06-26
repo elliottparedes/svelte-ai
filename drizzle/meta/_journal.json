@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1748527713000,
+      "tag": "0001_subscription_tier",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1748799127000,
+      "tag": "0002_message_openrouter_cost",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1748892523000,
+      "tag": "0003_message_tool_usage",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782493200000,
+      "tag": "0004_chat_audit",
+      "breakpoints": false
+    }
+  ]
+}

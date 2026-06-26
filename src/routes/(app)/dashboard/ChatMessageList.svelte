@@ -2,7 +2,9 @@
 	import ChatMessageRow from './ChatMessageRow.svelte';
 	import ChatMessageListExtras from './ChatMessageListExtras.svelte';
 	import type { ChatMessage, Model } from '$lib/types/dashboard';
+	import { groupDisplayRows } from '$lib/client/groupDisplayRows';
 	import { hydrateGenerateImageMessages } from '$lib/client/hydrateGenerateImageMessages';
+	import { orderChatMessages } from '$lib/client/orderChatMessages';
 	import { useChatMessageScroll } from './useChatMessageScroll.svelte';
 
 	let { messages, isStreaming, isCompacting = false, errorMessage, routedModelId = '', models = [] } = $props<{
@@ -23,25 +25,26 @@
 	}
 
 	const lastAssistantId = $derived.by(() => {
-		for (let i = displayMessages.length - 1; i >= 0; i--) {
-			if (displayMessages[i].role === 'assistant') return displayMessages[i].id;
+		for (let i = displayRows.length - 1; i >= 0; i--) {
+			if (displayRows[i].msg.role === 'assistant') return displayRows[i].msg.id;
 		}
 		return null;
 	});
 
-	const displayMessages = $derived(hydrateGenerateImageMessages(messages));
+	const displayMessages = $derived(orderChatMessages(hydrateGenerateImageMessages(messages)));
+	const displayRows = $derived(groupDisplayRows(displayMessages));
 
 	const scrollKey = $derived.by(() => {
-		const last = displayMessages.at(-1);
+		const last = displayRows.at(-1)?.msg;
 		return [
-			displayMessages.length,
+			displayRows.length,
 			last?.content.length ?? 0,
 			last?.reasoningContent?.length ?? 0,
 			isStreaming ? 1 : 0
 		].join(':');
 	});
 
-	const conversationKey = $derived(displayMessages[0]?.id);
+	const conversationKey = $derived(displayRows[0]?.id);
 
 	const scroll = useChatMessageScroll(
 		() => scrollKey,
@@ -68,12 +71,13 @@
 		tabindex="-1"
 	>
 		<div class="messages-wrapper" bind:this={scroll.listEl}>
-			{#each displayMessages as msg (msg.id)}
+			{#each displayRows as row (row.id)}
 				<ChatMessageRow
-					{msg}
+					msg={row.msg}
+					toolMessages={row.toolMessages}
 					messages={displayMessages}
 					{isStreaming}
-					modelLabel={msg.id === lastAssistantId ? resolveModelLabel(routedModelId) : ''}
+					modelLabel={row.msg.id === lastAssistantId ? resolveModelLabel(routedModelId) : ''}
 				/>
 			{/each}
 			<ChatMessageListExtras messages={displayMessages} {isStreaming} {isCompacting} {errorMessage} />

@@ -21,6 +21,8 @@
 		user,
 		chatQuota = null,
 		onLogout,
+		onCollapse = undefined,
+		onExpand = undefined,
 		collapsed = $bindable(false),
 		isMobile = false
 	} = $props<{
@@ -38,6 +40,8 @@
 		user: DashboardUser | null;
 		chatQuota?: ChatQuotaView | null;
 		onLogout: () => void;
+		onCollapse?: () => void;
+		onExpand?: () => void;
 		collapsed?: boolean;
 		isMobile?: boolean;
 	}>();
@@ -46,7 +50,7 @@
 <aside class="sidebar" class:collapsed class:mobile={isMobile}>
 	{#if collapsed}
 		{#if !isMobile}
-			<SidebarNarrowBar {onNewChat} onExpand={() => (collapsed = false)} />
+			<SidebarNarrowBar {onNewChat} onExpand={() => (onExpand ? onExpand() : (collapsed = false))} />
 		{/if}
 	{:else}
 		<div class="sidebar-inner">
@@ -57,7 +61,7 @@
 				</div>
 				<button
 					class="menu-btn"
-					onclick={() => (collapsed = true)}
+					onclick={() => (onCollapse ? onCollapse() : (collapsed = true))}
 					title={isMobile ? 'Close menu' : 'Collapse menu'}
 					aria-label={isMobile ? 'Close menu' : 'Collapse menu'}
 				>

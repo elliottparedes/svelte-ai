@@ -37,6 +37,7 @@
 		stroke-dashoffset={dashOffset}
 		transform="rotate(-90 {RING_SIZE / 2} {RING_SIZE / 2})"
 	/>
+	<circle class="core" class:warn cx={RING_SIZE / 2} cy={RING_SIZE / 2} r="2.6" />
 </svg>
 
 <style>
@@ -52,5 +53,12 @@
 	}
 	.fill.warn {
 		stroke: #fab387;
+	}
+	.core {
+		fill: #89b4fa;
+		opacity: 0.9;
+	}
+	.core.warn {
+		fill: #fab387;
 	}
 </style>

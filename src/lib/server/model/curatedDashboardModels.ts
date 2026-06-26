@@ -6,8 +6,8 @@ type GroupDef = { readonly label: string; readonly ids: readonly string[] };
 export const CURATED_DASHBOARD_MODEL_GROUPS: readonly GroupDef[] = [
 	{ label: 'Qwen', ids: ['qwen/qwen3.5-flash-02-23', 'qwen/qwen3-max'] },
 	{ label: 'Meta', ids: ['meta-llama/llama-4-scout'] },
-	{ label: 'DeepSeek', ids: ['deepseek/deepseek-v4-flash', 'deepseek/deepseek-r1-0528'] },
-	{ label: 'MoonshotAI', ids: ['moonshotai/kimi-k2.5'] }
+	{ label: 'DeepSeek', ids: ['deepseek/deepseek-v4-flash'] },
+	{ label: 'MoonshotAI', ids: ['moonshotai/kimi-k2.5', 'moonshotai/kimi-k2-thinking'] }
 ];
 
 export type CuratedModelGroup = { label: string; models: ChatModel[] };
