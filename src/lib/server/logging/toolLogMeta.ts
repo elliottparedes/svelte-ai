@@ -21,7 +21,7 @@ export function toolArgsForLog(name: string, args: Record<string, unknown>): Rec
 			const q = String(args.query ?? '');
 			return { queryChars: q.length, queryPreview: q.slice(0, 100) };
 		}
-		case 'execute_python':
+		case 'execute_javascript':
 			return { codeChars: String(args.code ?? '').length };
 		default:
 			return { argKeys: Object.keys(args) };

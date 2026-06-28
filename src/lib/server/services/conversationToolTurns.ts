@@ -29,6 +29,7 @@ import { usageProcessEvent } from './conversationTurnUsage.util';
 import { afterAssistantSaved } from './conversationToolTurnAfterSave.util';
 import { streamOneToolTurn } from './conversationToolTurnStream.util';
 import type { ConversationTurnAuditState } from './conversationTurnAudit';
+import { isClientExecutedTool } from '$lib/shared/clientTool';
 
 export async function* runConversationToolTurns(params: {
 	userId: string;
@@ -126,17 +127,31 @@ export async function* runConversationToolTurns(params: {
 			return;
 		}
 
+		const clientTool = isClientExecutedTool(pendingToolCall.name);
 		yield {
 			type: 'tool_call' as const,
 			toolCallId: pendingToolCall.id,
 			name: pendingToolCall.name,
-			arguments: pendingToolCall.arguments
+			arguments: pendingToolCall.arguments,
+			conversationId: params.conversationId,
+			turnId: params.turnId,
+			execution: clientTool ? 'client' : 'server',
+			sandboxFiles: clientTool ? [...params.sandboxFiles] : undefined,
+			usageSnapshot: clientTool
+				? {
+						llmCostUsd: params.usageAcc.snapshot().costUsd,
+						promptTokens: params.usageAcc.snapshot().promptTokens,
+						completionTokens: params.usageAcc.snapshot().completionTokens,
+						externalItems: params.usageAcc.snapshotExternal().items
+				  }
+				: undefined
 		};
 		params.turnAudit?.toolCalls.push({
 			toolCallId: pendingToolCall.id,
 			name: pendingToolCall.name,
 			arguments: pendingToolCall.arguments
 		});
+		if (clientTool) return;
 		const gate = beforeToolExecution(toolPolicy, pendingToolCall);
 		const toolResult = gate.allowed
 			? await executeToolLogged(

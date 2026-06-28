@@ -21,10 +21,10 @@
 	stroke-linejoin="round"
 	aria-hidden="true"
 >
-	{#if id === 'execute_python'}
-		<polyline points="8 6 8 18 16 18" />
-		<line x1="8" y1="12" x2="14" y2="12" />
-		<line x1="8" y1="15" x2="12" y2="15" />
+	{#if id === 'execute_javascript'}
+		<path d="M9 7h4.5a2.5 2.5 0 0 1 0 5H11" />
+		<path d="M11 12h2.5a2.5 2.5 0 0 1 0 5H9" />
+		<path d="M7 7v7a3 3 0 0 0 3 3" />
 	{:else if id === 'fetch_url'}
 		<path d="M10 13a4.5 4.5 0 0 0 6.4 0l1.6-1.6a4.5 4.5 0 0 0-6.4-6.4L10 6" />
 		<path d="M14 11a4.5 4.5 0 0 0-6.4 0L6 12.6a4.5 4.5 0 0 0 6.4 6.4L14 18" />

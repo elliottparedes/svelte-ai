@@ -1,8 +1,7 @@
 import type { ChatAttachment } from '../domain/ChatProvider.interface';
 import { modelSupportsTools } from '../model/modelCapabilities';
 
-const ULTRA_CHEAP_MODEL = 'z-ai/glm-4.7-flash';
-const VALUE_MODEL = 'qwen/qwen3.5-flash-02-23';
+const PRIMARY_CHAT_MODEL = 'qwen/qwen3.7-max';
 const TOOL_FALLBACK_MODEL = 'openai/gpt-4o-mini';
 
 export type ModelRoutingInput = {
@@ -19,13 +18,13 @@ export class ModelRoutingService {
 		if (requested) {
 			return this.ensureCapabilitySafe(requested, input.enabledToolNames, input.defaultModel);
 		}
-		const hasAttachments = (input.attachments?.length ?? 0) > 0;
-		const hasTools = (input.enabledToolNames?.length ?? 0) > 0;
-		if (!hasAttachments && !hasTools && input.prompt.trim().length < 120) {
-			return ULTRA_CHEAP_MODEL;
-		}
-		const candidate = hasTools ? VALUE_MODEL : input.defaultModel;
-		return this.ensureCapabilitySafe(candidate, input.enabledToolNames, input.defaultModel);
+		void input.attachments;
+		void input.prompt;
+		return this.ensureCapabilitySafe(
+			PRIMARY_CHAT_MODEL,
+			input.enabledToolNames,
+			input.defaultModel
+		);
 	}
 
 	private ensureCapabilitySafe(

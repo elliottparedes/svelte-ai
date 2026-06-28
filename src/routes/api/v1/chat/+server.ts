@@ -1,6 +1,6 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { error } from '@sveltejs/kit';
-import { chatPromptSchema } from '$lib/server/validation/conversation.schema';
+import { chatPromptSchema, chatResumeToolSchema } from '$lib/server/validation/conversation.schema';
 import { OpenRouterProvider } from '$lib/server/infrastructure/OpenRouterProvider';
 import { ChatRepository } from '$lib/server/repositories/ChatRepository';
 import { MessageRepository } from '$lib/server/repositories/MessageRepository';
@@ -39,17 +39,12 @@ import { DomainError, handleDomainError } from '$lib/server/domain/DomainError';
 import { parseSubscriptionTier } from '$lib/shared/subscriptionTier';
 import { ChatTurnUsageAccumulator } from '$lib/server/services/chatTurnUsageAccumulator';
 import { createConversationTurnAuditState } from '$lib/server/services/conversationTurnAudit';
+import { resumeClientToolConversation } from '$lib/server/services/resumeClientToolConversation';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	const user = locals.user;
 	if (!user) error(401, 'Unauthorized');
 	const browserTimeZone = request.headers.get('x-user-timezone')?.trim() || undefined;
-
-	try {
-		await new ChatQuotaService().assertCanSend(user);
-	} catch (err) {
-		handleDomainError(err);
-	}
 
 	let body: unknown;
 	try {
@@ -58,21 +53,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		error(400, 'Invalid JSON');
 	}
 
-	const parseResult = chatPromptSchema.safeParse(body);
-	if (!parseResult.success) {
-		error(400, parseResult.error.issues.map((i) => i.message).join(', '));
+	const isResume = !!body && typeof body === 'object' && 'resumeTool' in body;
+	if (!isResume) {
+		try {
+			await new ChatQuotaService().assertCanSend(user);
+		} catch (err) {
+			handleDomainError(err);
+		}
 	}
 
-	const {
-		conversationId,
-		message,
-		model,
-		attachments,
-		projectId,
-		enabledToolNames,
-		voiceMode,
-		deepReasoning
-	} = parseResult.data;
+	if (isResume) {
+		const parsed = chatResumeToolSchema.safeParse(body);
+		if (!parsed.success) error(400, parsed.error.issues.map((i) => i.message).join(', '));
+		return await handleResumeRequest(parsed.data, user.id, browserTimeZone);
+	}
+	const parsedBody = chatPromptSchema.safeParse(body);
+	if (!parsedBody.success) error(400, parsedBody.error.issues.map((i) => i.message).join(', '));
+	const { conversationId, message, model, attachments, projectId, enabledToolNames, voiceMode, deepReasoning } = parsedBody.data;
 	const useVoice = Boolean(voiceMode && isElevenLabsConfigured());
 
 	const messageRepo = new MessageRepository();
@@ -270,3 +267,61 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 	});
 };
+
+async function handleResumeRequest(
+	data: import('$lib/server/validation/conversation.schema').ChatResumeToolInput,
+	userId: string,
+	browserTimeZone: string | undefined
+) {
+	const provider = new OpenRouterProvider(OPENROUTER_API_KEY, OPENROUTER_HTTP_REFERER || undefined);
+	const messageRepo = new MessageRepository();
+	const turnRepo = new ConversationTurnRepository();
+	const latestTurn = await turnRepo.findLatestByConversationId(data.conversationId);
+	const usageAcc = new ChatTurnUsageAccumulator();
+	const turnAudit = createConversationTurnAuditState();
+	usageAcc.hydrate(
+		{
+			costUsd: data.resumeTool.usageSnapshot.llmCostUsd,
+			promptTokens: data.resumeTool.usageSnapshot.promptTokens,
+			completionTokens: data.resumeTool.usageSnapshot.completionTokens
+		},
+		data.resumeTool.usageSnapshot.externalItems as never[]
+	);
+	const encoder = new TextEncoder();
+	const stream = new ReadableStream({
+		async start(controller) {
+			const writeLine = (line: string) => controller.enqueue(encoder.encode(line));
+			for await (const event of resumeClientToolConversation({
+				userId,
+				conversationId: data.conversationId,
+				modelId: latestTurn?.modelId ?? 'default',
+				turnId: data.resumeTool.turnId,
+				toolCallId: data.resumeTool.toolCallId,
+				toolName: data.resumeTool.name,
+				toolArguments: data.resumeTool.arguments,
+				toolResult: data.resumeTool.result,
+				enabledToolNamesJson: latestTurn?.enabledToolNamesJson,
+				sandboxFiles: data.resumeTool.sandboxFiles,
+				browserTimeZone: data.browserTimeZone ?? browserTimeZone,
+				chatRepo: new ChatRepository(),
+				messageRepo,
+				projectRepo: new ProjectRepository(),
+				provider,
+				toolExecutor: new ToolExecutor(),
+				usageAcc,
+				turnAudit,
+				turnRepo
+			})) {
+				writeLine(`data: ${JSON.stringify(event)}\n\n`);
+			}
+			controller.close();
+		}
+	});
+	return new Response(stream, {
+		headers: {
+			'Content-Type': 'text/event-stream',
+			'Cache-Control': 'no-cache',
+			Connection: 'keep-alive'
+		}
+	});
+}

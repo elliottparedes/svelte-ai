@@ -9,7 +9,22 @@ export type ConversationProcessEvent =
 			turnPromptTokens: number;
 			turnCompletionTokens: number;
 	  }
-	| { type: 'tool_call'; toolCallId: string; name: string; arguments: Record<string, unknown> }
+	| {
+			type: 'tool_call';
+			toolCallId: string;
+			name: string;
+			arguments: Record<string, unknown>;
+			conversationId?: string;
+			execution?: 'client' | 'server';
+			sandboxFiles?: { name: string; content: string }[];
+			turnId?: string;
+			usageSnapshot?: {
+				llmCostUsd: number;
+				promptTokens: number;
+				completionTokens: number;
+				externalItems: { provider: string; toolName: string; costUsd: number }[];
+			};
+	  }
 	| { type: 'tool_result'; toolCallId: string; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
 	| { type: 'summary_start' }

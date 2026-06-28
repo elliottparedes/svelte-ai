@@ -13,7 +13,22 @@ export type ChatSseEvent =
 	  }
 	| { type: 'audio'; data: string }
 	| { type: 'routing'; modelId: string; source: ChatRoutingSource; tier?: string }
-	| { type: 'tool_call'; toolCallId: string; name: string; arguments?: Record<string, unknown> }
+	| {
+			type: 'tool_call';
+			toolCallId: string;
+			name: string;
+			arguments?: Record<string, unknown>;
+			conversationId?: string;
+			turnId?: string;
+			execution?: 'client' | 'server';
+			sandboxFiles?: { name: string; content: string }[];
+			usageSnapshot?: {
+				llmCostUsd: number;
+				promptTokens: number;
+				completionTokens: number;
+				externalItems: { provider: string; toolName: string; costUsd: number }[];
+			};
+	  }
 	| { type: 'tool_result'; toolCallId: string; name: string; result: string }
 	| { type: 'title'; conversationId: string; title: string }
 	| { type: 'summary_start' }
@@ -56,7 +71,22 @@ function* parseSseDataLines(lines: string[]): Generator<ChatSseEvent> {
 					type: 'tool_call',
 					toolCallId: String(parsed.toolCallId ?? ''),
 					name: String(parsed.name),
-					arguments: parsed.arguments as Record<string, unknown> | undefined
+					arguments: parsed.arguments as Record<string, unknown> | undefined,
+					conversationId: parsed.conversationId != null ? String(parsed.conversationId) : undefined,
+					turnId: parsed.turnId != null ? String(parsed.turnId) : undefined,
+					execution: parsed.execution === 'client' ? 'client' : 'server',
+					sandboxFiles: Array.isArray(parsed.sandboxFiles)
+						? (parsed.sandboxFiles as { name: string; content: string }[])
+						: undefined,
+					usageSnapshot:
+						parsed.usageSnapshot && typeof parsed.usageSnapshot === 'object'
+							? (parsed.usageSnapshot as {
+									llmCostUsd: number;
+									promptTokens: number;
+									completionTokens: number;
+									externalItems: { provider: string; toolName: string; costUsd: number }[];
+							  })
+							: undefined
 				};
 			} else if (t === 'tool_result') {
 				yield {

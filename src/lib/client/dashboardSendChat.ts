@@ -11,6 +11,7 @@ import {
 	imageGenToolSucceeded,
 	refetchMessagesAfterImageGen
 } from '$lib/client/refetchConversationAfterImageGen';
+import { runClientCodeTool } from '$lib/client/runClientCodeTool';
 export type DashboardSendDeps = {
 	streamKey: string;
 	getMessages: () => ChatMessage[];
@@ -80,42 +81,14 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	}));
 	d.setAttachments([]);
 
-	let res: Response;
-	try {
-		const payload: Record<string, unknown> = {
-			message: text || ' ',
-			attachments: payloadAttachments
-		};
-		if (d.getDeepReasoning()) payload.deepReasoning = true;
-		const explicitModel = d.getExplicitModelId?.()?.trim();
-		if (explicitModel) payload.model = explicitModel;
-		if (!isPendingConversationId(d.streamKey)) {
-			payload.conversationId = d.streamKey;
-		}
-		if (d.getProjectComposeMode() && d.getActiveProjectId()) {
-			payload.projectId = d.getActiveProjectId();
-		}
-		if (d.getModelSupportsTools()) {
-			payload.enabledToolNames = [...d.getEnabledToolNames()];
-		}
-		if (d.voiceModeEnabled) payload.voiceMode = true;
-		res = await fetch('/api/v1/chat', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				...(browserTimeZone ? { 'X-User-Timezone': browserTimeZone } : {})
-			},
-			body: JSON.stringify(payload)
-		});
-	} catch {
-		d.onStreamFailed(d.streamKey, 'Network error. Please try again.');
-		return;
-	}
-
-	if (!res.ok || !res.body) {
-		d.onStreamFailed(d.streamKey, 'Failed to send message');
-		return;
-	}
+	const basePayload: Record<string, unknown> = { message: text || ' ', attachments: payloadAttachments };
+	if (d.getDeepReasoning()) basePayload.deepReasoning = true;
+	const explicitModel = d.getExplicitModelId?.()?.trim();
+	if (explicitModel) basePayload.model = explicitModel;
+	if (!isPendingConversationId(d.streamKey)) basePayload.conversationId = d.streamKey;
+	if (d.getProjectComposeMode() && d.getActiveProjectId()) basePayload.projectId = d.getActiveProjectId();
+	if (d.getModelSupportsTools()) basePayload.enabledToolNames = [...d.getEnabledToolNames()];
+	if (d.voiceModeEnabled) basePayload.voiceMode = true;
 
 	const assistantId = crypto.randomUUID();
 	let acc = {
@@ -149,48 +122,98 @@ export async function sendDashboardChatMessage(d: DashboardSendDeps): Promise<vo
 	});
 
 	let imageGenNeedsRefetch = false;
+	let activeConversationId = !isPendingConversationId(d.streamKey) ? d.streamKey : '';
+	let pendingResume:
+		| {
+				turnId: string;
+				toolCallId: string;
+				name: string;
+				arguments: Record<string, unknown>;
+				result: string;
+				sandboxFiles: { name: string; content: string }[];
+				usageSnapshot: {
+					llmCostUsd: number;
+					promptTokens: number;
+					completionTokens: number;
+					externalItems: { provider: string; toolName: string; costUsd: number }[];
+				};
+		  }
+		| null = null;
 
 	try {
-		const readAll = (async () => {
-			for await (const ev of readChatSseStream(res.body!)) {
-				if (ev.type === 'title') {
-					d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
-					continue;
-				}
-				if (ev.type === 'audio' && pcm && ev.data) {
-					const bin = atob(ev.data);
-					const bytes = new Uint8Array(bin.length);
-					for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-					pcm.playPcm(bytes);
-					continue;
-				}
-				if (ev.type === 'tool_result' && ev.name === 'generate_image' && imageGenToolSucceeded(ev.result)) {
-					imageGenNeedsRefetch = true;
-				}
-				acc = accumulateChatSse(acc, ev, assistantId);
-				if (ev.type === 'done') {
-					d.onStreamReplyDone?.(d.streamKey, ev.conversationId);
-				}
-				if (ev.type === 'summary_done') {
-					d.onStreamSummaryDone?.(
+		do {
+			const payload = pendingResume
+				? {
+						conversationId: activeConversationId,
+						resumeTool: pendingResume,
+						browserTimeZone
+					}
+				: basePayload;
+			const res = await fetch('/api/v1/chat', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					...(browserTimeZone ? { 'X-User-Timezone': browserTimeZone } : {})
+				},
+				body: JSON.stringify(payload)
+			});
+			if (!res.ok || !res.body) throw new Error('Failed to send message');
+			pendingResume = null;
+			const readAll = (async () => {
+				for await (const ev of readChatSseStream(res.body!)) {
+					if (ev.type === 'title') {
+						d.onStreamTitle(d.streamKey, ev.conversationId, ev.title);
+						continue;
+					}
+					if (ev.type === 'audio' && pcm && ev.data) {
+						const bin = atob(ev.data);
+						const bytes = new Uint8Array(bin.length);
+						for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+						pcm.playPcm(bytes);
+						continue;
+					}
+					if (ev.type === 'tool_result' && ev.name === 'generate_image' && imageGenToolSucceeded(ev.result)) {
+						imageGenNeedsRefetch = true;
+					}
+					acc = accumulateChatSse(acc, ev, assistantId);
+					if (ev.type === 'tool_call' && ev.execution === 'client' && ev.turnId && ev.conversationId) {
+						activeConversationId = ev.conversationId;
+						pendingResume = {
+							turnId: ev.turnId,
+							toolCallId: ev.toolCallId,
+							name: ev.name,
+							arguments: ev.arguments ?? {},
+							result: await runClientCodeTool(String(ev.arguments?.code ?? ''), ev.sandboxFiles ?? []),
+							sandboxFiles: ev.sandboxFiles ?? [],
+							usageSnapshot: ev.usageSnapshot ?? {
+								llmCostUsd: 0,
+								promptTokens: 0,
+								completionTokens: 0,
+								externalItems: []
+							}
+						};
+					}
+					if (ev.type === 'done') d.onStreamReplyDone?.(d.streamKey, ev.conversationId);
+					if (ev.type === 'summary_done') {
+						d.onStreamSummaryDone?.(
+							d.streamKey,
+							ev.conversationId,
+							ev.summaryThroughMessageId,
+							ev.summaryChars
+						);
+					}
+					if (ev.type === 'routing' && ev.modelId) d.onRouting?.(ev.modelId);
+					d.onStreamMessages(
 						d.streamKey,
-						ev.conversationId,
-						ev.summaryThroughMessageId,
-						ev.summaryChars
+						acc.messages,
+						acc.errorMessage,
+						acc.isCompacting,
+						acc.streamingTurnCostUsd
 					);
 				}
-				if (ev.type === 'routing' && ev.modelId) d.onRouting?.(ev.modelId);
-				d.onStreamMessages(
-					d.streamKey,
-					acc.messages,
-					acc.errorMessage,
-					acc.isCompacting,
-					acc.streamingTurnCostUsd
-				);
-			}
-		})();
-
-		await Promise.race([readAll, streamTimedOut]);
+			})();
+			await Promise.race([readAll, streamTimedOut]);
+		} while (pendingResume);
 
 		if (imageGenNeedsRefetch) {
 			try {

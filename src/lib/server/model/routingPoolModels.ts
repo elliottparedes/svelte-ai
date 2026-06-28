@@ -3,12 +3,8 @@ import type { Model } from '$lib/types/dashboard';
 
 /** Models the auto-router may select (dashboard context meter + capabilities). */
 export const ROUTING_POOL_MODEL_IDS: readonly string[] = [
-	'z-ai/glm-4.7-flash',
-	'google/gemini-2.0-flash-lite-001',
-	'qwen/qwen3.5-flash-02-23',
-	'minimax/minimax-m2.5',
+	'qwen/qwen3.7-max',
 	'google/gemini-2.5-flash',
-	'x-ai/grok-4.3',
 	'meta-llama/llama-4-scout',
 	'moonshotai/kimi-k2-thinking',
 	'openai/gpt-4o-mini'

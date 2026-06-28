@@ -6,6 +6,14 @@ export class ChatTurnUsageAccumulator {
 	private total: OpenRouterUsage = { costUsd: 0, promptTokens: 0, completionTokens: 0 };
 	private external: ExternalToolUsage[] = [];
 
+	hydrate(
+		total: OpenRouterUsage,
+		externalItems: readonly ExternalToolUsage[] = []
+	): void {
+		this.total = { ...total };
+		this.external = externalItems.map((item) => ({ ...item }));
+	}
+
 	add(usage: OpenRouterUsage | null | undefined): void {
 		if (!usage) return;
 		this.total = mergeOpenRouterUsage(this.total, usage);

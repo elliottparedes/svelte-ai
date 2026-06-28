@@ -4,7 +4,7 @@ type GroupDef = { readonly label: string; readonly ids: readonly string[] };
 
 /** Dashboard picker: best value picks — one clear role each, minimal overlap. */
 export const CURATED_DASHBOARD_MODEL_GROUPS: readonly GroupDef[] = [
-	{ label: 'Qwen', ids: ['qwen/qwen3.5-flash-02-23', 'qwen/qwen3-max'] },
+	{ label: 'Qwen', ids: ['qwen/qwen3.7-max', 'qwen/qwen3-max'] },
 	{ label: 'Meta', ids: ['meta-llama/llama-4-scout'] },
 	{ label: 'DeepSeek', ids: ['deepseek/deepseek-v4-flash'] },
 	{ label: 'MoonshotAI', ids: ['moonshotai/kimi-k2.5', 'moonshotai/kimi-k2-thinking'] }

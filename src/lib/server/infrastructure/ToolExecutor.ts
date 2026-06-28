@@ -3,7 +3,6 @@ import { braveImageSearchWithUsage } from './braveImageSearch';
 import { fetchUrlContent } from './fetchUrlContent';
 import { exaUrlContent } from './exaUrlContent';
 import { ImageGenerationService } from './imageGenerationService';
-import { executePythonOnPiston } from './pistonClient';
 import { WebSearchRouter } from './WebSearchRouter';
 import { BRAVE_SEARCH_API_KEY } from '../env';
 import { EXA_AI_API_KEY } from '../env/searchEnv';
@@ -31,12 +30,9 @@ export class ToolExecutor {
 		ctx?: ToolRunContext
 	): Promise<ToolRunResult> {
 		switch (name) {
-			case 'execute_python':
+			case 'execute_javascript':
 				return {
-					content: await executePythonOnPiston(
-						String(args.code ?? ''),
-						ctx?.sandboxFiles ?? []
-					)
+					content: 'Error: execute_javascript must run in the browser worker.'
 				};
 			case 'fetch_url':
 				return await this.runFetchUrl(String(args.url ?? ''), args.offset);

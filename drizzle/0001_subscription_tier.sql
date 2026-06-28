@@ -2,6 +2,8 @@
 ALTER TABLE `users`
 	ADD COLUMN `subscription_tier` varchar(16) NOT NULL DEFAULT 'free' AFTER `alt_model_ids`;
 
+--> statement-breakpoint
+
 -- Pro tier for Elliott (adjust email if needed).
 UPDATE `users`
 SET `subscription_tier` = 'pro'

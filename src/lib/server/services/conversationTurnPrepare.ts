@@ -47,7 +47,7 @@ export async function prepareConversationTurn(p: {
 		relayApplied: false,
 		enabledToolNames: p.enabledToolNames
 	});
-	const sandboxFiles = preTooling.effectiveNames.includes('execute_python')
+	const sandboxFiles = preTooling.effectiveNames.includes('execute_javascript')
 		? sandboxFilesFromAttachments(p.attachments)
 		: [];
 	const augmentedPromptBase = augmentPromptForSandbox(p.prompt, p.attachments, sandboxFiles);

@@ -5,11 +5,11 @@ import {
 	buildChatToolSystemPromptNoWeb,
 	MODEL_DOES_NOT_SUPPORT_TOOLS_PROMPT
 } from '$lib/shared/chatToolSystemPrompt';
-import { EXECUTE_PYTHON_TOOL } from './conversationToolsExecutePython';
+import { EXECUTE_JAVASCRIPT_TOOL } from './conversationToolsExecuteJavascript';
 export const MAX_TOOL_TURNS = 12;
 
 export const TOOLS: ToolDefinition[] = [
-	EXECUTE_PYTHON_TOOL,
+	EXECUTE_JAVASCRIPT_TOOL,
 	{
 		name: 'fetch_url',
 		description:
