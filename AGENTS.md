@@ -199,3 +199,30 @@ npm run piston:ping  # Piston Python execute_python smoke test (PISTON_URL)
 - `DomainError` class used for business logic errors (carries HTTP status)
 - `handleDomainError()` converts DomainErrors to SvelteKit `error()` responses
 - `.env` is gitignored — never commit it
+
+## Cursor Cloud specific instructions
+
+### MySQL setup
+MySQL 8 must be running locally before starting the dev server. In the Cloud Agent VM:
+```bash
+sudo mkdir -p /var/run/mysqld && sudo chown mysql:mysql /var/run/mysqld
+sudo mysqld --user=mysql --daemonize
+```
+The root password is set to `devpassword` and the database is `ai_platform`.
+Use `DATABASE_URL=mysql://root:devpassword@127.0.0.1:3306/ai_platform` in `.env` to override any injected `MYSQL_*` env vars that point to an external host.
+
+After starting MySQL, run `npm run db:push` to ensure the schema is up to date.
+
+### Environment variables
+The VM has secrets injected for `OPENROUTER_API_KEY`, `MYSQL_*`, `BRAVE_SEARCH_API_KEY`, `PISTON_URL`, and Telegram vars. The `.env` file must set `DATABASE_URL` (pointing to local MySQL) and `SESSION_SECRET` at minimum. Env vars injected at the OS level are NOT overridden by `dotenv` — `DATABASE_URL` is used because `resolveMysqlConn()` checks it first.
+
+### Running the app
+- `npm run dev -- --host 0.0.0.0` starts Vite on port 5173.
+- `npm run check` runs TypeScript + Svelte diagnostics (zero errors expected).
+- `npm run build` produces a production build.
+- Health check: `GET /health` returns `{"status":"ok"}`.
+- Login uses email + password (`POST /api/v1/auth/signup` then `/login`).
+
+### Gotchas
+- MySQL TCP connection via `127.0.0.1` works; socket-based `localhost` may fail in this container environment.
+- The `MYSQL_PORT` injected secret is `33066` (remote); the local MySQL listens on default `3306`. Always use `DATABASE_URL` in `.env` to avoid confusion.
